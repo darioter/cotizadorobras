@@ -512,13 +512,11 @@ html,body{overflow-x:hidden;max-width:100vw}
             </div>
           </div>
         </div>
-        <!-- PASO 2: Resultado inline + botón propuesta -->
+        <!-- PASO 2: Resultado inline -->
         <div id="step-resultado" style="display:none">
-          <!-- Resumen de precio calculado -->
           <div id="calc-preview" class="card mb-12" style="border-left:4px solid var(--accent)"></div>
-          <!-- Botón propuesta IA -->
-          <button class="btn btn-full mb-12" id="btn-propuesta" onclick="generarPropuesta()" style="background:var(--navy);color:#fff;font-size:14px;padding:14px">
-            ✦ Generar propuesta estética con IA
+          <button class="btn btn-full mb-12" onclick="guardarYVerResultado()" style="background:var(--navy);color:#fff;font-size:14px;padding:14px">
+            💾 Guardar proyecto
           </button>
           <button class="btn btn-secondary btn-full mb-12" onclick="resetCalculo()" style="font-size:12px">
             ← Volver a editar costos
@@ -838,7 +836,7 @@ async function initApp(user){
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   // Cargar config con fallback seguro
-  await Promise.all([loadParametros(),loadCatalog()]);
+  await Promise.all([loadParametros(),loadCatalog(),loadMateriales()]);
   await migrarCatalogoSiNecesario();
   initPIPRubros();
   showView('pip');
@@ -1686,6 +1684,33 @@ async function autoFillFromAI(){
 // ── PASO 1: CALCULAR PRECIO (sin IA) ──
 let _calcSnapshot = null; // guarda el cálculo actual
 
+async function guardarYVerResultado(){
+  if(!_calcSnapshot)return toast('Calculá el precio primero','error');
+  const res=_calcSnapshot;
+  const resultado={...res,propuestas:[]};
+  try{
+    if(_editingProyectoId){
+      await sb.from('proyectos_obra').update({
+        nombre:res.nombre,cliente:res.cliente,brief_texto:res.brief,
+        superficie_m2:res.m2||null,resultado,updated_at:new Date().toISOString()
+      }).eq('id',_editingProyectoId);
+      const idx=_proyectosData.findIndex(x=>x.id===_editingProyectoId);
+      if(idx>=0)_proyectosData[idx]={..._proyectosData[idx],nombre:res.nombre,cliente:res.cliente,superficie_m2:res.m2||null,resultado};
+      toast('✓ Proyecto actualizado','success');
+      _editingProyectoId=null;
+      const banner=document.getElementById('edit-banner');
+      if(banner)banner.remove();
+    } else {
+      await sb.from('proyectos_obra').insert({
+        nombre:res.nombre,cliente:res.cliente,brief_texto:res.brief,
+        superficie_m2:res.m2||null,resultado,created_by:currentUser.id
+      });
+    }
+  }catch(e){console.warn('No se pudo guardar:',e.message);}
+  renderPIPResult(resultado);
+}
+
+
 function calcularPrecio(){
   const nombre=document.getElementById('pip-nombre').value.trim();
   if(!nombre)return toast('Ingresá un nombre para el proyecto','error');
@@ -1915,7 +1940,7 @@ function renderPIPResult(res){
     <div class="tabs" id="res-tabs">
       <button class="tab active" onclick="resTab('precio',this)">💰 Precio</button>
       <button class="tab" onclick="resTab('rubros',this)">📋 Rubros</button>
-      <button class="tab" onclick="resTab('propuestas',this)">✦ Diseño</button>
+      <button class="tab" onclick="resTab('propuestas',this)">🧱 Materiales</button>
       <button class="tab" onclick="resTab('oferta',this)">📄 Oferta</button>
     </div>
 
@@ -2171,6 +2196,7 @@ function renderProposal(p,i){
 
 function resTab(id,btn){
   ['precio','rubros','propuestas','oferta'].forEach(t=>document.getElementById('res-'+t).style.display=t===id?'':'none');
+  if(id==='propuestas'&&_lastResultado){renderMateriales(_lastResultado);}
   document.querySelectorAll('#res-tabs .tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
@@ -2613,6 +2639,124 @@ function copyPrompt(btn){
 }
 
 function fmt(n){return Math.round(n||0).toLocaleString('es-AR');}
+// ── RENDIMIENTOS DE MATERIALES ──
+const RENDIMIENTOS={"preliminares_pr01": [["Bolsas de consorcio 240L", 0.05, "u"]], "demoliciones_d01": [["Volquete 4m³", 0.08, "u"]], "demoliciones_d05": [["Volquete 4m³", 0.02, "u"]], "movimiento_tierra_mt01": [["Volquete 4m³", 0.25, "u"]], "estructura_e03": [["Hormigón H-21 (m³)", 1.05, "m³"], ["Hierro Ø10 (kg)", 35, "kg"], ["Hierro Ø8 (kg)", 10, "kg"], ["Alambre recocido 1.2mm (kg)", 0.5, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 8, "ml"]], "estructura_e08": [["Hormigón H-21 (m³)", 1.05, "m³"], ["Hierro Ø10 (kg)", 45, "kg"], ["Hierro Ø8 (kg)", 15, "kg"], ["Malla de acero Q188 (m²)", 1.1, "m²"], ["Alambre recocido 1.2mm (kg)", 0.6, "kg"], ["Fenólico 18mm (m²)", 1.1, "m²"], ["Puntales metálicos (u)", 0.8, "u"]], "estructura_e14": [["Hormigón H-21 (m³)", 1.05, "m³"], ["Hierro Ø16 (kg)", 55, "kg"], ["Hierro Ø8 estribos (kg)", 15, "kg"], ["Alambre recocido 1.2mm (kg)", 0.8, "kg"], ["Tabla encofrado (ml)", 12, "ml"]], "mamposteria_m01": [["Bloques hormigón 20x20x40 (u)", 12.5, "u"], ["Cemento portland (kg)", 8, "kg"], ["Arena gruesa (m³)", 0.025, "m³"]], "mamposteria_m05": [["Ladrillos comunes (u)", 75, "u"], ["Cemento portland (kg)", 6, "kg"], ["Cal hidratada (kg)", 4, "kg"], ["Arena fina (m³)", 0.02, "m³"]], "mamposteria_m10": [["Ladrillos huecos 8x18x33 (u)", 18, "u"], ["Cemento portland (kg)", 4, "kg"], ["Cal hidratada (kg)", 2, "kg"], ["Arena fina (m³)", 0.015, "m³"]], "mamposteria_m13": [["Ladrillos cerámicos portante 12x19x33 (u)", 16, "u"], ["Cemento portland (kg)", 5, "kg"], ["Cal hidratada (kg)", 3, "kg"], ["Arena fina (m³)", 0.018, "m³"]], "mamposteria_cp01": [["Hormigón pobre H-8 (m³)", 0.15, "m³"], ["Arena gruesa (m³)", 0.02, "m³"], ["Film polietileno 150µ (m²)", 1.1, "m²"]], "construccion_seco_cs01": [["Placa Durlock ST 12.5mm (m²)", 2.2, "m²"], ["Montante 70mm 3m (u)", 0.55, "u"], ["Solera 70mm 3m (u)", 0.35, "u"], ["Tornillos Durlock punta aguja x500 (cja)", 0.04, "u"], ["Masilla Durlock 30kg (balde)", 0.15, "u"], ["Cinta papel kraft 50m (u)", 0.06, "u"]], "construccion_seco_cs05": [["Placa Durlock ST 12.5mm (m²)", 1.1, "m²"], ["Perfil omega 60mm 3m (u)", 0.5, "u"], ["Solera 60mm 3m (u)", 0.35, "u"], ["Varilla roscada 3/8\" (ml)", 0.4, "ml"], ["Tornillos Durlock punta aguja x500 (cja)", 0.03, "u"], ["Masilla Durlock 30kg (balde)", 0.12, "u"], ["Cinta papel kraft 50m (u)", 0.05, "u"]], "aislaciones_a04": [["Film polietileno 150µ (m²)", 1.1, "m²"]], "aislaciones_a06": [["Membrana asfáltica 4mm (m²)", 1.15, "m²"], ["Imprimante asfáltico (lt)", 0.3, "lt"]], "cubierta_cu01": [["Membrana aluminio 4mm (m²)", 1.15, "m²"], ["Imprimante asfáltico (lt)", 0.3, "lt"], ["Hormigón pobre H-8 (m³)", 0.08, "m³"], ["Arena gruesa (m³)", 0.02, "m³"], ["Pendientes (kg cemento)", 8, "kg"]], "cubierta_cu05": [["Chapa ondulada N24 (m²)", 1.12, "m²"], ["Tornillos autoperforantes (u)", 8, "u"], ["Burletes de sellado (ml)", 0.5, "ml"]], "cubierta_cu06": [["Chapa prepintada (m²)", 1.12, "m²"], ["Tornillos autoperforantes (u)", 8, "u"], ["Sellador asfáltico (lt)", 0.05, "lt"]], "revoques_r01": [["Cemento portland (kg)", 5, "kg"], ["Cal hidratada (kg)", 8, "kg"], ["Arena fina (m³)", 0.025, "m³"], ["Cal fina aérea (kg)", 2, "kg"]], "revoques_r04": [["Revoque proyectable seco (kg)", 18, "kg"], ["Hidrófugo líquido (lt)", 0.3, "lt"], ["Agua (lt)", 5, "lt"]], "revoques_r05": [["Revoque proyectable seco (kg)", 16, "kg"], ["Agua (lt)", 4.5, "lt"]], "revestimientos_rv01": [["Cerámico 20x20 (m²)", 1.1, "m²"], ["Adhesivo cerámico (kg)", 5, "kg"], ["Junta cerámica (kg)", 0.25, "kg"], ["Crucetas 2mm (u)", 30, "u"]], "revestimientos_rv03": [["Cerámica esmaltada 30x30 (m²)", 1.1, "m²"], ["Adhesivo cerámico (kg)", 5.5, "kg"], ["Junta cerámica (kg)", 0.2, "kg"], ["Crucetas 3mm (u)", 15, "u"]], "revestimientos_rv04": [["Porcellanato 30x30 (m²)", 1.1, "m²"], ["Adhesivo flexible (kg)", 6, "kg"], ["Junta porcellanato (kg)", 0.2, "kg"], ["Crucetas 3mm (u)", 15, "u"]], "cielorrasos_cr01": [["Cal fina aérea (kg)", 3, "kg"], ["Cemento portland (kg)", 1, "kg"], ["Arena fina (m³)", 0.008, "m³"]], "cielorrasos_cr03": [["Cal fina aérea (kg)", 3, "kg"], ["Cemento portland (kg)", 1, "kg"], ["Listones de madera 2x2\" (ml)", 3, "ml"], ["Clavos 2\" (kg)", 0.05, "kg"]], "cielorrasos_cr09": [["Yeso proyectable (kg)", 12, "kg"], ["Agua (lt)", 6, "lt"], ["Cinta papel kraft 50m (u)", 0.05, "u"]], "contrapisos_cp01": [["Cascote partido (m³)", 0.12, "m³"], ["Cemento portland (kg)", 6, "kg"], ["Arena gruesa (m³)", 0.02, "m³"], ["Film polietileno 150µ (m²)", 1.1, "m²"]], "contrapisos_cp02": [["Cascote partido (m³)", 0.06, "m³"], ["Cemento portland (kg)", 4, "kg"], ["Arena gruesa (m³)", 0.012, "m³"]], "contrapisos_cp05": [["Cemento portland (kg)", 8, "kg"], ["Arena fina (m³)", 0.018, "m³"]], "pisos_p04": [["Porcellanato 30x30 (m²)", 1.1, "m²"], ["Adhesivo flexible (kg)", 6, "kg"], ["Junta porcellanato (kg)", 0.2, "kg"], ["Crucetas 3mm (u)", 15, "u"], ["Zócalo porcellanato 10x60 (ml)", 0.0, "ml"]], "pisos_p05": [["Cerámico 20x20 (m²)", 1.1, "m²"], ["Adhesivo cerámico (kg)", 5, "kg"], ["Junta cerámica (kg)", 0.25, "kg"], ["Crucetas 2mm (u)", 30, "u"]], "pisos_p08": [["Mosaico granítico 30x30 (m²)", 1.1, "m²"], ["Cal hidratada (kg)", 3, "kg"], ["Cemento portland (kg)", 2, "kg"], ["Arena fina (m³)", 0.01, "m³"]], "pisos_p12": [["Parquet eucaliptus (m²)", 1.12, "m²"], ["Adhesivo epoxi bicomponente (kg)", 1.5, "kg"], ["Lija para madera (u)", 0.3, "u"]], "pisos_p15": [["Lija para madera N°80 (u)", 0.5, "u"], ["Lija para madera N°120 (u)", 0.3, "u"], ["Plastificante poliuretánico (lt)", 0.2, "lt"]], "escaleras_es02": [["Cemento portland (kg)", 6, "kg"], ["Arena fina (m³)", 0.015, "m³"], ["Ferrocemento (kg)", 1, "kg"]], "escaleras_es05": [["Cerámico 20x20 (m²)", 1.12, "m²"], ["Adhesivo cerámico (kg)", 5, "kg"], ["Junta cerámica (kg)", 0.25, "kg"]], "marmoleria_mr01": [["Mesada granito gris mara 60cm (ml)", 1.05, "ml"], ["Silicona neutra (u)", 0.3, "u"], ["Soporte mesada (u)", 2, "u"]], "pintura_pi01": [["Látex interior 1ª marca (lt)", 0.15, "lt"], ["Fijador al agua (lt)", 0.05, "lt"], ["Enduído plástico (kg)", 0.2, "kg"], ["Lija N°120 (u)", 0.05, "u"]], "pintura_pi02": [["Látex interior 1ª marca (lt)", 0.15, "lt"], ["Fijador al agua (lt)", 0.05, "lt"], ["Rodillo para cielo raso (u)", 0.02, "u"]], "pintura_pi03": [["Látex exterior 1ª marca (lt)", 0.18, "lt"], ["Fijador exterior (lt)", 0.06, "lt"], ["Enduído exterior (kg)", 0.25, "kg"]], "pintura_pi09": [["Impermeabilizante fibrado (lt)", 0.6, "lt"], ["Pincel de 4\" (u)", 0.01, "u"]], "sanitaria_sa01": [["Inodoro (u)", 1, "u"], ["Bidet (u)", 1, "u"], ["Vanitory (u)", 1, "u"], ["Grifería monocomando baño (u)", 1, "u"], ["Ducha (u)", 1, "u"], ["Cañería PVC 110mm (ml)", 4, "ml"], ["Cañería PVC 63mm (ml)", 3, "ml"], ["Cañería polipropileno 20mm (ml)", 8, "ml"], ["Pegamento PVC (u)", 0.1, "u"]], "sanitaria_sa02": [["Pileta cocina (u)", 1, "u"], ["Grifería monocomando cocina (u)", 1, "u"], ["Pileta lavadero (u)", 1, "u"], ["Cañería PVC 63mm (ml)", 3, "ml"], ["Cañería polipropileno 20mm (ml)", 6, "ml"]], "electricidad_el01": [["Cable 2.5mm² (ml)", 8, "ml"], ["Caño corrugado 3/4\" (ml)", 4, "ml"], ["Caja de paso 10x10 (u)", 0.3, "u"], ["Bornera conexión (u)", 2, "u"]], "electricidad_el02": [["Cable 4mm² (ml)", 10, "ml"], ["Caño corrugado 1\" (ml)", 5, "ml"], ["Toma corriente schuko (u)", 1, "u"]], "calefaccion_cl01": [["Tubo pex 16mm (ml)", 6, "ml"], ["Clips sujeción (u)", 30, "u"], ["Malla metálica piso radiante (m²)", 1.1, "m²"], ["Mortero autonivelante (kg)", 20, "kg"]]};
+
+let _materialesDB={}; // materiales con precios cargados de Supabase
+
+async function loadMateriales(){
+  try{
+    const{data}=await sb.from('materiales_obra').select('*').eq('activo',true).order('categoria').order('orden');
+    if(data&&data.length){
+      data.forEach(m=>{_materialesDB[m.label]=m;});
+    }
+  }catch(e){console.warn('materiales_obra no cargada:',e.message);}
+}
+
+function calcularMateriales(rubrosA){
+  // Para cada ítem seleccionado, buscar rendimientos y calcular
+  const totales={}; // label → {qty, unit, precio, categoria}
+
+  rubrosA.forEach(function(it){
+    if(!it.cant||it.cant<=0)return;
+    // Buscar rendimientos por key: rubro_id
+    const key=it.section+'_'+it.id;
+    const rends=RENDIMIENTOS[key];
+    if(!rends)return;
+
+    rends.forEach(function(r){
+      const matLabel=r[0];
+      const qtyBase=r[1];
+      const unit=r[2];
+      const qty=qtyBase*it.cant*1.10; // +10% desperdicio ya incluido en algunos, doble check
+      if(!totales[matLabel]){
+        const matDB=_materialesDB[matLabel]||{};
+        totales[matLabel]={
+          qty:0,
+          unit:unit,
+          precio:matDB.precio||0,
+          categoria:matDB.categoria||'Varios',
+          enDB:!!matDB.precio
+        };
+      }
+      totales[matLabel].qty+=qty;
+    });
+  });
+  return totales;
+}
+
+function renderMateriales(resultado){
+  const cont=document.getElementById('res-propuestas');
+  if(!cont)return;
+  const rubrosA=resultado.rubrosA||[];
+  const totales=calcularMateriales(rubrosA);
+  const keys=Object.keys(totales);
+
+  if(!keys.length){
+    cont.innerHTML='<div class="card"><div class="card-body"><div class="empty-state">Sin ítems con rendimientos definidos.<br><small>Cargá rubros en el PIP para ver el desglose de materiales.</small></div></div></div>';
+    return;
+  }
+
+  // Agrupar por categoría
+  const byCat={};
+  keys.forEach(function(k){
+    const cat=totales[k].categoria||'Varios';
+    if(!byCat[cat])byCat[cat]=[];
+    byCat[cat].push({label:k,...totales[k]});
+  });
+
+  let totalMateriales=0;
+  let sinPrecio=0;
+  keys.forEach(function(k){
+    const m=totales[k];
+    totalMateriales+=m.qty*m.precio;
+    if(!m.enDB)sinPrecio++;
+  });
+
+  let html='<div class="card" style="margin-bottom:12px">'
+    +'<div class="card-header"><div><div class="card-title">🧱 Estimación de materiales</div>'
+    +'<div style="font-size:11px;color:#888;margin-top:2px">Rendimientos estándar + 10% desperdicio</div></div>'
+    +'<div style="text-align:right">'
+    +(sinPrecio?'<div style="font-size:10px;color:var(--accent);margin-bottom:4px">⚠ '+sinPrecio+' materiales sin precio — actualizá en Precios base</div>':'')
+    +'<div style="font-size:11px;color:#888">Total materiales estimado</div>'
+    +'<div style="font-size:20px;font-weight:700;color:var(--navy)">$ '+fmt(totalMateriales)+'</div>'
+    +'</div></div></div>';
+
+  Object.keys(byCat).sort().forEach(function(cat){
+    const items=byCat[cat];
+    html+='<div class="card" style="margin-bottom:10px">'
+      +'<div class="card-header" style="cursor:pointer" onclick="var b=this.nextElementSibling;b.style.display=b.style.display===\'none\'?\'block\':\'none\'">'
+      +'<div class="card-title" style="font-size:13px">'+escHtml(cat)+'</div>'
+      +'<span style="font-size:12px;color:var(--accent)">$ '+fmt(items.reduce(function(s,m){return s+m.qty*m.precio;},0))+'</span>'
+      +'</div>'
+      +'<div class="card-body" style="padding:0">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<tr style="background:#f5f5f5"><td style="padding:6px 10px;font-weight:700;border-bottom:1px solid var(--border)">Material</td>'
+      +'<td style="padding:6px 10px;font-weight:700;border-bottom:1px solid var(--border);text-align:right">Cantidad</td>'
+      +'<td style="padding:6px 10px;font-weight:700;border-bottom:1px solid var(--border);text-align:right">Precio unit.</td>'
+      +'<td style="padding:6px 10px;font-weight:700;border-bottom:1px solid var(--border);text-align:right">Subtotal</td>'
+      +'</tr>'
+      +items.map(function(m){
+        var subtotal=m.qty*m.precio;
+        return '<tr>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0">'+escHtml(m.label)+'</td>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right">'+m.qty.toFixed(2)+' '+escHtml(m.unit)+'</td>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right'+(m.enDB?'':';color:var(--accent)')+'">'+
+            (m.enDB?'$ '+fmt(m.precio):'sin precio')+'</td>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:700">'+
+            (m.enDB?'$ '+fmt(subtotal):'-')+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</table></div></div>';
+  });
+
+  // Botón imprimir
+  html='<div class="no-print" style="margin-bottom:10px"><button class="btn btn-gold btn-sm" onclick="printContent(document.getElementById(\'res-propuestas\'))">🖨 Imprimir Materiales</button></div>'+html;
+
+  cont.innerHTML=html;
+}
+
+
 function escHtml(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(msg,type=''){
   const el=document.getElementById('toast');
