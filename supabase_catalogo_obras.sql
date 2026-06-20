@@ -1,9 +1,9 @@
 -- CATÁLOGO OBRA ESTIMATOR — Ejecutar en Supabase SQL Editor
 -- Usar en el proyecto de cotizadorobras
 
-TRUNCATE TABLE catalogo;
+TRUNCATE TABLE catalogo_obra;
 
-INSERT INTO catalogo (id, rubro, label, unit, precio, activo, orden) VALUES
+INSERT INTO catalogo_obra (id, rubro, label, unit, precio, activo, orden) VALUES
   ('preliminares_pr1', 'preliminares', 'Limpieza y nivelación del terreno', 'm²', 178887, true, 0),
   ('preliminares_pr2', 'preliminares', 'Obrador, depósito y sanitarios', 'u', 566201, true, 1),
   ('preliminares_pr3', 'preliminares', 'Cartel de obra', 'u', 522628, true, 2),
@@ -125,4 +125,4 @@ INSERT INTO catalogo (id, rubro, label, unit, precio, activo, orden) VALUES
   ('otros_o3', 'otros', 'Ayuda de gremios', 'm²', 35261, true, 2),
   ('otros_o4', 'otros', 'Varios', 'global', 0, true, 3);
 
-SELECT rubro, count(*) FROM catalogo WHERE activo=true GROUP BY rubro ORDER BY rubro;
+SELECT rubro, count(*) FROM catalogo_obra WHERE activo=true GROUP BY rubro ORDER BY rubro;

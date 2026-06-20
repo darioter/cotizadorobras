@@ -1111,7 +1111,7 @@ async function showView(v){
 // ── PARÁMETROS ──
 async function loadParametros(){
   try{
-    const{data,error}=await sb.from('config').select('value').eq('key','parametros').maybeSingle();
+    const{data,error}=await sb.from('config_obra').select('value').eq('key','parametros').maybeSingle();
     parametros=data?.value?{...DEFAULT_PARAMS,...JSON.parse(data.value)}:{...DEFAULT_PARAMS};
   }catch(e){ parametros={...DEFAULT_PARAMS}; }
   updateParamsSummary();
@@ -1120,7 +1120,7 @@ async function saveParametros(){
   if(!isAdmin()) return toast('Solo los administradores pueden modificar parámetros','error');
   document.querySelectorAll('[data-param]').forEach(f=>{parametros[f.dataset.param]=parseFloat(f.value)/100||0;});
   try{
-    await sb.from('config').upsert({key:'parametros',value:JSON.stringify(parametros),updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'key'});
+    await sb.from('config_obra').upsert({key:'parametros',value:JSON.stringify(parametros),updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'key'});
     toast('✓ Parámetros guardados','success');
   }catch(e){toast('Error: '+e.message,'error');}
   updateParamsSummary();
@@ -1156,7 +1156,7 @@ async function loadCatalog(){
   });
 
   try{
-    const resp=await sb.from('catalogo')
+    const resp=await sb.from('catalogo_obra')
       .select('id,rubro,label,unit,precio,orden')
       .eq('activo',true)
       .order('rubro').order('orden');
@@ -1204,7 +1204,7 @@ async function savePrecios(){
   const rubro=currentPreciosTab;
   const items=preciosCatalog[rubro]||[];
   try{
-    const delResp=await sb.from('catalogo').delete().eq('rubro',rubro);
+    const delResp=await sb.from('catalogo_obra').delete().eq('rubro',rubro);
     if(delResp.error) throw new Error('Error al borrar: '+delResp.error.message);
     if(items.length>0){
       const rows=items.map((it,i)=>({
@@ -1218,7 +1218,7 @@ async function savePrecios(){
         updated_by: currentUser.id,
         updated_at: new Date().toISOString()
       }));
-      const insResp=await sb.from('catalogo').insert(rows);
+      const insResp=await sb.from('catalogo_obra').insert(rows);
       if(insResp.error) throw new Error('Error al insertar: '+insResp.error.message);
       preciosCatalog[rubro]=rows.map(r=>({id:r.id,label:r.label,unit:r.unit,precio:r.precio}));
     }
@@ -1262,11 +1262,11 @@ async function migrarCatalogoSiNecesario(){
   // Migrar una sola vez del config.catalogo JSON a tabla catalogo por ítems
   try{
     // Ver si la tabla catalogo ya tiene datos
-    const{data:existing}=await sb.from('catalogo').select('id').limit(1);
+    const{data:existing}=await sb.from('catalogo_obra').select('id').limit(1);
     if(existing&&existing.length>0) return; // ya migrado
 
     // Buscar catálogo viejo en config
-    const{data:oldConfig}=await sb.from('config').select('value').eq('key','catalogo').maybeSingle();
+    const{data:oldConfig}=await sb.from('config_obra').select('value').eq('key','catalogo').maybeSingle();
     if(!oldConfig?.value) return; // nada que migrar
 
     const oldCatalog=JSON.parse(oldConfig.value);
@@ -1282,7 +1282,7 @@ async function migrarCatalogoSiNecesario(){
       });
     });
     if(rows.length>0){
-      await sb.from('catalogo').upsert(rows,{onConflict:'id'});
+      await sb.from('catalogo_obra').upsert(rows,{onConflict:'id'});
       // Actualizar preciosCatalog con los datos migrados
       await loadCatalog();
       toast('✓ Catálogo migrado correctamente ('+rows.length+' ítems)','success');
@@ -1395,7 +1395,7 @@ async function deleteCatalogItem(tab,i){
   // Eliminar de Supabase si tiene ID fijo
   if(item&&item.id&&!String(item.id).startsWith('new')){
     try{
-      await sb.from('catalogo').delete().eq('id',item.id);
+      await sb.from('catalogo_obra').delete().eq('id',item.id);
     }catch(e){console.warn('No se pudo eliminar de Supabase:',e.message);}
   }
   preciosCatalog[tab].splice(i,1);
@@ -2015,7 +2015,7 @@ Respondé SOLO JSON sin markdown:
     // Guardar o actualizar en Supabase
     try{
       if(_editingProyectoId){
-        await sb.from('proyectos').update({
+        await sb.from('proyectos_obra').update({
           nombre:res.nombre,cliente:res.cliente,brief_texto:res.brief,
           superficie_m2:res.m2||null,resultado,updated_at:new Date().toISOString()
         }).eq('id',_editingProyectoId);
@@ -2027,7 +2027,7 @@ Respondé SOLO JSON sin markdown:
         const banner=document.getElementById('edit-banner');
         if(banner)banner.remove();
       } else {
-        await sb.from('proyectos').insert({
+        await sb.from('proyectos_obra').insert({
           nombre:res.nombre,cliente:res.cliente,brief_texto:res.brief,
           superficie_m2:res.m2||null,resultado,created_by:currentUser.id
         });
@@ -2380,7 +2380,7 @@ let _ofertaRender=null; // imagen del render para la oferta // ID del proyecto q
 async function loadProyectos(){
   const el=document.getElementById('proyectos-list');
   el.innerHTML='<div class="empty-state"><span class="spinner">⟳</span></div>';
-  const{data}=await sb.from('proyectos').select('*,p:profiles(full_name)').order('created_at',{ascending:false});
+  const{data}=await sb.from('proyectos_obra').select('*,p:profiles(full_name)').order('created_at',{ascending:false});
   _proyectosData=data||[];
   renderProyectosList();
 }
@@ -2482,14 +2482,14 @@ function renderProyectosList(){
 }
 
 async function cambiarEstado(id,estado){
-  await sb.from('proyectos').update({estado,updated_at:new Date().toISOString()}).eq('id',id);
+  await sb.from('proyectos_obra').update({estado,updated_at:new Date().toISOString()}).eq('id',id);
   const p=_proyectosData.find(x=>x.id===id);
   if(p) p.estado=estado;
   toast('Estado actualizado: '+estado,'success');
 }
 
 async function openProyecto(id){
-  const p=_proyectosData.find(x=>x.id===id)||await sb.from('proyectos').select('*').eq('id',id).single().then(r=>r.data);
+  const p=_proyectosData.find(x=>x.id===id)||await sb.from('proyectos_obra').select('*').eq('id',id).single().then(r=>r.data);
   if(!p?.resultado)return toast('Sin resultado guardado','error');
   showView('pip');
   renderPIPResult(p.resultado);
@@ -2586,7 +2586,7 @@ async function guardarEditProyecto(id){
 async function duplicarProyecto(id){
   const p=_proyectosData.find(x=>x.id===id);
   if(!p)return;
-  const{data}=await sb.from('proyectos').insert({
+  const{data}=await sb.from('proyectos_obra').insert({
     nombre:'Copia — '+p.nombre,
     cliente:p.cliente,
     brief_texto:p.brief_texto,
@@ -2614,7 +2614,7 @@ function confirmarEliminar(id,nombre){
 }
 
 async function eliminarProyecto(id){
-  await sb.from('proyectos').delete().eq('id',id);
+  await sb.from('proyectos_obra').delete().eq('id',id);
   _proyectosData=_proyectosData.filter(x=>x.id!==id);
   closeModal();
   renderProyectosList();
