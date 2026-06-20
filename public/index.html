@@ -2655,14 +2655,19 @@ async function loadMateriales(){
 }
 
 function calcularMateriales(rubrosA){
-  // Para cada ítem seleccionado, buscar rendimientos y calcular
-  const totales={}; // label → {qty, unit, precio, categoria}
+  const totales={};
+  console.log('[materiales] rubrosA:', rubrosA.map(i=>({section:i.section,id:i.id,cant:i.cant})));
+  console.log('[materiales] RENDIMIENTOS keys sample:', Object.keys(RENDIMIENTOS).slice(0,5));
 
   rubrosA.forEach(function(it){
     if(!it.cant||it.cant<=0)return;
-    // Buscar rendimientos por key: rubro_id
-    const key=it.section+'_'+it.id;
-    const rends=RENDIMIENTOS[key];
+    // Try multiple key formats
+    const key1=it.section+'_'+it.id;
+    const key2=it.section+'_'+it.section+'_'+it.id;
+    // Also try matching by section+label substring
+    const key=RENDIMIENTOS[key1]?key1:(RENDIMIENTOS[key2]?key2:null);
+    console.log('[materiales] item key:', key1, '→', key?'FOUND':'not found');
+    const rends=key?RENDIMIENTOS[key]:null;
     if(!rends)return;
 
     rends.forEach(function(r){
