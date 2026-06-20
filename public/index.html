@@ -1899,7 +1899,7 @@ Respondé SOLO JSON sin markdown:
 async function generatePIP(){ calcularPrecio(); }
 
 // ── RENDER RESULTADO ──
-function renderPIPResult(res){
+function renderPIPResult(res){_lastResultado=res;
   document.getElementById('pip-form').style.display='none';
   const rv=document.getElementById('pip-result');rv.style.display='';
   const c=res.calc;const p=res.params;
@@ -2196,7 +2196,7 @@ function renderProposal(p,i){
 
 function resTab(id,btn){
   ['precio','rubros','propuestas','oferta'].forEach(t=>document.getElementById('res-'+t).style.display=t===id?'':'none');
-  if(id==='propuestas'&&_lastResultado){renderMateriales(_lastResultado);}
+  if(id==='propuestas'){if(_lastResultado)renderMateriales(_lastResultado);else{const c=document.getElementById('res-propuestas');if(c)c.innerHTML='<div class="card"><div class="card-body"><div class="empty-state">Calculá el precio primero para ver los materiales.</div></div></div>';}}
   document.querySelectorAll('#res-tabs .tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
