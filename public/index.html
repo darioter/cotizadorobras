@@ -2705,11 +2705,19 @@ function renderMateriales(resultado){
   const cont=document.getElementById('res-propuestas');
   if(!cont)return;
   const rubrosA=resultado.rubrosA||[];
+
+  // Debug visible
+  const debug='rubrosA: '+rubrosA.length+' items — '
+    +rubrosA.map(function(i){return i.label+' ('+i.cant+') id='+i.id;}).join(' | ');
+
   const totales=calcularMateriales(rubrosA);
   const keys=Object.keys(totales);
 
   if(!keys.length){
-    cont.innerHTML='<div class="card"><div class="card-body"><div class="empty-state">Sin ítems con rendimientos definidos.<br><small>Cargá rubros en el PIP para ver el desglose de materiales.</small></div></div></div>';
+    cont.innerHTML='<div class="card"><div class="card-body">'
+      +'<div style="font-size:11px;color:#888;margin-bottom:10px;padding:8px;background:#f5f5f5;border-radius:6px;word-break:break-all">DEBUG: '+escHtml(debug)+'</div>'
+      +'<div class="empty-state">Sin ítems con rendimientos definidos.<br><small>Cargá rubros en el PIP para ver el desglose de materiales.</small></div>'
+      +'</div></div>';
     return;
   }
 
