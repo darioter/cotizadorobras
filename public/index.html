@@ -2225,7 +2225,8 @@ function resetPIP(){
 // ── PROYECTOS ──
 let _proyectosData=[];
 let _editingProyectoId=null;
-let _ofertaRender=null; // imagen del render para la oferta // ID del proyecto que se está editando
+let _ofertaRender=null;
+let _lastResultado=null; // imagen del render para la oferta // ID del proyecto que se está editando
 
 async function loadProyectos(){
   const el=document.getElementById('proyectos-list');
