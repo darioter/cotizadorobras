@@ -60,6 +60,7 @@ create table if not exists config_obra (
 );
 
 alter table config_obra enable row level security;
+drop policy if exists "config_obra_all" on config_obra;
 create policy "config_obra_all" on config_obra for all to authenticated using (true) with check (true);
 
 -- Verificar
