@@ -378,19 +378,18 @@ html,body{overflow-x:hidden;max-width:100vw}
               <div><label class="field-label">Firma contrato</label><input type="date" id="pip-fecha-montaje" /></div>
               <div><label class="field-label">Entrega final</label><input type="date" id="pip-fecha-desmontaje" /></div>
             </div>
-            <!-- Stand -->
-            <div style="font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--border)">Stand</div>
-            <div class="grid-3 mb-10">
-              <div><label class="field-label">M² totales</label><input type="number" id="pip-m2" placeholder="36" /></div>
-              <div><label class="field-label">Frente (m)</label><input type="number" id="pip-frente" placeholder="6" /></div>
-              <div><label class="field-label">Fondo (m)</label><input type="number" id="pip-fondo" placeholder="6" /></div>
-            </div>
+            <!-- Obra -->
+            <div style="font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--border)">Obra</div>
             <div class="grid-2 mb-10">
-              <div><label class="field-label">Tipología</label>
+              <div><label class="field-label">M² totales</label><input type="number" id="pip-m2" placeholder="120" /></div>
+              <div><label class="field-label">Tipo de obra</label>
                 <select id="pip-tipo"><option value="obra_nueva">Obra Nueva</option><option value="remodelacion">Remodelación</option><option value="ampliacion">Ampliación</option><option value="refaccion">Refacción</option><option value="reciclaje">Reciclaje</option><option value="reforma_bano_cocina">Reforma Baño/Cocina</option></select>
               </div>
-              <div><label class="field-label">Entrepiso (m²)</label><input type="number" id="pip-entrepiso" placeholder="0" /></div>
             </div>
+            <!-- campos ocultos para compatibilidad con oferta -->
+            <input type="hidden" id="pip-frente" value="" />
+            <input type="hidden" id="pip-fondo" value="" />
+            <input type="hidden" id="pip-entrepiso" value="0" />
             <div><label class="field-label">Brief</label><textarea id="pip-brief" rows="3" placeholder="Descripción de la obra, alcances, materiales a utilizar, requerimientos especiales..."></textarea></div>
           </div>
         </div>
