@@ -3333,31 +3333,46 @@ function drawAbertura(ctx, ab){
     ctx.beginPath();ctx.moveTo(x1+ny*off,y1+nx*off);ctx.lineTo(x2+ny*off,y2+nx*off);ctx.stroke();
     ctx.beginPath();ctx.moveTo(x1-ny*off,y1-nx*off);ctx.lineTo(x2-ny*off,y2-nx*off);ctx.stroke();
   } else {
-    // Puerta: marco + arco de apertura estándar
-    const ori=ab.orientacion||1;
-    // Marco (la abertura en la pared)
-    ctx.strokeStyle='#1A2744';ctx.lineWidth=3;
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    // Línea de hoja desde x1
-    const isH=ab.pared==='N'||ab.pared==='S';
-    // La hoja va perpendicular a la pared, hacia adentro del ambiente
+    // Puerta: símbolo arquitectónico estándar
+    // x1,y1 = punto de bisagra (inicio de la abertura)
+    // x2,y2 = fin de la abertura
     // nx,ny = normal HACIA AFUERA del ambiente
-    // interior = -nx, -ny direction
-    // ori=1: hacia adentro (default), ori=-1: hacia afuera
-    // inward direction = opposite of normal (normal points out)
-    const hojaDir=ori>0?1:-1;
-    // perpendicular INTO the room = (-nx,-ny) direction
-    const leafX2=x1+(-ny)*abPx*hojaDir;
-    const leafY2=y1+(nx)*abPx*hojaDir;
-    // Draw leaf
+    // La hoja abre HACIA ADENTRO del ambiente por defecto (ori=1)
+    // Adentro = dirección opuesta a la normal = (-nx, -ny)
+
+    const ori=ab.orientacion||1; // 1=adentro, -1=afuera
+    const sign=ori>0?1:-1;
+
+    // Dirección perpendicular a la pared hacia adentro del ambiente
+    const perpX=-nx*sign;
+    const perpY=-ny*sign;
+
+    // Extremo de la hoja (perpendicular desde x1, largo = abPx)
+    const leafX=x1+perpX*abPx;
+    const leafY=y1+perpY*abPx;
+
+    // 1. Marco: línea fina sobre la abertura
+    ctx.strokeStyle='#1A2744';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+
+    // 2. Hoja: línea desde bisagra (x1,y1) perpendicular hacia adentro
     ctx.strokeStyle='#1A2744';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(leafX2,leafY2);ctx.stroke();
-    // Arc from x1,y1 radius=abPx, from wall direction to leaf direction
-    ctx.setLineDash([3,2]);ctx.lineWidth=1;
-    const wallAngle=Math.atan2(y2-y1,x2-x1); // angle along wall
-    const leafAngle=Math.atan2(leafY2-y1,leafX2-x1);
-    const ccw=hojaDir<0;
-    ctx.beginPath();ctx.arc(x1,y1,abPx,wallAngle,leafAngle,ccw);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(leafX,leafY);ctx.stroke();
+
+    // 3. Arco: cuarto de círculo desde punta de la hoja hasta x2,y2
+    // Centro del arco = x1,y1 (la bisagra), radio = abPx
+    // Ángulo desde bisagra hasta leafX,leafY
+    const startAngle=Math.atan2(leafY-y1, leafX-x1);
+    // Ángulo desde bisagra hasta x2,y2 (a lo largo de la pared)
+    const endAngle=Math.atan2(y2-y1, x2-x1);
+    // El arco va de la hoja hasta el extremo de la abertura
+    // Dirección del arco depende de orientación
+    const anticlockwise=ori<0;
+    ctx.strokeStyle='#1A2744';ctx.lineWidth=1;
+    ctx.setLineDash([3,2]);
+    ctx.beginPath();
+    ctx.arc(x1,y1,abPx,startAngle,endAngle,anticlockwise);
+    ctx.stroke();
     ctx.setLineDash([]);
   }
 
