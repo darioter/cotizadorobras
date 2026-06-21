@@ -3238,8 +3238,8 @@ function drawAmbiente(ctx, amb){
   const walls = getAmbienteWalls(amb);
   walls.forEach(wall => {
     // S=shared(auto), ext=exterior, int=interior, med=medianera
-    const colors={S:'#7A9BC0',ext:'#1A2744',int:'#AAA',med:'#E67E22'};
-    const widths={S:2,ext:4,int:1.5,med:3};
+    const colors={S:'#7A9BC0',ext:'#1A2744',int:'#BBBBBB',med:'#E67E22'};
+    const widths={S:2,ext:5,int:1,med:2.5};
     ctx.strokeStyle=colors[wall.tipo]||'#1A2744';
     ctx.lineWidth=widths[wall.tipo]||2;
     ctx.setLineDash([]);
@@ -3938,7 +3938,16 @@ function calcPlantaComputo(){
   });
   columnas=Math.round(columnas);
 
-  const m2netas=Math.round((m2paredesExt+m2paredesInt-m2puertas-m2ventanas-m2vanos)*100)/100;
+  // Discount aberturas from wall m2 by wall type
+  const m2aberturas=m2puertas+m2ventanas+m2vanos;
+  // For now subtract total aberturas from total walls (net)
+  const m2totalBruto=m2paredesExt+m2paredesInt+m2paredesMed;
+  const m2netas=Math.round(Math.max(0,m2totalBruto-m2aberturas)*100)/100;
+  // Also net by type (approximate — subtract proportionally)
+  const ratioExt=m2totalBruto>0?m2paredesExt/m2totalBruto:1;
+  const ratioInt=m2totalBruto>0?m2paredesInt/m2totalBruto:0;
+  const m2netasExt=Math.round(Math.max(0,m2paredesExt-m2aberturas*ratioExt)*100)/100;
+  const m2netasInt=Math.round(Math.max(0,m2paredesInt-m2aberturas*ratioInt)*100)/100;
   return {
     ambientes:ambs.length,
     m2piso:Math.round(m2piso*100)/100,
@@ -3959,6 +3968,8 @@ function calcPlantaComputo(){
     m2vanos:Math.round(m2vanos*100)/100,
     mlVanos:Math.round(mlVanos*100)/100,
     m2netas,
+    m2netasExt,
+    m2netasInt,
   };
 }
 
@@ -3976,10 +3987,10 @@ function updateComputo(){
     ${row('M² de piso',c.m2piso,'m²')}
     ${row('M² techo/losa',c.m2piso,'m²')}
     ${row('Perímetro exterior',c.mlPerimExt,'ml')}
-    ${row('Paredes ext.',c.m2paredesExt,'m²')}
-    ${row('Paredes int.',c.m2paredesInt,'m²')}
+    ${row('Paredes ext. (brutas)',c.m2paredesExt,'m²')}
+    ${row('Paredes int. (brutas)',c.m2paredesInt,'m²')}
     ${row('Medianeras',c.m2paredesMed,'m²')}
-    ${row('Vanos (descuento)','-'+c.m2vanos,'m²')}
+    ${row('Aberturas (descuento)','-'+Math.round((c.m2puertas+c.m2ventanas+c.m2vanos)*100)/100,'m²')}
     ${row('Paredes netas',c.m2netas,'m²')}
     ${row('Columnas estimadas',c.columnas,'u')}
     ${row('Vigas encadenado',c.vigas,'ml')}
