@@ -3722,11 +3722,11 @@ function showPlantaProps(){
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
     <div><label class="field-label">Ancho (m)</label>
-    <input type="number" id="prop-w" value="${(amb.w*_planta.escala).toFixed(1)}" step="0.25" style="width:100%;font-size:12px"
-      oninput="updatePropM('w',this.value)"></div>
+    <input type="text" inputmode="decimal" id="prop-w" value="${(amb.w*_planta.escala).toFixed(2)}" style="width:100%;font-size:12px"
+      onblur="updatePropM('w',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
     <div><label class="field-label">Largo (m)</label>
-    <input type="number" id="prop-h" value="${(amb.h*_planta.escala).toFixed(1)}" step="0.25" style="width:100%;font-size:12px"
-      oninput="updatePropM('h',this.value)"></div>
+    <input type="text" inputmode="decimal" id="prop-h" value="${(amb.h*_planta.escala).toFixed(2)}" style="width:100%;font-size:12px"
+      onblur="updatePropM('h',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
   </div>
   <div class="mb-10">
     <label class="field-label">Altura (m)</label>
@@ -3783,14 +3783,16 @@ function updateProp(key,val){
 function updatePropM(key,val){
   const amb=_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
   if(!amb)return;
-  // Snap to nearest 0.25m increment
-  const m=parseFloat(val||0);
-  const snapped=Math.round(m/_planta.escala)*_planta.escala; // round to grid
-  const cells=Math.max(1,Math.round(snapped/_planta.escala));
+  // Accept comma as decimal separator
+  const clean=String(val).replace(',','.');
+  const m=parseFloat(clean)||0;
+  if(m<=0)return;
+  // Snap to nearest 0.25m — escala is always 0.25 regardless of zoom
+  const ESCALA=0.25;
+  const cells=Math.max(1,Math.round(m/ESCALA));
   amb[key]=cells;
-  // Update input to show snapped value
   const inp=document.getElementById('prop-'+key);
-  if(inp)inp.value=(cells*_planta.escala).toFixed(2);
+  if(inp)inp.value=(cells*ESCALA).toFixed(2);
   renderAmbientesList(); updateComputo(); drawPlanta();
 }
 
@@ -3880,7 +3882,17 @@ function calcPlantaComputo(){
   const m2piso=ambs.reduce((s,a)=>s+a.w*a.h*e*e,0);
 
   // Paredes — clasificadas por tipo
-  let mlPerimExt=0, m2paredesExt=0, m2paredesInt=0, m2paredesMed=0;
+  // Nomenclatura:
+  //   ext = cara exterior (revoque ext + cara int del mismo muro)
+  //   int = pared interior libre (revoque ambas caras)
+  //   med = medianera (solo cara propia)
+  //   S   = compartida con otro ambiente (una sola vez, cara única)
+
+  let mlPerimExt=0;
+  let m2careExt=0;   // caras exteriores (revoque/pintura exterior)
+  let m2careIntDeExt=0; // caras interiores de muros exteriores (revoque/pintura interior)
+  let m2paredesInt=0;   // paredes internas (2 caras pero 1 muro)
+  let m2paredesMed=0;
   const sharedCounted=new Set();
 
   ambs.forEach(amb=>{
@@ -3892,7 +3904,7 @@ function calcPlantaComputo(){
       const m2=ml*alt;
 
       if(wall.tipo==='S'){
-        // Compartida — contar solo una vez
+        // Compartida — contar solo una vez como pared interior
         const other=getSharedNeighbor(amb,wall.side);
         if(other){
           const key=[amb.id,other.id].sort().join('_')+wall.side;
@@ -3904,14 +3916,20 @@ function calcPlantaComputo(){
         }
       } else if(wall.tipo==='ext'){
         mlPerimExt+=ml;
-        m2paredesExt+=m2;
+        m2careExt+=m2;       // cara exterior
+        m2careIntDeExt+=m2;  // cara interior del mismo muro (también se revoca/pinta)
       } else if(wall.tipo==='int'){
-        m2paredesInt+=m2;
+        // Pared interior libre: dos caras (frente a espacio vacío/pasillo)
+        m2paredesInt+=m2*2;
       } else if(wall.tipo==='med'){
-        m2paredesMed+=m2;
+        m2paredesMed+=m2; // solo cara propia
       }
     });
   });
+
+  // Totales para cómputo
+  const m2paredesExt=m2careExt;
+  const m2totalCarasInteriores=m2careIntDeExt+m2paredesInt; // todo lo que se pinta/revoca por dentro
 
   // Altura promedio
   const altProm=ambs.length?ambs.reduce((s,a)=>s+a.altura,0)/ambs.length:2.6;
@@ -3938,22 +3956,21 @@ function calcPlantaComputo(){
   });
   columnas=Math.round(columnas);
 
-  // Discount aberturas from wall m2 by wall type
   const m2aberturas=m2puertas+m2ventanas+m2vanos;
-  // For now subtract total aberturas from total walls (net)
-  const m2totalBruto=m2paredesExt+m2paredesInt+m2paredesMed;
-  const m2netas=Math.round(Math.max(0,m2totalBruto-m2aberturas)*100)/100;
-  // Also net by type (approximate — subtract proportionally)
-  const ratioExt=m2totalBruto>0?m2paredesExt/m2totalBruto:1;
-  const ratioInt=m2totalBruto>0?m2paredesInt/m2totalBruto:0;
-  const m2netasExt=Math.round(Math.max(0,m2paredesExt-m2aberturas*ratioExt)*100)/100;
-  const m2netasInt=Math.round(Math.max(0,m2paredesInt-m2aberturas*ratioInt)*100)/100;
+  // Netas exteriores (caras ext − aberturas en ext)
+  const m2netasExt=Math.round(Math.max(0,m2careExt-m2aberturas)*100)/100;
+  // Netas interiores (caras int de muros ext + paredes int − aberturas en int)
+  const m2netasInt=Math.round(Math.max(0,m2totalCarasInteriores-m2aberturas)*100)/100;
+  const m2netas=Math.round(Math.max(0,m2careExt+m2totalCarasInteriores+m2paredesMed-m2aberturas*2)*100)/100;
   return {
     ambientes:ambs.length,
     m2piso:Math.round(m2piso*100)/100,
     mlPerimExt:Math.round(mlPerimExt*100)/100,
-    m2paredesExt:Math.round(m2paredesExt*100)/100,
+    m2careExt:Math.round(m2careExt*100)/100,
+    m2careIntDeExt:Math.round(m2careIntDeExt*100)/100,
+    m2paredesExt:Math.round(m2careExt*100)/100,
     m2paredesInt:Math.round(m2paredesInt*100)/100,
+    m2totalCarasInt:Math.round(m2totalCarasInteriores*100)/100,
     m2paredesTotal:Math.round((m2paredesExt+m2paredesInt+m2paredesMed)*100)/100,
     m2paredesMed:Math.round(m2paredesMed*100)/100,
     altProm:Math.round(altProm*100)/100,
@@ -3987,11 +4004,13 @@ function updateComputo(){
     ${row('M² de piso',c.m2piso,'m²')}
     ${row('M² techo/losa',c.m2piso,'m²')}
     ${row('Perímetro exterior',c.mlPerimExt,'ml')}
-    ${row('Paredes ext. (brutas)',c.m2paredesExt,'m²')}
-    ${row('Paredes int. (brutas)',c.m2paredesInt,'m²')}
+    ${row('Caras exteriores',c.m2careExt||c.m2paredesExt,'m²')}
+    ${row('Caras int. de muros ext.',c.m2careIntDeExt||0,'m²')}
+    ${row('Paredes interiores',c.m2paredesInt,'m²')}
     ${row('Medianeras',c.m2paredesMed,'m²')}
-    ${row('Aberturas (descuento)','-'+Math.round((c.m2puertas+c.m2ventanas+c.m2vanos)*100)/100,'m²')}
-    ${row('Paredes netas',c.m2netas,'m²')}
+    ${row('⊖ Aberturas','-'+Math.round((c.m2puertas+c.m2ventanas+c.m2vanos)*100)/100,'m²')}
+    ${row('Revoque ext. neto',c.m2netasExt,'m²')}
+    ${row('Revoque int. neto',c.m2netasInt,'m²')}
     ${row('Columnas estimadas',c.columnas,'u')}
     ${row('Vigas encadenado',c.vigas,'ml')}
     ${row('Puertas',c.puertas,'u')}
