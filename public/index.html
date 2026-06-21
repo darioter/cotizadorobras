@@ -2958,7 +2958,7 @@ function renderMateriales(resultado){
 let _planta = {
   ambientes: [],      // [{id, nombre, x, y, w, h, altura, color}]
   aberturas: [],      // [{id, ambienteId, pared, posCell, tipo, ancho, alto, label, orientacion}]
-  gridSize: 16,       // px por celda = 0.25m → 1 celda = 0.25m
+  gridSize: 20,       // px por celda = 0.25m → 1 celda = 0.25m
   escala: 0.25,       // metros por celda
   nextId: 1,
 };
@@ -3257,18 +3257,23 @@ function drawAmbiente(ctx, amb){
     });
   }
 
-  // Label
-  const wm = (amb.w * _planta.escala).toFixed(1);
-  const hm = (amb.h * _planta.escala).toFixed(1);
-  const area = (amb.w * amb.h * _planta.escala * _planta.escala).toFixed(1);
-  ctx.fillStyle = '#1A2744';
-  ctx.font = `bold ${Math.min(13, Math.max(9, W/amb.nombre.length*1.2))}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.fillText(amb.nombre, s.sx+W/2, s.sy+H/2-6);
-  ctx.font = `10px Arial`;
-  ctx.fillStyle = '#666';
-  ctx.fillText(`${wm}×${hm}m = ${area}m²`, s.sx+W/2, s.sy+H/2+10);
-  ctx.textAlign = 'left';
+  // Label — only if room is big enough to show text
+  if(W>40&&H>30){
+    const wm = (amb.w * _planta.escala).toFixed(2);
+    const hm = (amb.h * _planta.escala).toFixed(2);
+    const area = (amb.w * amb.h * _planta.escala * _planta.escala).toFixed(2);
+    ctx.fillStyle = '#1A2744';
+    const fontSize=Math.min(12,Math.max(8,Math.min(W/10,H/4)));
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText(amb.nombre, s.sx+W/2, s.sy+H/2-(H>50?8:0));
+    if(H>50){
+      ctx.font = `${Math.max(8,fontSize-2)}px Arial`;
+      ctx.fillStyle = '#666';
+      ctx.fillText(`${wm}×${hm}m = ${area}m²`, s.sx+W/2, s.sy+H/2+10);
+    }
+    ctx.textAlign = 'left';
+  }
 }
 
 function getAberturaCoords(ab){
@@ -3338,11 +3343,12 @@ function drawAbertura(ctx, ab){
     // La hoja va perpendicular a la pared, hacia adentro del ambiente
     // nx,ny = normal HACIA AFUERA del ambiente
     // interior = -nx, -ny direction
-    const inx=-nx, iny=-ny; // hacia adentro
+    // ori=1: hacia adentro (default), ori=-1: hacia afuera
+    // inward direction = opposite of normal (normal points out)
     const hojaDir=ori>0?1:-1;
-    // End point of door leaf
-    const leafX2=x1+iny*abPx*hojaDir; // perpendicular to wall
-    const leafY2=y1-inx*abPx*hojaDir;
+    // perpendicular INTO the room = (-nx,-ny) direction
+    const leafX2=x1+(-ny)*abPx*hojaDir;
+    const leafY2=y1+(nx)*abPx*hojaDir;
     // Draw leaf
     ctx.strokeStyle='#1A2744';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(leafX2,leafY2);ctx.stroke();
@@ -3560,7 +3566,7 @@ function plantaMouseUp(e){
       const nombre=AMBIENTE_NAMES[_planta.ambientes.length%AMBIENTE_NAMES.length]||('Amb. '+(_planta.ambientes.length+1));
       const color=AMBIENTE_COLORS[_planta.ambientes.length%AMBIENTE_COLORS.length];
       const id='amb_'+(_planta.nextId++);
-      _planta.ambientes.push({id,nombre:nombre+' ('+wm+'×'+hm+'m)',x,y,w,h,altura:2.6,color});
+      _planta.ambientes.push({id,nombre,x,y,w,h,altura:2.6,color});
       _plantaState.selectedId=id;
       showPlantaProps();
       renderAmbientesList();
@@ -3696,10 +3702,10 @@ function showPlantaProps(){
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
     <div><label class="field-label">Ancho (m)</label>
-    <input type="number" id="prop-w" value="${(amb.w*_planta.escala).toFixed(1)}" step="0.5" style="width:100%;font-size:12px"
+    <input type="number" id="prop-w" value="${(amb.w*_planta.escala).toFixed(1)}" step="0.25" style="width:100%;font-size:12px"
       oninput="updatePropM('w',this.value)"></div>
     <div><label class="field-label">Largo (m)</label>
-    <input type="number" id="prop-h" value="${(amb.h*_planta.escala).toFixed(1)}" step="0.5" style="width:100%;font-size:12px"
+    <input type="number" id="prop-h" value="${(amb.h*_planta.escala).toFixed(1)}" step="0.25" style="width:100%;font-size:12px"
       oninput="updatePropM('h',this.value)"></div>
   </div>
   <div class="mb-10">
