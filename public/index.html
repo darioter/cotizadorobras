@@ -175,7 +175,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 @media print{
   header,#bottom-nav,.summary-bar,.tabs,.no-print,
   #step-calcular,#step-resultado,.card-header small,
-  #res-precio,#res-rubros,#res-planta,#res-propuestas,#res-oferta{display:none!important}
+  #res-precio,#res-rubros,#res-propuestas,#res-oferta{display:none!important}
   .print-target{display:block!important}
   body,main{padding:0!important;margin:0!important;background:#fff!important;max-width:100%!important}
   .oferta-doc{box-shadow:none!important;border:none!important;border-radius:0!important;padding:16px 20px!important;max-width:100%!important;margin:0!important}
@@ -471,6 +471,26 @@ html,body{overflow-x:hidden;max-width:100vw}
                 <div style="font-weight:600;color:var(--navy);font-size:11px" id="dz-render-label">Render ref.</div>
                 <div style="font-size:9px;color:#999" id="dz-render-sub">Imagen</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PLANTA -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header" style="cursor:pointer" onclick="togglePlantaSection()">
+            <div>
+              <div class="card-title">📐 Planta del proyecto</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">Dibujá los ambientes para calcular cantidades automáticamente</div>
+            </div>
+            <span id="planta-toggle-icon" style="font-size:18px;color:#888">▶</span>
+          </div>
+          <div id="planta-section" style="display:none">
+            <div style="padding:10px 12px;border-top:1px solid var(--border)">
+              <div id="planta-editor-pip"></div>
+              <div id="planta-computo-pip" style="display:none;margin-top:10px;padding:10px 12px;background:#F7F3EE;border-radius:8px"></div>
+              <button onclick="aplicarPlantaAlPIP()" class="btn btn-primary" style="margin-top:10px;width:100%">
+                📋 Aplicar cantidades al presupuesto
+              </button>
             </div>
           </div>
         </div>
@@ -2089,7 +2109,6 @@ function renderPIPResult(res){_lastResultado=res;
     <div class="tabs" id="res-tabs">
       <button class="tab active" onclick="resTab('precio',this)">💰 Precio</button>
       <button class="tab" onclick="resTab('rubros',this)">📋 Rubros</button>
-      <button class="tab" onclick="resTab('planta',this)">📐 Planta</button>
       <button class="tab" onclick="resTab('propuestas',this)">🧱 Materiales</button>
       <button class="tab" onclick="resTab('oferta',this)">📄 Oferta</button>
     </div>
@@ -2147,8 +2166,6 @@ function renderPIPResult(res){_lastResultado=res;
     </div>
 
     <!-- PROPUESTAS -->
-    <div id="res-planta" style="display:none"></div>
-
     <div id="res-propuestas" style="display:none">
       <div style="margin-bottom:10px"><button class="btn btn-gold btn-sm" onclick="printContent(document.getElementById('res-propuestas'))">🖨 Imprimir Propuestas</button></div>
       ${(res.propuestas||[]).length===0?'<div class="empty-state">Sin propuestas generadas</div>':(res.propuestas||[]).map((p,i)=>renderProposal(p,i)).join('')}
@@ -2347,8 +2364,7 @@ function renderProposal(p,i){
 }
 
 function resTab(id,btn){
-  ['precio','rubros','planta','propuestas','oferta'].forEach(t=>document.getElementById('res-'+t).style.display=t===id?'':'none');
-  if(id==='planta'){renderPlantaEditor();}
+  ['precio','rubros','propuestas','oferta'].forEach(t=>document.getElementById('res-'+t).style.display=t===id?'':'none');
   if(id==='propuestas'){if(_lastResultado)renderMateriales(_lastResultado);else{const c=document.getElementById('res-propuestas');if(c)c.innerHTML='<div class="card"><div class="card-body"><div class="empty-state">Calculá el precio primero para ver los materiales.</div></div></div>';}}
   document.querySelectorAll('#res-tabs .tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -2974,9 +2990,23 @@ let _plantaState = {
   panX: 0, panY: 0,
 };
 
+function togglePlantaSection(){
+  const sec=document.getElementById('planta-section');
+  const icon=document.getElementById('planta-toggle-icon');
+  if(!sec)return;
+  const open=sec.style.display==='none';
+  sec.style.display=open?'':'none';
+  if(icon)icon.textContent=open?'▼':'▶';
+  if(open){
+    const cont=document.getElementById('planta-editor-pip');
+    if(cont&&!cont.querySelector('canvas'))renderPlantaEditor();
+  }
+}
+
 function renderPlantaEditor(){
-  const cont = document.getElementById('res-planta');
+  const cont = document.getElementById('planta-editor-pip')||document.getElementById('res-planta');
   if(!cont) return;
+  const computo=document.getElementById('planta-computo-pip');
 
   cont.innerHTML = `
   <div style="font-family:Arial,sans-serif">
@@ -3662,7 +3692,8 @@ function calcPlantaComputo(){
 }
 
 function updateComputo(){
-  const cont=document.getElementById('planta-computo');
+  const cont=document.getElementById('planta-computo')||document.getElementById('planta-computo-pip');
+  if(cont&&document.getElementById('planta-computo-pip'))document.getElementById('planta-computo-pip').style.display=_planta.ambientes.length?'':'none';
   if(!cont||!_planta.ambientes.length){
     if(cont)cont.innerHTML='<div style="color:#aaa;text-align:center;padding:10px">Sin ambientes</div>';
     return;
@@ -3691,6 +3722,50 @@ function updateComputo(){
 }
 
 // ── APLICAR AL PIP ──
+function aplicarPlantaAlPIP(){
+  if(!_planta.ambientes.length)return toast('Sin ambientes en la planta','error');
+  const c=calcPlantaComputo();
+
+  // Precargar m2 total
+  const m2inp=document.getElementById('pip-m2');
+  if(m2inp)m2inp.value=c.m2piso.toFixed(1);
+
+  // Buscar ítems en pipRubrosA y actualizar cantidades automáticamente
+  const mappings=[
+    // [keywords en el label, cantidad, sección]
+    {keys:['platea','fundación','base céntr'],cant:c.m2piso,section:'estructura'},
+    {keys:['losa','entrepiso'],cant:c.m2piso,section:'estructura'},
+    {keys:['mampostería','ladrillo','bloque'],cant:c.m2paredesTotal,section:'mamposteria'},
+    {keys:['piso','cerámica','porcellanato','parquet','mosaico','alisado'],cant:c.m2piso,section:'pisos'},
+    {keys:['cielo raso','cielorraso'],cant:c.m2piso,section:'cielorrasos'},
+    {keys:['revoque','grueso','fino'],cant:c.m2netas,section:'revoques'},
+    {keys:['revestimiento','cerámico'],cant:c.m2netas,section:'revestimientos'},
+    {keys:['pintura','látex interior'],cant:c.m2paredesInt,section:'pintura'},
+    {keys:['látex exterior','exterior'],cant:c.m2paredesExt,section:'pintura'},
+    {keys:['contrapiso','carpeta'],cant:c.m2piso,section:'contrapisos'},
+    {keys:['impermeabilizante'],cant:c.m2piso,section:'pintura'},
+    {keys:['columna'],cant:c.columnas,section:'estructura'},
+    {keys:['viga','encadenado'],cant:c.vigas,section:'estructura'},
+    {keys:['puerta'],cant:c.puertas,section:'carpinteria_madera'},
+    {keys:['ventana','abertura'],cant:c.ventanas,section:'carpinteria_madera'},
+  ];
+
+  let applied=0;
+  pipRubrosA.forEach(function(it){
+    const labelLow=(it.label||'').toLowerCase();
+    for(const m of mappings){
+      if(m.keys.some(function(k){return labelLow.indexOf(k)>=0;})){
+        it.cant=parseFloat(m.cant.toFixed(2));
+        applied++;
+        break;
+      }
+    }
+  });
+
+  renderPIPRubrosA();
+  toast('✓ Planta aplicada — '+c.m2piso+'m² piso, '+c.columnas+' columnas, '+c.vigas+'ml vigas'+(applied?' ('+applied+' ítems actualizados)':''),'success');
+}
+
 function aplicarCometutoAlPIP(){
   if(!_planta.ambientes.length)return toast('Sin ambientes en la planta','error');
   const c=calcPlantaComputo();
