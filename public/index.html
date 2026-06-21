@@ -175,7 +175,7 @@ hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 @media print{
   header,#bottom-nav,.summary-bar,.tabs,.no-print,
   #step-calcular,#step-resultado,.card-header small,
-  #res-precio,#res-rubros,#res-propuestas,#res-oferta{display:none!important}
+  #res-precio,#res-rubros,#res-planta,#res-propuestas,#res-oferta{display:none!important}
   .print-target{display:block!important}
   body,main{padding:0!important;margin:0!important;background:#fff!important;max-width:100%!important}
   .oferta-doc{box-shadow:none!important;border:none!important;border-radius:0!important;padding:16px 20px!important;max-width:100%!important;margin:0!important}
@@ -2089,6 +2089,7 @@ function renderPIPResult(res){_lastResultado=res;
     <div class="tabs" id="res-tabs">
       <button class="tab active" onclick="resTab('precio',this)">💰 Precio</button>
       <button class="tab" onclick="resTab('rubros',this)">📋 Rubros</button>
+      <button class="tab" onclick="resTab('planta',this)">📐 Planta</button>
       <button class="tab" onclick="resTab('propuestas',this)">🧱 Materiales</button>
       <button class="tab" onclick="resTab('oferta',this)">📄 Oferta</button>
     </div>
@@ -2146,6 +2147,8 @@ function renderPIPResult(res){_lastResultado=res;
     </div>
 
     <!-- PROPUESTAS -->
+    <div id="res-planta" style="display:none"></div>
+
     <div id="res-propuestas" style="display:none">
       <div style="margin-bottom:10px"><button class="btn btn-gold btn-sm" onclick="printContent(document.getElementById('res-propuestas'))">🖨 Imprimir Propuestas</button></div>
       ${(res.propuestas||[]).length===0?'<div class="empty-state">Sin propuestas generadas</div>':(res.propuestas||[]).map((p,i)=>renderProposal(p,i)).join('')}
@@ -2344,7 +2347,8 @@ function renderProposal(p,i){
 }
 
 function resTab(id,btn){
-  ['precio','rubros','propuestas','oferta'].forEach(t=>document.getElementById('res-'+t).style.display=t===id?'':'none');
+  ['precio','rubros','planta','propuestas','oferta'].forEach(t=>document.getElementById('res-'+t).style.display=t===id?'':'none');
+  if(id==='planta'){renderPlantaEditor();}
   if(id==='propuestas'){if(_lastResultado)renderMateriales(_lastResultado);else{const c=document.getElementById('res-propuestas');if(c)c.innerHTML='<div class="card"><div class="card-body"><div class="empty-state">Calculá el precio primero para ver los materiales.</div></div></div>';}}
   document.querySelectorAll('#res-tabs .tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -2929,6 +2933,777 @@ function renderMateriales(resultado){
   cont.innerHTML=html;
 }
 
+
+
+// ═══════════════════════════════════════════════════════════
+// EDITOR DE PLANTA — Obra Estimator DALI
+// ═══════════════════════════════════════════════════════════
+
+let _planta = {
+  ambientes: [],      // [{id, nombre, x, y, w, h, altura, color}]
+  aberturas: [],      // [{id, ambienteId, pared, pos, tipo, ancho, alto, label}]
+  gridSize: 20,       // px por celda = 0.5m → 1 celda = 0.5m
+  escala: 0.5,        // metros por celda
+  nextId: 1,
+};
+
+// Colores por ambiente
+const AMBIENTE_COLORS = [
+  '#E8F4F8','#FFF3E0','#F3E5F5','#E8F5E9','#FBE9E7',
+  '#E0F2F1','#F9FBE7','#FCE4EC','#E8EAF6','#FFF8E1'
+];
+
+const AMBIENTE_NAMES = [
+  'Living','Comedor','Cocina','Baño','Dormitorio 1',
+  'Dormitorio 2','Dormitorio 3','Estudio','Lavadero','Garaje',
+  'Hall','Pasillo','Terraza','Jardín','Depósito'
+];
+
+// Estado del editor
+let _plantaState = {
+  tool: 'select',     // select | ambiente | abertura
+  drawing: false,
+  startX: 0, startY: 0,
+  dragAmb: null,
+  dragOffX: 0, dragOffY: 0,
+  resizing: null,
+  selectedId: null,
+  hoveredWall: null,
+  canvas: null,
+  ctx: null,
+  panX: 0, panY: 0,
+};
+
+function renderPlantaEditor(){
+  const cont = document.getElementById('res-planta');
+  if(!cont) return;
+
+  cont.innerHTML = `
+  <div style="font-family:Arial,sans-serif">
+    <!-- Toolbar -->
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:#F7F3EE;border-radius:10px;border:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-right:4px">Herramientas:</div>
+      <button id="planta-tool-select" onclick="setPlantaTool('select')" class="btn btn-sm" style="background:var(--navy);color:#fff">↖ Seleccionar</button>
+      <button id="planta-tool-ambiente" onclick="setPlantaTool('ambiente')" class="btn btn-sm" style="background:#F0EAE2;color:#666">⬛ Ambiente</button>
+      <button id="planta-tool-abertura" onclick="setPlantaTool('abertura')" class="btn btn-sm" style="background:#F0EAE2;color:#666">🚪 Abertura</button>
+      <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
+      <button onclick="plantaZoom(1.2)" class="btn btn-sm" style="background:#F0EAE2;color:#666">＋</button>
+      <button onclick="plantaZoom(0.8)" class="btn btn-sm" style="background:#F0EAE2;color:#666">－</button>
+      <button onclick="plantaFit()" class="btn btn-sm" style="background:#F0EAE2;color:#666">⊡ Ajustar</button>
+      <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
+      <span style="font-size:10px;color:#888">Escala: 1 celda = 0.5m</span>
+      <button onclick="printContent(document.getElementById('res-planta'))" class="btn btn-sm no-print" style="margin-left:auto;background:#F0EAE2;color:#666">🖨 Imprimir</button>
+    </div>
+
+    <!-- Canvas + Panel -->
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <!-- Canvas -->
+      <div style="flex:1;min-width:0;border:2px solid var(--border);border-radius:10px;overflow:hidden;position:relative;background:#fff">
+        <canvas id="planta-canvas" style="display:block;cursor:crosshair;touch-action:none"></canvas>
+        <div id="planta-tooltip" style="display:none;position:absolute;background:#1B2A3B;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;pointer-events:none;z-index:10"></div>
+      </div>
+
+      <!-- Panel lateral -->
+      <div style="width:220px;flex-shrink:0">
+        <!-- Ambientes list -->
+        <div class="card" style="margin-bottom:8px">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">Ambientes</div>
+            <button onclick="addAmbienteManual()" class="btn btn-sm" style="font-size:10px;padding:3px 8px">+ Agregar</button>
+          </div>
+          <div id="planta-amb-list" style="max-height:200px;overflow-y:auto"></div>
+        </div>
+
+        <!-- Propiedades del seleccionado -->
+        <div id="planta-props" class="card" style="margin-bottom:8px;display:none">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">Propiedades</div>
+            <button onclick="deletePlantaSelected()" style="background:none;border:none;color:#C0392B;cursor:pointer;font-size:14px">🗑</button>
+          </div>
+          <div id="planta-props-content" style="padding:8px 12px"></div>
+        </div>
+
+        <!-- Cómputo -->
+        <div class="card">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">📊 Cómputo</div>
+            <button onclick="aplicarCometutoAlPIP()" class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--navy);color:#fff">→ Al PIP</button>
+          </div>
+          <div id="planta-computo" style="padding:8px 12px;font-size:11px"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  initPlantaCanvas();
+  renderAmbientesList();
+  updateComputo();
+}
+
+function initPlantaCanvas(){
+  const canvas = document.getElementById('planta-canvas');
+  if(!canvas) return;
+  _plantaState.canvas = canvas;
+  _plantaState.ctx = canvas.getContext('2d');
+
+  // Size canvas to container
+  const cont = canvas.parentElement;
+  const W = cont.clientWidth || 600;
+  const H = Math.max(400, window.innerHeight * 0.55);
+  canvas.width = W;
+  canvas.height = H;
+
+  // Center grid
+  _plantaState.panX = W/2 - 10 * _planta.gridSize;
+  _plantaState.panY = H/2 - 8 * _planta.gridSize;
+
+  // Events
+  canvas.addEventListener('mousedown', plantaMouseDown);
+  canvas.addEventListener('mousemove', plantaMouseMove);
+  canvas.addEventListener('mouseup', plantaMouseUp);
+  canvas.addEventListener('mouseleave', ()=>{ _plantaState.drawing=false; _plantaState.dragAmb=null; drawPlanta(); });
+  canvas.addEventListener('wheel', plantaWheel, {passive:false});
+
+  // Touch
+  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); plantaMouseDown(touchToMouse(e)); }, {passive:false});
+  canvas.addEventListener('touchmove', e=>{ e.preventDefault(); plantaMouseMove(touchToMouse(e)); }, {passive:false});
+  canvas.addEventListener('touchend', e=>{ e.preventDefault(); plantaMouseUp(touchToMouse(e)); }, {passive:false});
+
+  drawPlanta();
+}
+
+function touchToMouse(e){
+  const t = e.touches[0] || e.changedTouches[0];
+  const rect = _plantaState.canvas.getBoundingClientRect();
+  return { clientX: t.clientX, offsetX: t.clientX-rect.left, offsetY: t.clientY-rect.top, preventDefault:()=>e.preventDefault() };
+}
+
+// ── COORDENADAS ──
+function screenToGrid(sx, sy){
+  const g = _planta.gridSize;
+  const gx = Math.round((sx - _plantaState.panX) / g);
+  const gy = Math.round((sy - _plantaState.panY) / g);
+  return {gx, gy};
+}
+function gridToScreen(gx, gy){
+  return {
+    sx: gx * _planta.gridSize + _plantaState.panX,
+    sy: gy * _planta.gridSize + _plantaState.panY
+  };
+}
+function snapToGrid(px){
+  return Math.round(px / _planta.gridSize) * _planta.gridSize;
+}
+
+// ── DIBUJO ──
+function drawPlanta(){
+  const {canvas, ctx, panX, panY, drawing, startX, startY} = _plantaState;
+  if(!ctx) return;
+  const W = canvas.width, H = canvas.height;
+  const g = _planta.gridSize;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  ctx.fillStyle = '#FAFAFA';
+  ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle = '#E8E8E8';
+  ctx.lineWidth = 0.5;
+  const startGX = Math.floor(-panX/g);
+  const endGX = Math.ceil((W-panX)/g);
+  const startGY = Math.floor(-panY/g);
+  const endGY = Math.ceil((H-panY)/g);
+
+  for(let x=startGX; x<=endGX; x++){
+    ctx.beginPath();
+    ctx.moveTo(x*g+panX, 0);
+    ctx.lineTo(x*g+panX, H);
+    ctx.stroke();
+  }
+  for(let y=startGY; y<=endGY; y++){
+    ctx.beginPath();
+    ctx.moveTo(0, y*g+panY);
+    ctx.lineTo(W, y*g+panY);
+    ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#CCC';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(panX,0); ctx.lineTo(panX,H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,panY); ctx.lineTo(W,panY); ctx.stroke();
+
+  // Scale label
+  ctx.fillStyle = '#AAA';
+  ctx.font = '10px Arial';
+  ctx.fillText(`0.5m`, panX+g+2, panY-4);
+  ctx.beginPath(); ctx.moveTo(panX,panY-3); ctx.lineTo(panX+g,panY-3); ctx.stroke();
+
+  // Ambientes
+  _planta.ambientes.forEach(amb => drawAmbiente(ctx, amb));
+
+  // Aberturas
+  _planta.aberturas.forEach(ab => drawAbertura(ctx, ab));
+
+  // Preview while drawing
+  if(drawing && _plantaState.tool==='ambiente'){
+    const {gx:ex, gy:ey} = screenToGrid(_plantaState.curX||startX, _plantaState.curY||startY);
+    const {gx:sx2, gy:sy2} = screenToGrid(startX, startY);
+    const s1 = gridToScreen(sx2,sy2);
+    const s2 = gridToScreen(ex,ey);
+    ctx.fillStyle = 'rgba(26,39,68,0.08)';
+    ctx.fillRect(Math.min(s1.sx,s2.sx), Math.min(s1.sy,s2.sy),
+      Math.abs(s2.sx-s1.sx), Math.abs(s2.sy-s1.sy));
+    ctx.strokeStyle = 'var(--navy)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5,3]);
+    ctx.strokeRect(Math.min(s1.sx,s2.sx), Math.min(s1.sy,s2.sy),
+      Math.abs(s2.sx-s1.sx), Math.abs(s2.sy-s1.sy));
+    ctx.setLineDash([]);
+    // dimensions
+    const wm = Math.abs(ex-sx2)*_planta.escala;
+    const hm = Math.abs(ey-sy2)*_planta.escala;
+    ctx.fillStyle = '#1A2744';
+    ctx.font = 'bold 11px Arial';
+    ctx.fillText(`${wm.toFixed(1)}m × ${hm.toFixed(1)}m`,
+      Math.min(s1.sx,s2.sx)+4, Math.min(s1.sy,s2.sy)-4);
+  }
+}
+
+function drawAmbiente(ctx, amb){
+  const g = _planta.gridSize;
+  const s = gridToScreen(amb.x, amb.y);
+  const W = amb.w * g;
+  const H = amb.h * g;
+  const selected = _plantaState.selectedId === amb.id;
+
+  // Fill
+  ctx.fillStyle = amb.color || '#E8F4F8';
+  ctx.fillRect(s.sx, s.sy, W, H);
+
+  // Walls — detect exterior vs shared
+  const walls = getAmbienteWalls(amb);
+  walls.forEach(wall => {
+    const isExt = wall.tipo === 'E';
+    const isShared = wall.tipo === 'S';
+    ctx.strokeStyle = isExt ? '#1A2744' : (isShared ? '#7A9BC0' : '#AAA');
+    ctx.lineWidth = isExt ? 4 : (isShared ? 2 : 1.5);
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(wall.x1, wall.y1);
+    ctx.lineTo(wall.x2, wall.y2);
+    ctx.stroke();
+  });
+
+  // Selection
+  if(selected){
+    ctx.strokeStyle = '#E67E22';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4,3]);
+    ctx.strokeRect(s.sx-2, s.sy-2, W+4, H+4);
+    ctx.setLineDash([]);
+    // Resize handles
+    [[0,0],[1,0],[0,1],[1,1]].forEach(([hx,hy])=>{
+      ctx.fillStyle = '#E67E22';
+      ctx.fillRect(s.sx+hx*W-5, s.sy+hy*H-5, 10, 10);
+    });
+  }
+
+  // Label
+  const wm = (amb.w * _planta.escala).toFixed(1);
+  const hm = (amb.h * _planta.escala).toFixed(1);
+  const area = (amb.w * amb.h * _planta.escala * _planta.escala).toFixed(1);
+  ctx.fillStyle = '#1A2744';
+  ctx.font = `bold ${Math.min(13, Math.max(9, W/amb.nombre.length*1.2))}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.fillText(amb.nombre, s.sx+W/2, s.sy+H/2-6);
+  ctx.font = `10px Arial`;
+  ctx.fillStyle = '#666';
+  ctx.fillText(`${wm}×${hm}m = ${area}m²`, s.sx+W/2, s.sy+H/2+10);
+  ctx.textAlign = 'left';
+}
+
+function drawAbertura(ctx, ab){
+  const amb = _planta.ambientes.find(a=>a.id===ab.ambienteId);
+  if(!amb) return;
+  const g = _planta.gridSize;
+  const s = gridToScreen(amb.x, amb.y);
+  const W = amb.w*g, H = amb.h*g;
+  const abW = ab.ancho / _planta.escala * g; // px
+  const pos = ab.pos; // 0..1
+
+  let x1,y1,x2,y2;
+  if(ab.pared==='N'){ x1=s.sx+W*pos; y1=s.sy; x2=x1+abW; y2=s.sy; }
+  else if(ab.pared==='S'){ x1=s.sx+W*pos; y1=s.sy+H; x2=x1+abW; y2=s.sy+H; }
+  else if(ab.pared==='O'){ x1=s.sx; y1=s.sy+H*pos; x2=s.sx; y2=y1+abW; }
+  else { x1=s.sx+W; y1=s.sy+H*pos; x2=s.sx+W; y2=y1+abW; }
+
+  // Draw opening
+  ctx.strokeStyle = ab.tipo==='ventana' ? '#3498DB' : '#E67E22';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+
+  // Door arc
+  if(ab.tipo==='puerta'){
+    ctx.strokeStyle = '#E67E22';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2,2]);
+    ctx.beginPath();
+    if(ab.pared==='N'||ab.pared==='S'){
+      ctx.arc(x1, y1, abW, ab.pared==='N'?0:Math.PI, ab.pared==='N'?Math.PI/2:Math.PI/2*3);
+    } else {
+      ctx.arc(x1, y1, abW, 0, Math.PI/2);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Label
+  ctx.fillStyle = ab.tipo==='ventana'?'#3498DB':'#E67E22';
+  ctx.font = '9px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(ab.label||ab.tipo[0].toUpperCase(), (x1+x2)/2, (y1+y2)/2-3);
+  ctx.textAlign='left';
+}
+
+// ── PAREDES ──
+function getAmbienteWalls(amb){
+  const g = _planta.gridSize;
+  const s = gridToScreen(amb.x, amb.y);
+  const W = amb.w*g, H = amb.h*g;
+  const walls = [
+    {side:'N', x1:s.sx, y1:s.sy, x2:s.sx+W, y2:s.sy},
+    {side:'S', x1:s.sx, y1:s.sy+H, x2:s.sx+W, y2:s.sy+H},
+    {side:'O', x1:s.sx, y1:s.sy, x2:s.sx, y2:s.sy+H},
+    {side:'E', x1:s.sx+W, y1:s.sy, x2:s.sx+W, y2:s.sy+H},
+  ];
+  // Check if shared with another ambiente
+  walls.forEach(wall => {
+    const shared = isWallShared(amb, wall.side);
+    wall.tipo = shared ? 'S' : 'E';
+  });
+  return walls;
+}
+
+function isWallShared(amb, side){
+  return _planta.ambientes.some(other => {
+    if(other.id===amb.id) return false;
+    if(side==='E' && other.x===amb.x+amb.w &&
+       !(other.y>=amb.y+amb.h || other.y+other.h<=amb.y)) return true;
+    if(side==='O' && other.x+other.w===amb.x &&
+       !(other.y>=amb.y+amb.h || other.y+other.h<=amb.y)) return true;
+    if(side==='S' && other.y===amb.y+amb.h &&
+       !(other.x>=amb.x+amb.w || other.x+other.w<=amb.x)) return true;
+    if(side==='N' && other.y+other.h===amb.y &&
+       !(other.x>=amb.x+amb.w || other.x+other.w<=amb.x)) return true;
+    return false;
+  });
+}
+
+// ── EVENTOS ──
+function plantaMouseDown(e){
+  const ox = e.offsetX, oy = e.offsetY;
+  const {tool} = _plantaState;
+
+  if(tool==='select'){
+    // Check resize handle first
+    const amb = _planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+    if(amb){
+      const g=_planta.gridSize, s=gridToScreen(amb.x,amb.y);
+      const corners=[{hx:0,hy:0},{hx:1,hy:0},{hx:0,hy:1},{hx:1,hy:1}];
+      for(let c of corners){
+        const cx=s.sx+c.hx*amb.w*g, cy=s.sy+c.hy*amb.h*g;
+        if(Math.abs(ox-cx)<8&&Math.abs(oy-cy)<8){
+          _plantaState.resizing={id:amb.id,corner:c,startX:ox,startY:oy,
+            origX:amb.x,origY:amb.y,origW:amb.w,origH:amb.h};
+          return;
+        }
+      }
+    }
+    // Check click on ambiente
+    const clicked = getAmbienteAt(ox,oy);
+    if(clicked){
+      _plantaState.selectedId = clicked.id;
+      const s=gridToScreen(clicked.x,clicked.y);
+      _plantaState.dragAmb = clicked.id;
+      _plantaState.dragOffX = ox-s.sx;
+      _plantaState.dragOffY = oy-s.sy;
+    } else {
+      _plantaState.selectedId = null;
+    }
+    showPlantaProps();
+    renderAmbientesList();
+    drawPlanta();
+  }
+
+  if(tool==='ambiente'){
+    _plantaState.drawing = true;
+    _plantaState.startX = ox;
+    _plantaState.startY = oy;
+    _plantaState.curX = ox;
+    _plantaState.curY = oy;
+  }
+
+  if(tool==='abertura'){
+    const amb = getAmbienteAt(ox,oy);
+    if(amb){
+      const wall = getNearestWall(amb,ox,oy);
+      addAbertura(amb,wall);
+    }
+  }
+}
+
+function plantaMouseMove(e){
+  const ox=e.offsetX, oy=e.offsetY;
+  _plantaState.curX=ox; _plantaState.curY=oy;
+
+  // Resize
+  if(_plantaState.resizing){
+    const r=_plantaState.resizing;
+    const g=_planta.gridSize;
+    const dGx=Math.round((ox-r.startX)/g);
+    const dGy=Math.round((oy-r.startY)/g);
+    const amb=_planta.ambientes.find(a=>a.id===r.id);
+    if(!amb)return;
+    if(r.corner.hx===0){ amb.x=r.origX+dGx; amb.w=Math.max(1,r.origW-dGx); }
+    else { amb.w=Math.max(1,r.origW+dGx); }
+    if(r.corner.hy===0){ amb.y=r.origY+dGy; amb.h=Math.max(1,r.origH-dGy); }
+    else { amb.h=Math.max(1,r.origH+dGy); }
+    updateComputo(); drawPlanta(); showPlantaProps(); return;
+  }
+
+  // Drag
+  if(_plantaState.dragAmb){
+    const amb=_planta.ambientes.find(a=>a.id===_plantaState.dragAmb);
+    if(!amb)return;
+    const g=_planta.gridSize;
+    const newX=snapToGrid(ox-_plantaState.dragOffX);
+    const newY=snapToGrid(oy-_plantaState.dragOffY);
+    amb.x=Math.round(newX/g);
+    amb.y=Math.round(newY/g);
+    updateComputo(); drawPlanta(); return;
+  }
+
+  if(_plantaState.drawing) drawPlanta();
+}
+
+function plantaMouseUp(e){
+  const ox=e.offsetX||_plantaState.curX, oy=e.offsetY||_plantaState.curY;
+
+  if(_plantaState.resizing){ _plantaState.resizing=null; updateComputo(); renderAmbientesList(); return; }
+  if(_plantaState.dragAmb){ _plantaState.dragAmb=null; return; }
+
+  if(_plantaState.drawing && _plantaState.tool==='ambiente'){
+    _plantaState.drawing=false;
+    const g=_planta.gridSize;
+    const {gx:sx,gy:sy}=screenToGrid(_plantaState.startX,_plantaState.startY);
+    const {gx:ex,gy:ey}=screenToGrid(ox,oy);
+    const x=Math.min(sx,ex), y=Math.min(sy,ey);
+    const w=Math.abs(ex-sx), h=Math.abs(ey-sy);
+    if(w>0&&h>0){
+      const nombre=AMBIENTE_NAMES[_planta.ambientes.length%AMBIENTE_NAMES.length]||('Amb. '+(_planta.ambientes.length+1));
+      const color=AMBIENTE_COLORS[_planta.ambientes.length%AMBIENTE_COLORS.length];
+      const id='amb_'+(_planta.nextId++);
+      _planta.ambientes.push({id,nombre,x,y,w,h,altura:2.6,color});
+      _plantaState.selectedId=id;
+      showPlantaProps();
+      renderAmbientesList();
+      updateComputo();
+    }
+    drawPlanta();
+  }
+}
+
+function plantaWheel(e){
+  e.preventDefault();
+  const factor=e.deltaY<0?1.1:0.9;
+  plantaZoom(factor, e.offsetX, e.offsetY);
+}
+
+function plantaZoom(factor, cx, cy){
+  const canvas=_plantaState.canvas;
+  cx=cx||canvas.width/2; cy=cy||canvas.height/2;
+  _plantaState.panX=cx+((_plantaState.panX-cx)*factor);
+  _plantaState.panY=cy+((_plantaState.panY-cy)*factor);
+  _planta.gridSize=Math.max(10,Math.min(60,_planta.gridSize*factor));
+  drawPlanta();
+}
+
+function plantaFit(){
+  const canvas=_plantaState.canvas;
+  if(!_planta.ambientes.length){ _plantaState.panX=canvas.width/2-200; _plantaState.panY=canvas.height/2-100; drawPlanta(); return; }
+  const minX=Math.min(..._planta.ambientes.map(a=>a.x));
+  const maxX=Math.max(..._planta.ambientes.map(a=>a.x+a.w));
+  const minY=Math.min(..._planta.ambientes.map(a=>a.y));
+  const maxY=Math.max(..._planta.ambientes.map(a=>a.y+a.h));
+  const pw=maxX-minX, ph=maxY-minY;
+  const margin=60;
+  const gx=(canvas.width-margin*2)/Math.max(pw,1);
+  const gy=(canvas.height-margin*2)/Math.max(ph,1);
+  _planta.gridSize=Math.max(10,Math.min(50,Math.min(gx,gy)));
+  _plantaState.panX=margin-minX*_planta.gridSize;
+  _plantaState.panY=margin-minY*_planta.gridSize;
+  drawPlanta();
+}
+
+function setPlantaTool(tool){
+  _plantaState.tool=tool;
+  ['select','ambiente','abertura'].forEach(t=>{
+    const btn=document.getElementById('planta-tool-'+t);
+    if(btn) btn.style.background=t===tool?'var(--navy)':'#F0EAE2';
+    if(btn) btn.style.color=t===tool?'#fff':'#666';
+  });
+  const canvas=_plantaState.canvas;
+  if(canvas) canvas.style.cursor=tool==='select'?'default':'crosshair';
+}
+
+function getAmbienteAt(ox,oy){
+  const g=_planta.gridSize;
+  return _planta.ambientes.slice().reverse().find(amb=>{
+    const s=gridToScreen(amb.x,amb.y);
+    return ox>=s.sx&&ox<=s.sx+amb.w*g&&oy>=s.sy&&oy<=s.sy+amb.h*g;
+  })||null;
+}
+
+function getNearestWall(amb,ox,oy){
+  const g=_planta.gridSize, s=gridToScreen(amb.x,amb.y);
+  const W=amb.w*g, H=amb.h*g;
+  const dists={N:Math.abs(oy-s.sy),S:Math.abs(oy-s.sy-H),O:Math.abs(ox-s.sx),E:Math.abs(ox-s.sx-W)};
+  return Object.keys(dists).reduce((a,b)=>dists[a]<dists[b]?a:b);
+}
+
+// ── AMBIENTES ──
+function addAmbienteManual(){
+  const id='amb_'+(_planta.nextId++);
+  const color=AMBIENTE_COLORS[_planta.ambientes.length%AMBIENTE_COLORS.length];
+  // Place next to last or at origin
+  const lastAmb=_planta.ambientes[_planta.ambientes.length-1];
+  const x=lastAmb?lastAmb.x+lastAmb.w+1:2;
+  const y=lastAmb?lastAmb.y:2;
+  _planta.ambientes.push({id,nombre:'Ambiente '+(_planta.ambientes.length+1),x,y,w:8,h:6,altura:2.6,color});
+  _plantaState.selectedId=id;
+  renderAmbientesList(); showPlantaProps(); updateComputo(); drawPlanta();
+}
+
+function renderAmbientesList(){
+  const list=document.getElementById('planta-amb-list');
+  if(!list)return;
+  if(!_planta.ambientes.length){
+    list.innerHTML='<div style="padding:10px 12px;font-size:11px;color:#aaa">Dibujá un ambiente en la grilla</div>';
+    return;
+  }
+  list.innerHTML=_planta.ambientes.map(amb=>{
+    const area=(amb.w*amb.h*_planta.escala*_planta.escala).toFixed(1);
+    const sel=_plantaState.selectedId===amb.id;
+    return '<div onclick="selectAmbiente(\''+amb.id+'\')" style="padding:7px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;background:'+(sel?'#FFF8F0':'#fff')+';display:flex;align-items:center;gap:8px">'
+      +'<div style="width:12px;height:12px;border-radius:3px;background:'+amb.color+';border:1px solid #ccc;flex-shrink:0"></div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:var(--navy)">'+escHtml(amb.nombre)+'</div>'
+      +'<div style="font-size:10px;color:#888">'+area+' m² · h:'+amb.altura+'m</div></div>'
+      +'</div>';
+  }).join('');
+}
+
+function selectAmbiente(id){
+  _plantaState.selectedId=id;
+  showPlantaProps(); renderAmbientesList(); drawPlanta();
+}
+
+function showPlantaProps(){
+  const panel=document.getElementById('planta-props');
+  const cont=document.getElementById('planta-props-content');
+  if(!panel||!cont)return;
+  const amb=_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+  if(!amb){ panel.style.display='none'; return; }
+  panel.style.display='';
+
+  cont.innerHTML=`
+  <div class="mb-10">
+    <label class="field-label">Nombre</label>
+    <input id="prop-nombre" value="${escHtml(amb.nombre)}" style="width:100%;font-size:12px" oninput="updateProp('nombre',this.value)">
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+    <div><label class="field-label">Ancho (m)</label>
+    <input type="number" id="prop-w" value="${(amb.w*_planta.escala).toFixed(1)}" step="0.5" style="width:100%;font-size:12px"
+      oninput="updatePropM('w',this.value)"></div>
+    <div><label class="field-label">Largo (m)</label>
+    <input type="number" id="prop-h" value="${(amb.h*_planta.escala).toFixed(1)}" step="0.5" style="width:100%;font-size:12px"
+      oninput="updatePropM('h',this.value)"></div>
+  </div>
+  <div class="mb-10">
+    <label class="field-label">Altura (m)</label>
+    <input type="number" id="prop-alt" value="${amb.altura}" step="0.1" min="2" max="6" style="width:100%;font-size:12px"
+      oninput="updateProp('altura',parseFloat(this.value)||2.6)">
+  </div>
+  <div class="mb-10">
+    <label class="field-label">Color</label>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+    ${AMBIENTE_COLORS.map(c=>`<div onclick="updateProp('color','${c}')" style="width:18px;height:18px;background:${c};border:2px solid ${c===amb.color?'var(--accent)':'#ccc'};border-radius:3px;cursor:pointer"></div>`).join('')}
+    </div>
+  </div>
+  <div>
+    <label class="field-label">Aberturas en este ambiente</label>
+    <div style="display:flex;gap:4px;margin-top:4px">
+      <button onclick="addAbertura(null,'N')" class="btn btn-sm" style="font-size:10px;flex:1">🚪 N</button>
+      <button onclick="addAbertura(null,'S')" class="btn btn-sm" style="font-size:10px;flex:1">🚪 S</button>
+      <button onclick="addAbertura(null,'O')" class="btn btn-sm" style="font-size:10px;flex:1">🚪 O</button>
+      <button onclick="addAbertura(null,'E')" class="btn btn-sm" style="font-size:10px;flex:1">🚪 E</button>
+    </div>
+    <div style="margin-top:6px">
+    ${_planta.aberturas.filter(ab=>ab.ambienteId===amb.id).map(ab=>`
+      <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:10px">
+        <span>${ab.tipo==='puerta'?'🚪':'🪟'}</span>
+        <span style="flex:1">${escHtml(ab.label||ab.tipo)} · pared ${ab.pared} · ${ab.ancho}m</span>
+        <button onclick="deleteAbertura('${ab.id}')" style="background:none;border:none;cursor:pointer;color:#C0392B;font-size:12px">×</button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function updateProp(key,val){
+  const amb=_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+  if(!amb)return;
+  amb[key]=val;
+  renderAmbientesList(); updateComputo(); drawPlanta();
+}
+
+function updatePropM(key,val){
+  const amb=_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+  if(!amb)return;
+  const cells=Math.max(1,Math.round(parseFloat(val||0)/_planta.escala));
+  amb[key]=cells;
+  renderAmbientesList(); updateComputo(); drawPlanta();
+}
+
+function deletePlantaSelected(){
+  _planta.ambientes=_planta.ambientes.filter(a=>a.id!==_plantaState.selectedId);
+  _planta.aberturas=_planta.aberturas.filter(ab=>ab.ambienteId!==_plantaState.selectedId);
+  _plantaState.selectedId=null;
+  showPlantaProps(); renderAmbientesList(); updateComputo(); drawPlanta();
+}
+
+// ── ABERTURAS ──
+function addAbertura(amb, pared){
+  const selAmb=amb||_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+  if(!selAmb)return;
+  const tipo=prompt('Tipo (puerta/ventana):','puerta')||'puerta';
+  const ancho=parseFloat(prompt('Ancho (m):','0.90')||0.9);
+  const label=prompt('Etiqueta:',tipo==='puerta'?'P1':'V1')||'';
+  const id='ab_'+(_planta.nextId++);
+  _planta.aberturas.push({id,ambienteId:selAmb.id,pared:pared||'N',pos:0.1,tipo,ancho,alto:tipo==='puerta'?2.1:1.2,label});
+  showPlantaProps(); drawPlanta();
+}
+
+function deleteAbertura(id){
+  _planta.aberturas=_planta.aberturas.filter(ab=>ab.id!==id);
+  showPlantaProps(); drawPlanta();
+}
+
+// ── CÓMPUTO ──
+function calcPlantaComputo(){
+  const e=_planta.escala;
+  const ambs=_planta.ambientes;
+
+  // M² piso total
+  const m2piso=ambs.reduce((s,a)=>s+a.w*a.h*e*e,0);
+
+  // Paredes — sin duplicar compartidas
+  let mlPerimExt=0, m2paredesExt=0, m2paredesInt=0;
+  ambs.forEach(amb=>{
+    const walls=getAmbienteWalls(amb);
+    walls.forEach(wall=>{
+      const isH=wall.side==='N'||wall.side==='S';
+      const ml=(isH?amb.w:amb.h)*e;
+      const m2=ml*amb.altura;
+      if(wall.tipo==='E'){ mlPerimExt+=ml; m2paredesExt+=m2; }
+      else if(wall.tipo==='S'){ m2paredesInt+=m2/2; } // compartida, cuenta mitad
+    });
+  });
+
+  // Altura promedio
+  const altProm=ambs.length?ambs.reduce((s,a)=>s+a.altura,0)/ambs.length:2.6;
+
+  // Aberturas
+  const puertas=_planta.aberturas.filter(ab=>ab.tipo==='puerta');
+  const ventanas=_planta.aberturas.filter(ab=>ab.tipo==='ventana');
+  const m2puertas=puertas.reduce((s,ab)=>s+ab.ancho*(ab.alto||2.1),0);
+  const m2ventanas=ventanas.reduce((s,ab)=>s+ab.ancho*(ab.alto||1.2),0);
+
+  // Columnas: 1 por esquina de cada ambiente, descontando esquinas compartidas
+  let columnas=0;
+  ambs.forEach(amb=>{
+    const corners=[[amb.x,amb.y],[amb.x+amb.w,amb.y],[amb.x,amb.y+amb.h],[amb.x+amb.w,amb.y+amb.h]];
+    corners.forEach(([cx,cy])=>{
+      const shared=ambs.filter(o=>o.id!==amb.id&&
+        (o.x===cx||o.x+o.w===cx)&&(o.y===cy||o.y+o.h===cy)).length;
+      if(shared===0) columnas++;
+      else columnas+=1/Math.max(shared,1);
+    });
+  });
+  columnas=Math.round(columnas);
+
+  return {
+    ambientes:ambs.length,
+    m2piso:Math.round(m2piso*100)/100,
+    mlPerimExt:Math.round(mlPerimExt*100)/100,
+    m2paredesExt:Math.round(m2paredesExt*100)/100,
+    m2paredesInt:Math.round(m2paredesInt*100)/100,
+    m2paredesTotal:Math.round((m2paredesExt+m2paredesInt)*100)/100,
+    altProm:Math.round(altProm*100)/100,
+    columnas,
+    vigas:Math.round(mlPerimExt*100)/100,
+    puertas:puertas.length,
+    ventanas:ventanas.length,
+    m2puertas:Math.round(m2puertas*100)/100,
+    m2ventanas:Math.round(m2ventanas*100)/100,
+    m2netas:Math.round((m2paredesExt+m2paredesInt-m2puertas-m2ventanas)*100)/100,
+  };
+}
+
+function updateComputo(){
+  const cont=document.getElementById('planta-computo');
+  if(!cont||!_planta.ambientes.length){
+    if(cont)cont.innerHTML='<div style="color:#aaa;text-align:center;padding:10px">Sin ambientes</div>';
+    return;
+  }
+  const c=calcPlantaComputo();
+  cont.innerHTML=`
+  <table style="width:100%;border-collapse:collapse">
+    ${row('Ambientes',c.ambientes,'u')}
+    ${row('M² de piso',c.m2piso,'m²')}
+    ${row('M² techo/losa',c.m2piso,'m²')}
+    ${row('Perímetro exterior',c.mlPerimExt,'ml')}
+    ${row('Paredes ext. (brutas)',c.m2paredesExt,'m²')}
+    ${row('Paredes int.',c.m2paredesInt,'m²')}
+    ${row('Paredes netas (−abertu.)',c.m2netas,'m²')}
+    ${row('Columnas estimadas',c.columnas,'u')}
+    ${row('Vigas encadenado',c.vigas,'ml')}
+    ${row('Puertas',c.puertas,'u')}
+    ${row('Ventanas',c.ventanas,'u')}
+    ${row('Alt. promedio',c.altProm,'m')}
+  </table>`;
+
+  function row(label,val,unit){
+    return `<tr><td style="padding:3px 0;color:#555;font-size:10px">${label}</td>
+    <td style="padding:3px 0;text-align:right;font-weight:700;font-size:11px;color:var(--navy)">${typeof val==='number'?val.toFixed(val%1===0?0:2):val} <span style="font-weight:400;color:#888;font-size:10px">${unit}</span></td></tr>`;
+  }
+}
+
+// ── APLICAR AL PIP ──
+function aplicarCometutoAlPIP(){
+  if(!_planta.ambientes.length)return toast('Sin ambientes en la planta','error');
+  const c=calcPlantaComputo();
+  // Update m2 field
+  const m2inp=document.getElementById('pip-m2');
+  if(m2inp){ m2inp.value=c.m2piso.toFixed(1); }
+  toast('✓ M² aplicados al PIP: '+c.m2piso+' m²','success');
+  // Store planta data in snapshot for later
+  if(_calcSnapshot) _calcSnapshot.planta=c;
+  // Switch to PIP form
+  document.getElementById('pip-result').style.display='none';
+  document.getElementById('pip-form').style.display='';
+}
 
 function escHtml(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(msg,type=''){
