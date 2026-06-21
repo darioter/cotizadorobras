@@ -2957,9 +2957,9 @@ function renderMateriales(resultado){
 
 let _planta = {
   ambientes: [],      // [{id, nombre, x, y, w, h, altura, color}]
-  aberturas: [],      // [{id, ambienteId, pared, pos, tipo, ancho, alto, label}]
-  gridSize: 20,       // px por celda = 0.5m → 1 celda = 0.5m
-  escala: 0.5,        // metros por celda
+  aberturas: [],      // [{id, ambienteId, pared, posCell, tipo, ancho, alto, label, orientacion}]
+  gridSize: 16,       // px por celda = 0.25m → 1 celda = 0.25m
+  escala: 0.25,       // metros por celda
   nextId: 1,
 };
 
@@ -3168,7 +3168,7 @@ function drawPlanta(){
   // Scale label
   ctx.fillStyle = '#AAA';
   ctx.font = '10px Arial';
-  ctx.fillText(`0.5m`, panX+g+2, panY-4);
+  ctx.fillText(`0.25m`, panX+g+2, panY-4);
   ctx.beginPath(); ctx.moveTo(panX,panY-3); ctx.lineTo(panX+g,panY-3); ctx.stroke();
 
   // Ambientes
@@ -3255,46 +3255,91 @@ function drawAmbiente(ctx, amb){
   ctx.textAlign = 'left';
 }
 
+function getAberturaCoords(ab){
+  const amb=_planta.ambientes.find(a=>a.id===ab.ambienteId);
+  if(!amb)return null;
+  const g=_planta.gridSize;
+  const s=gridToScreen(amb.x,amb.y);
+  const W=amb.w*g, H=amb.h*g;
+  const abCells=Math.round(ab.ancho/_planta.escala);
+  const abPx=abCells*g;
+  const posPx=(ab.posCell||0)*g; // offset in px from corner of wall
+  let x1,y1,x2,y2,nx,ny; // nx,ny = outward normal
+  if(ab.pared==='N'){x1=s.sx+posPx;y1=s.sy;x2=x1+abPx;y2=s.sy;nx=0;ny=-1;}
+  else if(ab.pared==='S'){x1=s.sx+posPx;y1=s.sy+H;x2=x1+abPx;y2=s.sy+H;nx=0;ny=1;}
+  else if(ab.pared==='O'){x1=s.sx;y1=s.sy+posPx;x2=s.sx;y2=y1+abPx;nx=-1;ny=0;}
+  else{x1=s.sx+W;y1=s.sy+posPx;x2=s.sx+W;y2=y1+abPx;nx=1;ny=0;}
+  return{x1,y1,x2,y2,nx,ny,abPx};
+}
+
 function drawAbertura(ctx, ab){
-  const amb = _planta.ambientes.find(a=>a.id===ab.ambienteId);
-  if(!amb) return;
-  const g = _planta.gridSize;
-  const s = gridToScreen(amb.x, amb.y);
-  const W = amb.w*g, H = amb.h*g;
-  const abW = ab.ancho / _planta.escala * g; // px
-  const pos = ab.pos; // 0..1
+  const coords=getAberturaCoords(ab);
+  if(!coords)return;
+  const{x1,y1,x2,y2,nx,ny,abPx}=coords;
+  const isV=ab.tipo==='ventana', isVano=ab.tipo==='vano';
 
-  let x1,y1,x2,y2;
-  if(ab.pared==='N'){ x1=s.sx+W*pos; y1=s.sy; x2=x1+abW; y2=s.sy; }
-  else if(ab.pared==='S'){ x1=s.sx+W*pos; y1=s.sy+H; x2=x1+abW; y2=s.sy+H; }
-  else if(ab.pared==='O'){ x1=s.sx; y1=s.sy+H*pos; x2=s.sx; y2=y1+abW; }
-  else { x1=s.sx+W; y1=s.sy+H*pos; x2=s.sx+W; y2=y1+abW; }
+  // Erase wall line (draw background color over it)
+  ctx.strokeStyle='#fff';
+  ctx.lineWidth=6;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
 
-  // Draw opening
-  ctx.strokeStyle = ab.tipo==='ventana' ? '#3498DB' : '#E67E22';
-  ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  if(isVano){
+    // Vano: naranja, línea doble indicando dintel
+    ctx.strokeStyle='#F39C12';
+    ctx.lineWidth=3;
+    ctx.setLineDash([4,2]);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.setLineDash([]);
+    // Label VANO
+    ctx.fillStyle='#F39C12';
+    ctx.font='bold 8px Arial';
+    ctx.textAlign='center';
+    const mx=(x1+x2)/2,my=(y1+y2)/2;
+    ctx.fillText('VANO'+(ab.ancho?(' '+ab.ancho+'m'):''),mx+nx*8,my+ny*8);
+    ctx.textAlign='left';
+    return;
+  }
 
-  // Door arc
-  if(ab.tipo==='puerta'){
-    ctx.strokeStyle = '#E67E22';
-    ctx.lineWidth = 1;
+  if(isV){
+    // Ventana: línea triple azul
+    ctx.strokeStyle='#3498DB';
+    ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.strokeStyle='#3498DB';ctx.lineWidth=1;
+    const off=3;
+    ctx.beginPath();ctx.moveTo(x1+ny*off,y1+nx*off);ctx.lineTo(x2+ny*off,y2+nx*off);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x1-ny*off,y1-nx*off);ctx.lineTo(x2-ny*off,y2-nx*off);ctx.stroke();
+  } else {
+    // Puerta: línea + arco de apertura
+    const ori=ab.orientacion||1; // 1 = adentro, -1 = afuera
+    ctx.strokeStyle='#1A2744';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    // Arco desde x1 (punto de giro) radio=abPx
+    const isH=ab.pared==='N'||ab.pared==='S';
+    ctx.strokeStyle='#1A2744';ctx.lineWidth=1;
     ctx.setLineDash([2,2]);
     ctx.beginPath();
-    if(ab.pared==='N'||ab.pared==='S'){
-      ctx.arc(x1, y1, abW, ab.pared==='N'?0:Math.PI, ab.pared==='N'?Math.PI/2:Math.PI/2*3);
+    if(isH){
+      const startAngle=ori>0?(ny<0?0:Math.PI):(ny<0?Math.PI:0);
+      const endAngle=startAngle+(ori>0?-Math.PI/2:Math.PI/2);
+      ctx.arc(x1,y1,abPx,startAngle,endAngle,ori<0);
     } else {
-      ctx.arc(x1, y1, abW, 0, Math.PI/2);
+      const startAngle=ori>0?(nx<0?-Math.PI/2:Math.PI/2):(nx<0?Math.PI/2:-Math.PI/2);
+      const endAngle=startAngle+(ori>0?Math.PI/2:-Math.PI/2);
+      ctx.arc(x1,y1,abPx,startAngle,endAngle,ori<0);
     }
     ctx.stroke();
     ctx.setLineDash([]);
   }
 
   // Label
-  ctx.fillStyle = ab.tipo==='ventana'?'#3498DB':'#E67E22';
-  ctx.font = '9px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText(ab.label||ab.tipo[0].toUpperCase(), (x1+x2)/2, (y1+y2)/2-3);
+  const color=isV?'#3498DB':'#1A2744';
+  ctx.fillStyle=color;
+  ctx.font='bold 8px Arial';
+  ctx.textAlign='center';
+  ctx.fillText(ab.label||(isV?'V':'P'),(x1+x2)/2+nx*10,(y1+y2)/2+ny*10-2);
   ctx.textAlign='left';
 }
 
@@ -3377,10 +3422,17 @@ function plantaMouseDown(e){
   }
 
   if(tool==='abertura'){
-    const amb = getAmbienteAt(ox,oy);
+    const amb=getAmbienteAt(ox,oy);
     if(amb){
-      const wall = getNearestWall(amb,ox,oy);
-      addAbertura(amb,wall);
+      const wall=getNearestWall(amb,ox,oy);
+      const g=_planta.gridSize;
+      const s=gridToScreen(amb.x,amb.y);
+      // Calculate posCell = offset along wall from top/left corner
+      let posCell=0;
+      if(wall==='N'||wall==='S') posCell=Math.round((ox-s.sx)/g);
+      else posCell=Math.round((oy-s.sy)/g);
+      posCell=Math.max(0,posCell);
+      addAbertura(amb,wall,posCell,ox,oy);
     }
   }
 }
@@ -3583,8 +3635,8 @@ function showPlantaProps(){
     <div style="margin-top:6px">
     ${_planta.aberturas.filter(ab=>ab.ambienteId===amb.id).map(ab=>`
       <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:10px">
-        <span>${ab.tipo==='puerta'?'🚪':'🪟'}</span>
-        <span style="flex:1">${escHtml(ab.label||ab.tipo)} · pared ${ab.pared} · ${ab.ancho}m</span>
+        <span>${ab.tipo==='puerta'?'🚪':ab.tipo==='ventana'?'🪟':'⬜'}</span>
+        <span style="flex:1">${escHtml(ab.label||ab.tipo)} · pared ${ab.pared} · ${ab.ancho}m × ${ab.alto}m</span>
         <button onclick="deleteAbertura('${ab.id}')" style="background:none;border:none;cursor:pointer;color:#C0392B;font-size:12px">×</button>
       </div>`).join('')}
     </div>
@@ -3614,15 +3666,68 @@ function deletePlantaSelected(){
 }
 
 // ── ABERTURAS ──
-function addAbertura(amb, pared){
-  const selAmb=amb||_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+function addAbertura(ambOrNull, pared, posCell, clickX, clickY){
+  const selAmb=ambOrNull||_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
   if(!selAmb)return;
-  const tipo=prompt('Tipo (puerta/ventana):','puerta')||'puerta';
-  const ancho=parseFloat(prompt('Ancho (m):','0.90')||0.9);
-  const label=prompt('Etiqueta:',tipo==='puerta'?'P1':'V1')||'';
+  // Show inline dialog instead of prompt
+  const tipos=['puerta','ventana','vano'];
+  const defaults={puerta:{ancho:0.90,alto:2.10,label:'P'},ventana:{ancho:1.20,alto:1.10,label:'V'},vano:{ancho:2.00,alto:2.30,label:''}};
+
   const id='ab_'+(_planta.nextId++);
-  _planta.aberturas.push({id,ambienteId:selAmb.id,pared:pared||'N',pos:0.1,tipo,ancho,alto:tipo==='puerta'?2.1:1.2,label});
-  showPlantaProps(); drawPlanta();
+  // Show modal
+  showModal(`
+    <h3 style="font-family:Georgia,serif;color:var(--navy);margin-bottom:14px">Nueva abertura</h3>
+    <div class="mb-10">
+      <label class="field-label">Tipo</label>
+      <select id="ab-tipo" onchange="updateAbDefaults()" style="width:100%">
+        <option value="puerta">🚪 Puerta</option>
+        <option value="ventana">🪟 Ventana</option>
+        <option value="vano">⬜ Vano sin carpintería</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><label class="field-label">Ancho (m)</label><input type="number" id="ab-ancho" value="0.90" step="0.05" style="width:100%"></div>
+      <div><label class="field-label">Alto (m)</label><input type="number" id="ab-alto" value="2.10" step="0.05" style="width:100%"></div>
+    </div>
+    <div class="mb-10">
+      <label class="field-label">Etiqueta</label>
+      <input id="ab-label" value="P1" style="width:100%">
+    </div>
+    <div class="mb-10" id="ab-ori-wrap">
+      <label class="field-label">Apertura</label>
+      <select id="ab-ori" style="width:100%">
+        <option value="1">Hacia adentro</option>
+        <option value="-1">Hacia afuera</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmarAbertura('${id}','${selAmb.id}','${pared||'N'}',${posCell||0})">Agregar</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>
+  `);
+}
+
+function updateAbDefaults(){
+  const tipo=document.getElementById('ab-tipo')?.value;
+  const defaults={puerta:{ancho:0.90,alto:2.10,label:'P1'},ventana:{ancho:1.20,alto:1.10,label:'V1'},vano:{ancho:2.00,alto:2.30,label:''}};
+  const d=defaults[tipo]||defaults.puerta;
+  if(document.getElementById('ab-ancho'))document.getElementById('ab-ancho').value=d.ancho;
+  if(document.getElementById('ab-alto'))document.getElementById('ab-alto').value=d.alto;
+  if(document.getElementById('ab-label'))document.getElementById('ab-label').value=d.label;
+  if(document.getElementById('ab-ori-wrap'))document.getElementById('ab-ori-wrap').style.display=tipo==='vano'?'none':'';
+}
+
+function confirmarAbertura(id,ambId,pared,posCell){
+  const tipo=document.getElementById('ab-tipo')?.value||'puerta';
+  const ancho=parseFloat(document.getElementById('ab-ancho')?.value||0.9);
+  const alto=parseFloat(document.getElementById('ab-alto')?.value||2.1);
+  const label=document.getElementById('ab-label')?.value||'';
+  const ori=parseInt(document.getElementById('ab-ori')?.value||1);
+  _planta.aberturas.push({id,ambienteId:ambId,pared,posCell:posCell||0,tipo,ancho,alto,label,orientacion:ori});
+  closeModal();
+  showPlantaProps();
+  updateComputo();
+  drawPlanta();
 }
 
 function deleteAbertura(id){
@@ -3657,8 +3762,11 @@ function calcPlantaComputo(){
   // Aberturas
   const puertas=_planta.aberturas.filter(ab=>ab.tipo==='puerta');
   const ventanas=_planta.aberturas.filter(ab=>ab.tipo==='ventana');
+  const vanos=_planta.aberturas.filter(ab=>ab.tipo==='vano');
   const m2puertas=puertas.reduce((s,ab)=>s+ab.ancho*(ab.alto||2.1),0);
   const m2ventanas=ventanas.reduce((s,ab)=>s+ab.ancho*(ab.alto||1.2),0);
+  const m2vanos=vanos.reduce((s,ab)=>s+ab.ancho*(ab.alto||2.3),0);
+  const mlVanos=vanos.reduce((s,ab)=>s+ab.ancho,0); // descuenta ml de pared
 
   // Columnas: 1 por esquina de cada ambiente, descontando esquinas compartidas
   let columnas=0;
@@ -3673,6 +3781,7 @@ function calcPlantaComputo(){
   });
   columnas=Math.round(columnas);
 
+  const m2netas=Math.round((m2paredesExt+m2paredesInt-m2puertas-m2ventanas-m2vanos)*100)/100;
   return {
     ambientes:ambs.length,
     m2piso:Math.round(m2piso*100)/100,
@@ -3682,12 +3791,16 @@ function calcPlantaComputo(){
     m2paredesTotal:Math.round((m2paredesExt+m2paredesInt)*100)/100,
     altProm:Math.round(altProm*100)/100,
     columnas,
-    vigas:Math.round(mlPerimExt*100)/100,
+    vigas:Math.round((mlPerimExt-mlVanos)*100)/100, // vigas no se descuentan (llevan dintel)
+    vigasBrutas:Math.round(mlPerimExt*100)/100,
     puertas:puertas.length,
     ventanas:ventanas.length,
+    vanos:vanos.length,
     m2puertas:Math.round(m2puertas*100)/100,
     m2ventanas:Math.round(m2ventanas*100)/100,
-    m2netas:Math.round((m2paredesExt+m2paredesInt-m2puertas-m2ventanas)*100)/100,
+    m2vanos:Math.round(m2vanos*100)/100,
+    mlVanos:Math.round(mlVanos*100)/100,
+    m2netas,
   };
 }
 
@@ -3707,11 +3820,13 @@ function updateComputo(){
     ${row('Perímetro exterior',c.mlPerimExt,'ml')}
     ${row('Paredes ext. (brutas)',c.m2paredesExt,'m²')}
     ${row('Paredes int.',c.m2paredesInt,'m²')}
-    ${row('Paredes netas (−abertu.)',c.m2netas,'m²')}
+    ${row('Vanos (descuento)','-'+c.m2vanos,'m²')}
+    ${row('Paredes netas',c.m2netas,'m²')}
     ${row('Columnas estimadas',c.columnas,'u')}
     ${row('Vigas encadenado',c.vigas,'ml')}
     ${row('Puertas',c.puertas,'u')}
     ${row('Ventanas',c.ventanas,'u')}
+    ${row('Vanos sin carp.',c.vanos,'u')}
     ${row('Alt. promedio',c.altProm,'m')}
   </table>`;
 
