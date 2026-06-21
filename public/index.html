@@ -2977,11 +2977,14 @@ const AMBIENTE_NAMES = [
 
 // Estado del editor
 let _plantaState = {
-  tool: 'select',     // select | ambiente | abertura
+  tool: 'select',
   drawing: false,
   startX: 0, startY: 0,
+  curX: 0, curY: 0,
   dragAmb: null,
   dragOffX: 0, dragOffY: 0,
+  draggingAb: null,
+  selectedAbId: null,
   resizing: null,
   selectedId: null,
   hoveredWall: null,
@@ -3073,6 +3076,8 @@ function renderPlantaEditor(){
 function initPlantaCanvas(){
   const canvas = document.getElementById('planta-canvas');
   if(!canvas) return;
+  // Don't re-init if same canvas already set up
+  if(_plantaState.canvas===canvas) return;
   _plantaState.canvas = canvas;
   _plantaState.ctx = canvas.getContext('2d');
 
@@ -3499,15 +3504,11 @@ function plantaMouseMove(e){
   _plantaState.curX=ox; _plantaState.curY=oy;
 
   // Highlight wall on hover when using abertura tool
-  if(_plantaState.tool==='abertura'){
+  if(_plantaState.tool==='abertura'&&!_plantaState.draggingAb){
     const amb=getAmbienteAt(ox,oy);
-    if(amb){
-      const wall=getNearestWall(amb,ox,oy);
-      _plantaState.hoveredWall={ambId:amb.id,wall};
-    } else {
-      _plantaState.hoveredWall=null;
-    }
+    _plantaState.hoveredWall=amb?{ambId:amb.id,wall:getNearestWall(amb,ox,oy)}:null;
     drawPlanta();
+    return;
   }
 
   // Drag abertura along wall
