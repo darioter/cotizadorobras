@@ -3021,7 +3021,7 @@ function renderPlantaEditor(){
       <button onclick="plantaZoom(0.8)" class="btn btn-sm" style="background:#F0EAE2;color:#666">－</button>
       <button onclick="plantaFit()" class="btn btn-sm" style="background:#F0EAE2;color:#666">⊡ Ajustar</button>
       <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
-      <span style="font-size:10px;color:#888">Escala: 1 celda = 0.5m</span>
+      <span style="font-size:10px;color:#888">Escala: 1 celda = 0.25m</span>
       <button onclick="printContent(document.getElementById('res-planta'))" class="btn btn-sm no-print" style="margin-left:auto;background:#F0EAE2;color:#666">🖨 Imprimir</button>
     </div>
 
@@ -3173,6 +3173,22 @@ function drawPlanta(){
 
   // Ambientes
   _planta.ambientes.forEach(amb => drawAmbiente(ctx, amb));
+
+  // Wall hover highlight (abertura tool)
+  if(_plantaState.hoveredWall){
+    const hw=_plantaState.hoveredWall;
+    const amb=_planta.ambientes.find(a=>a.id===hw.ambId);
+    if(amb){
+      const g=_planta.gridSize,s=gridToScreen(amb.x,amb.y),W=amb.w*g,H=amb.h*g;
+      ctx.strokeStyle='rgba(230,126,34,0.6)';ctx.lineWidth=6;
+      ctx.beginPath();
+      if(hw.wall==='N'){ctx.moveTo(s.sx,s.sy);ctx.lineTo(s.sx+W,s.sy);}
+      else if(hw.wall==='S'){ctx.moveTo(s.sx,s.sy+H);ctx.lineTo(s.sx+W,s.sy+H);}
+      else if(hw.wall==='O'){ctx.moveTo(s.sx,s.sy);ctx.lineTo(s.sx,s.sy+H);}
+      else{ctx.moveTo(s.sx+W,s.sy);ctx.lineTo(s.sx+W,s.sy+H);}
+      ctx.stroke();
+    }
+  }
 
   // Aberturas
   _planta.aberturas.forEach(ab => drawAbertura(ctx, ab));
@@ -3397,16 +3413,28 @@ function plantaMouseDown(e){
         }
       }
     }
+    // Check click on abertura first (for dragging)
+    const clickedAb=getAberturaAt(ox,oy);
+    if(clickedAb){
+      _plantaState.draggingAb={id:clickedAb.id};
+      _plantaState.selectedAbId=clickedAb.id;
+      showPlantaProps();
+      drawPlanta();
+      return;
+    }
+
     // Check click on ambiente
     const clicked = getAmbienteAt(ox,oy);
     if(clicked){
       _plantaState.selectedId = clicked.id;
+      _plantaState.selectedAbId = null;
       const s=gridToScreen(clicked.x,clicked.y);
       _plantaState.dragAmb = clicked.id;
       _plantaState.dragOffX = ox-s.sx;
       _plantaState.dragOffY = oy-s.sy;
     } else {
       _plantaState.selectedId = null;
+      _plantaState.selectedAbId = null;
     }
     showPlantaProps();
     renderAmbientesList();
@@ -3440,6 +3468,38 @@ function plantaMouseDown(e){
 function plantaMouseMove(e){
   const ox=e.offsetX, oy=e.offsetY;
   _plantaState.curX=ox; _plantaState.curY=oy;
+
+  // Highlight wall on hover when using abertura tool
+  if(_plantaState.tool==='abertura'){
+    const amb=getAmbienteAt(ox,oy);
+    if(amb){
+      const wall=getNearestWall(amb,ox,oy);
+      _plantaState.hoveredWall={ambId:amb.id,wall};
+    } else {
+      _plantaState.hoveredWall=null;
+    }
+    drawPlanta();
+  }
+
+  // Drag abertura along wall
+  if(_plantaState.draggingAb){
+    const da=_plantaState.draggingAb;
+    const ab=_planta.aberturas.find(a=>a.id===da.id);
+    if(ab){
+      const g=_planta.gridSize;
+      const amb=_planta.ambientes.find(a=>a.id===ab.ambienteId);
+      if(amb){
+        const s=gridToScreen(amb.x,amb.y);
+        let posCell;
+        if(ab.pared==='N'||ab.pared==='S') posCell=Math.round((ox-s.sx)/g);
+        else posCell=Math.round((oy-s.sy)/g);
+        const maxCells=(ab.pared==='N'||ab.pared==='S'?amb.w:amb.h)-Math.round(ab.ancho/_planta.escala);
+        ab.posCell=Math.max(0,Math.min(maxCells,posCell));
+        drawPlanta();
+      }
+    }
+    return;
+  }
 
   // Resize
   if(_plantaState.resizing){
@@ -3475,6 +3535,7 @@ function plantaMouseUp(e){
   const ox=e.offsetX||_plantaState.curX, oy=e.offsetY||_plantaState.curY;
 
   if(_plantaState.resizing){ _plantaState.resizing=null; updateComputo(); renderAmbientesList(); return; }
+  if(_plantaState.draggingAb){ _plantaState.draggingAb=null; updateComputo(); drawPlanta(); return; }
   if(_plantaState.dragAmb){ _plantaState.dragAmb=null; return; }
 
   if(_plantaState.drawing && _plantaState.tool==='ambiente'){
@@ -3539,6 +3600,23 @@ function setPlantaTool(tool){
   });
   const canvas=_plantaState.canvas;
   if(canvas) canvas.style.cursor=tool==='select'?'default':'crosshair';
+}
+
+function getAberturaAt(ox,oy){
+  // Check if click is near an abertura
+  for(const ab of _planta.aberturas){
+    const coords=getAberturaCoords(ab);
+    if(!coords)continue;
+    const{x1,y1,x2,y2}=coords;
+    // Distance from point to line segment
+    const dx=x2-x1, dy=y2-y1;
+    const len=Math.sqrt(dx*dx+dy*dy)||1;
+    const t=Math.max(0,Math.min(1,((ox-x1)*dx+(oy-y1)*dy)/(len*len)));
+    const px=x1+t*dx, py=y1+t*dy;
+    const dist=Math.sqrt((ox-px)**2+(oy-py)**2);
+    if(dist<8)return ab;
+  }
+  return null;
 }
 
 function getAmbienteAt(ox,oy){
@@ -3625,12 +3703,12 @@ function showPlantaProps(){
     </div>
   </div>
   <div>
-    <label class="field-label">Aberturas en este ambiente</label>
+    <label class="field-label">Aberturas <small style="color:#888;font-weight:400">(usá herramienta 🚪 y clickeá la pared, luego arrastrala)</small></label>
     <div style="display:flex;gap:4px;margin-top:4px">
-      <button onclick="addAbertura(null,'N')" class="btn btn-sm" style="font-size:10px;flex:1">🚪 N</button>
-      <button onclick="addAbertura(null,'S')" class="btn btn-sm" style="font-size:10px;flex:1">🚪 S</button>
-      <button onclick="addAbertura(null,'O')" class="btn btn-sm" style="font-size:10px;flex:1">🚪 O</button>
-      <button onclick="addAbertura(null,'E')" class="btn btn-sm" style="font-size:10px;flex:1">🚪 E</button>
+      <button onclick="addAbertura(null,'N')" class="btn btn-sm" style="font-size:10px;flex:1">＋N</button>
+      <button onclick="addAbertura(null,'S')" class="btn btn-sm" style="font-size:10px;flex:1">＋S</button>
+      <button onclick="addAbertura(null,'O')" class="btn btn-sm" style="font-size:10px;flex:1">＋O</button>
+      <button onclick="addAbertura(null,'E')" class="btn btn-sm" style="font-size:10px;flex:1">＋E</button>
     </div>
     <div style="margin-top:6px">
     ${_planta.aberturas.filter(ab=>ab.ambienteId===amb.id).map(ab=>`
