@@ -1866,7 +1866,7 @@ async function guardarYVerResultado(){
     const tots=calcularMateriales(_lastResultado.rubrosA||res.rubrosA||[]);
     costoMateriales=Object.values(tots).reduce(function(s,m){return s+m.qty*m.precio;},0);
   }
-  const resultado={...res,propuestas:[],costoMateriales:Math.round(costoMateriales)};
+  const resultado={...res,propuestas:[],costoMateriales:Math.round(costoMateriales),planta:JSON.parse(JSON.stringify(_planta))};
   try{
     if(_editingProyectoId){
       await sb.from('proyectos_obra').update({
@@ -2396,6 +2396,10 @@ function resetPIP(){
   if(document.getElementById('calc-preview'))document.getElementById('calc-preview').innerHTML='';
   _calcSnapshot=null;
   _editingProyectoId=null;
+  // Reset planta for new project
+  _planta.ambientes=[];
+  _planta.aberturas=[];
+  _planta.nextId=1;
   const banner=document.getElementById('edit-banner');
   if(banner)banner.remove();
   uploadedFiles={brief:null,planta:null,render:null};
@@ -2528,6 +2532,12 @@ async function cambiarEstado(id,estado){
 
 async function openProyecto(id){
   const p=_proyectosData.find(x=>x.id===id)||await sb.from('proyectos_obra').select('*').eq('id',id).single().then(r=>r.data);
+  // Restore planta
+  if(p&&p.resultado&&p.resultado.planta&&p.resultado.planta.ambientes){
+    _planta.ambientes=p.resultado.planta.ambientes;
+    _planta.aberturas=p.resultado.planta.aberturas||[];
+    _planta.nextId=p.resultado.planta.nextId||(_planta.ambientes.length+1);
+  }
   if(!p?.resultado)return toast('Sin resultado guardado','error');
   showView('pip');
   renderPIPResult(p.resultado);
@@ -2598,8 +2608,15 @@ function editProyecto(id){
   renderPIPRubrosA();
   renderPIPRubrosB();
 
-  // Banner de modo edición
-  const banner=document.createElement('div');
+  // Restaurar planta si existe
+  if(res.planta&&res.planta.ambientes&&res.planta.ambientes.length){
+    _planta.ambientes=res.planta.ambientes;
+    _planta.aberturas=res.planta.aberturas||[];
+    _planta.nextId=res.planta.nextId||(_planta.ambientes.length+1);
+    toast('✓ Planta restaurada — '+_planta.ambientes.length+' ambientes','success');
+  }
+
+anner=document.createElement('div');
   banner.id='edit-banner';
   banner.style.cssText='background:#1B2A3B;color:#fff;border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:10px';
   banner.innerHTML='<span>✏ Editando: <strong>'+escHtml(p.nombre)+'</strong> — modificá y recalculá para guardar los cambios</span>'
@@ -3037,7 +3054,15 @@ function togglePlantaSection(){
   if(icon)icon.textContent=open?'▼':'▶';
   if(open){
     const cont=document.getElementById('planta-editor-pip');
-    if(cont&&!cont.querySelector('canvas'))renderPlantaEditor();
+    if(cont&&!cont.querySelector('canvas')){
+      renderPlantaEditor();
+    } else {
+      // Re-draw if canvas exists (planta may have been restored)
+      drawPlanta();
+      renderAmbientesList();
+      updateComputo();
+      if(_planta.ambientes.length>0)setTimeout(plantaFit,100);
+    }
   }
 }
 
