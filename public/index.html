@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Stand Estimator · DALI 360°</title>
+<title>Obra Estimator · DALI 360°</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -188,16 +188,76 @@ small{font-size:10px;color:#999}
 #toast.success{background:var(--green)}
 
 /* ── RESPONSIVE ── */
+/* MOBILE GLOBAL — evitar scroll horizontal */
+*,*::before,*::after{box-sizing:border-box}
+html,body{overflow-x:hidden;max-width:100vw}
+
 @media(max-width:600px){
   .user-name{display:none}
   .header-nav{display:none}
   #bottom-nav{display:block}
-  main{padding:14px 12px 80px}
+  main{padding:14px 10px 80px;max-width:100vw;overflow-x:hidden}
   .grid-2{grid-template-columns:1fr}
   .grid-3{grid-template-columns:1fr 1fr}
   #toast{bottom:90px}
-  .summary-stats{gap:10px}
-  .stat-value{font-size:14px}
+  .summary-stats{gap:6px;flex-wrap:wrap}
+  .stat-value{font-size:12px}
+  .stat-label{font-size:9px}
+
+  /* Toda la app respeta el ancho */
+  .card,.card-body,.card-header{max-width:100%;overflow-x:hidden}
+
+  /* Tabs — scroll horizontal interno, no rompen el layout */
+  .tabs,#res-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
+  .tabs .tab,#res-tabs .tab{white-space:nowrap;flex-shrink:0;padding:7px 10px;font-size:11px}
+
+  /* Oferta — scroll horizontal interno, sin forzar layout */
+  #res-oferta{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .oferta-doc{padding:10px!important;min-width:0!important;width:100%!important;box-sizing:border-box!important}
+  .oferta-doc table{font-size:10px!important;width:100%!important}
+  .oferta-doc td,.oferta-doc th{padding:4px 6px!important;font-size:10px!important;word-break:break-word;overflow-wrap:anywhere;max-width:120px}
+  .oferta-doc img{max-width:100%!important;height:auto!important}
+  /* Encabezado oferta compacto */
+  .oferta-doc table:first-child td{vertical-align:middle}
+  .oferta-doc table:first-child img{width:44px!important;height:44px!important}
+
+  /* Summary bar */
+  .summary-bar{padding:10px 12px}
+  .summary-bar .flex-between{flex-wrap:wrap;gap:6px}
+  .summary-stats{gap:6px}
+
+  /* Metric grid */
+  .metric-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .metric-card{padding:8px 10px}
+
+  /* Cascada waterfall */
+  .res-waterfall .flex-between{font-size:11px;gap:4px}
+
+  /* Propuestas */
+  .proposal-card .feature-grid{grid-template-columns:1fr}
+  .palette-swatch{width:26px!important;height:26px!important}
+
+  /* Formulario */
+  input,select,textarea{font-size:16px!important}
+  .pip-num{width:54px!important}
+
+  /* Botones */
+  .btn{white-space:nowrap;font-size:12px}
+  .no-print{flex-wrap:wrap;gap:6px}
+  .no-print .btn{font-size:11px;padding:7px 10px}
+  .card-header{flex-wrap:wrap;gap:6px}
+
+  /* PIP items */
+  .pip-item{gap:4px}
+  .pip-section-title{font-size:11px;padding:6px 10px}
+
+  /* Precios tabs */
+  #view-precios .tabs{overflow-x:auto;flex-wrap:nowrap}
+  #view-precios .tab{white-space:nowrap;flex-shrink:0;font-size:10px;padding:7px 8px}
+  #precios-tabs-bar{overflow-x:auto!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch}
+  #precios-tabs-bar::-webkit-scrollbar{display:none}
+  #precios-tabs-bar .tab{white-space:nowrap;flex-shrink:0}
+  .precio-item{flex-wrap:wrap;gap:6px}
 }
 @media(min-width:601px){
   .user-name{display:block}
@@ -216,7 +276,7 @@ small{font-size:10px;color:#999}
 <div id="auth-screen">
   <div class="auth-box">
     <img src="data:image/png;base64,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" style="width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 14px;display:block" alt="DALI" />
-    <div class="auth-title">Stand Estimator</div>
+    <div class="auth-title">Obra Estimator</div>
     <div class="auth-sub">DALI Arquitectura 360°</div>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="setAuthTab('login')">Ingresar</button>
@@ -242,7 +302,7 @@ small{font-size:10px;color:#999}
   <header>
     <div class="logo-wrap">
       <img src="data:image/png;base64,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" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="DALI" />
-      <div><div class="logo-text">STAND ESTIMATOR</div><div class="logo-sub">DALI Arquitectura 360°</div></div>
+      <div><div class="logo-text">OBRA ESTIMATOR</div><div class="logo-sub">DALI Arquitectura 360°</div></div>
     </div>
     <nav class="header-nav">
       <button class="active" onclick="showView('pip')" id="nav-pip">✦ Nuevo PIP</button>
@@ -291,7 +351,7 @@ small{font-size:10px;color:#999}
             </div>
             <div class="mb-10"><label class="field-label">Cliente *</label><input type="text" id="pip-cliente" placeholder="Nombre del cliente" /></div>
             <div class="grid-2 mb-10">
-              <div><label class="field-label">Nombre del proyecto</label><input type="text" id="pip-nombre" placeholder="Ej: Stand Novozymes — Expoagro 2026" /></div>
+              <div><label class="field-label">Nombre del proyecto</label><input type="text" id="pip-nombre" placeholder="Ej: Remodelación Depto. Palermo 2026" /></div>
               <div>
   <label class="field-label">Pauta del cliente ($)</label>
   <div style="position:relative">
@@ -304,37 +364,36 @@ small{font-size:10px;color:#999}
 </div>
             </div>
             <!-- Feria/Evento -->
-            <div style="font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--border)">Feria / Evento</div>
+            <div style="font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--border)">Datos de la Obra</div>
             <div class="grid-2 mb-10">
-              <div><label class="field-label">Nombre del evento</label><input type="text" id="pip-evento" placeholder="Ej: Expoagro 2026" /></div>
-              <div><label class="field-label">Lugar</label><input type="text" id="pip-lugar" placeholder="Ej: La Rural" /></div>
+              <div><label class="field-label">Dirección</label><input type="text" id="pip-evento" placeholder="Ej: Palermo, CABA" /></div>
+              <div><label class="field-label">Barrio / Localidad</label><input type="text" id="pip-lugar" placeholder="Ej: Av. Santa Fe 1234" /></div>
             </div>
             <div class="grid-2 mb-10">
-              <div><label class="field-label">Predio / Pabellón</label><input type="text" id="pip-predio" placeholder="Ej: Nacional / Pab. 3" /></div>
-              <div><label class="field-label">N° de Lote</label><input type="text" id="pip-lote-nro" placeholder="Ej: 1351" /></div>
+              <div><label class="field-label">Propietario</label><input type="text" id="pip-predio" placeholder="Nombre del propietario" /></div>
+              <div><label class="field-label">Parc. / Manz.</label><input type="text" id="pip-lote-nro" placeholder="Ej: 1351" /></div>
             </div>
             <div class="grid-2 mb-10">
-              <div><label class="field-label">Apertura feria</label><input type="date" id="pip-fecha-apertura" /></div>
-              <div><label class="field-label">Cierre feria</label><input type="date" id="pip-fecha-cierre" /></div>
+              <div><label class="field-label">Inicio de obra</label><input type="date" id="pip-fecha-apertura" /></div>
+              <div><label class="field-label">Fin de obra</label><input type="date" id="pip-fecha-cierre" /></div>
             </div>
             <div class="grid-2 mb-10">
-              <div><label class="field-label">Inicio montaje</label><input type="date" id="pip-fecha-montaje" /></div>
-              <div><label class="field-label">Desmontaje</label><input type="date" id="pip-fecha-desmontaje" /></div>
+              <div><label class="field-label">Firma contrato</label><input type="date" id="pip-fecha-montaje" /></div>
+              <div><label class="field-label">Entrega final</label><input type="date" id="pip-fecha-desmontaje" /></div>
             </div>
-            <!-- Stand -->
-            <div style="font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--border)">Stand</div>
-            <div class="grid-3 mb-10">
-              <div><label class="field-label">M² lote</label><input type="number" id="pip-m2" placeholder="36" /></div>
-              <div><label class="field-label">Frente (m)</label><input type="number" id="pip-frente" placeholder="6" /></div>
-              <div><label class="field-label">Fondo (m)</label><input type="number" id="pip-fondo" placeholder="6" /></div>
-            </div>
+            <!-- Obra -->
+            <div style="font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--border)">Obra</div>
             <div class="grid-2 mb-10">
-              <div><label class="field-label">Tipología</label>
-                <select id="pip-tipo"><option value="isla">Isla (4 lados libres)</option><option value="peninsula">Península (3 lados libres)</option><option value="esquina">Esquina (2 lados libres)</option><option value="entre3">Entre 3 medianeras</option></select>
+              <div><label class="field-label">M² totales</label><input type="number" id="pip-m2" placeholder="120" /></div>
+              <div><label class="field-label">Tipo de obra</label>
+                <select id="pip-tipo"><option value="obra_nueva">Obra Nueva</option><option value="remodelacion">Remodelación</option><option value="ampliacion">Ampliación</option><option value="refaccion">Refacción</option><option value="reciclaje">Reciclaje</option><option value="reforma_bano_cocina">Reforma Baño/Cocina</option></select>
               </div>
-              <div><label class="field-label">Entrepiso (m²)</label><input type="number" id="pip-entrepiso" placeholder="0" /></div>
             </div>
-            <div><label class="field-label">Brief</label><textarea id="pip-brief" rows="3" placeholder="Descripción del evento, marca, objetivos, estilo..."></textarea></div>
+            <!-- campos ocultos para compatibilidad con oferta -->
+            <input type="hidden" id="pip-frente" value="" />
+            <input type="hidden" id="pip-fondo" value="" />
+            <input type="hidden" id="pip-entrepiso" value="0" />
+            <div><label class="field-label">Brief</label><textarea id="pip-brief" rows="3" placeholder="Descripción de la obra, alcances, materiales a utilizar, requerimientos especiales..."></textarea></div>
           </div>
         </div>
 
@@ -419,6 +478,26 @@ small{font-size:10px;color:#999}
           </div>
         </div>
 
+        <!-- PLANTA -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header" style="cursor:pointer" onclick="togglePlantaSection()">
+            <div>
+              <div class="card-title">📐 Planta del proyecto</div>
+              <div style="font-size:11px;color:#888;margin-top:2px">Dibujá los ambientes para calcular cantidades automáticamente</div>
+            </div>
+            <span id="planta-toggle-icon" style="font-size:18px;color:#888">▶</span>
+          </div>
+          <div id="planta-section" style="display:none">
+            <div style="padding:10px 12px;border-top:1px solid var(--border)">
+              <div id="planta-editor-pip"></div>
+              <div id="planta-computo-pip" style="display:none;margin-top:10px;padding:10px 12px;background:#F7F3EE;border-radius:8px"></div>
+              <button onclick="aplicarPlantaAlPIP()" class="btn btn-primary" style="margin-top:10px;width:100%">
+                📋 Aplicar cantidades al presupuesto
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- CV-A -->
         <div class="card">
           <div class="card-header">
@@ -456,13 +535,11 @@ small{font-size:10px;color:#999}
             </div>
           </div>
         </div>
-        <!-- PASO 2: Resultado inline + botón propuesta -->
+        <!-- PASO 2: Resultado inline -->
         <div id="step-resultado" style="display:none">
-          <!-- Resumen de precio calculado -->
           <div id="calc-preview" class="card mb-12" style="border-left:4px solid var(--accent)"></div>
-          <!-- Botón propuesta IA -->
-          <button class="btn btn-full mb-12" id="btn-propuesta" onclick="generarPropuesta()" style="background:var(--navy);color:#fff;font-size:14px;padding:14px">
-            ✦ Generar propuesta estética con IA
+          <button class="btn btn-full mb-12" onclick="guardarYVerResultado()" style="background:var(--navy);color:#fff;font-size:14px;padding:14px">
+            💾 Guardar proyecto
           </button>
           <button class="btn btn-secondary btn-full mb-12" onclick="resetCalculo()" style="font-size:12px">
             ← Volver a editar costos
@@ -496,23 +573,41 @@ small{font-size:10px;color:#999}
             <span id="admin-precios-btns" style="display:none;gap:6px" class="flex">
               <button class="btn btn-sm" style="background:#F0EAE2;color:#666;font-size:11px" onclick="resetRubroDefault()" title="Resetear SOLO este rubro al listado por defecto">↺ Default rubro</button>
               <button class="btn btn-primary btn-sm" onclick="savePrecios()" id="btn-save-precios">Guardar rubro</button>
+              <button class="btn btn-sm" onclick="saveMateriales()" id="btn-save-materiales" style="background:#E67E22;color:#fff;font-size:11px;display:none">Guardar materiales</button>
             </span>
             <span id="member-precios-label" style="display:none;font-size:11px;color:#888">Solo lectura</span>
           </div>
         </div>
+        <div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:flex-end">
+          <button id="tab-materiales" onclick="switchToMateriales(this)" style="font-size:11px;padding:5px 14px;border-radius:15px;border:1.5px solid #E67E22;background:transparent;color:#E67E22;cursor:pointer;font-weight:600">🧰 Precios de Materiales</button>
+        </div>
         <div id="precios-tabs-bar" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--border);-ms-overflow-style:none;scrollbar-width:none;-webkit-overflow-scrolling:touch">
-          <button class="tab active" onclick="preciosTab('pisos',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#8B6F47">🪵 Pisos</button>
-          <button class="tab" onclick="preciosTab('constructor',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#4A6741">🏗 Constructor</button>
-          <button class="tab" onclick="preciosTab('vidrios',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#2C7BB6">🪟 Vidrios</button>
-          <button class="tab" onclick="preciosTab('electricidad',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#D4A017">💡 Elect.</button>
-          <button class="tab" onclick="preciosTab('grafica',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#B85C38">🖨 Gráfica</button>
-          <button class="tab" onclick="preciosTab('equipamiento',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#5B4A8A">🪑 Mobil.</button>
-          <button class="tab" onclick="preciosTab('audiovisual',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#1A7A8A">📺 AV</button>
-          <button class="tab" onclick="preciosTab('entelados',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#3A8A5C">🧵 Entelados</button>
-          <button class="tab" onclick="preciosTab('otros',this)" style="flex:none;border-radius:0;padding:8px 12px;font-size:11px" data-color="#6A6A6A">📦 Otros</button>
+          <button class="tab active" onclick="preciosTab('preliminares',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#6A6A6A">📋 Prelim.</button>
+          <button class="tab" onclick="preciosTab('demoliciones',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#8B4513">🔨 Demol.</button>
+          <button class="tab" onclick="preciosTab('movimiento_tierra',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#A0522D">⛏ Tierra</button>
+          <button class="tab" onclick="preciosTab('estructura',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#4A6741">🏗 Estruc.</button>
+          <button class="tab" onclick="preciosTab('mamposteria',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#B85C38">🧱 Mamp.</button>
+          <button class="tab" onclick="preciosTab('construccion_seco',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#5B4A8A">📐 Seco</button>
+          <button class="tab" onclick="preciosTab('aislaciones',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#2C6B8A">🛡 Aislac.</button>
+          <button class="tab" onclick="preciosTab('cubierta',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#2C7BB6">🏠 Cubierta</button>
+          <button class="tab" onclick="preciosTab('revoques',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#A0845C">🪣 Revoq.</button>
+          <button class="tab" onclick="preciosTab('revestimientos',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#7A5C3A">🔲 Revest.</button>
+          <button class="tab" onclick="preciosTab('cielorrasos',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#888">⬜ Cielo.</button>
+          <button class="tab" onclick="preciosTab('contrapisos',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#6B7A4A">🪨 Contrap.</button>
+          <button class="tab" onclick="preciosTab('pisos',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#8B6F47">🪵 Pisos</button>
+          <button class="tab" onclick="preciosTab('escaleras',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#7A6A5A">🪜 Escal.</button>
+          <button class="tab" onclick="preciosTab('marmoleria',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#4A4A4A">🔳 Mármol</button>
+          <button class="tab" onclick="preciosTab('carpinteria_metalica',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#5A6A7A">⚙ C.Metal</button>
+          <button class="tab" onclick="preciosTab('carpinteria_madera',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#6B4226">🚪 C.Madera</button>
+          <button class="tab" onclick="preciosTab('sanitaria',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#1A7A8A">🚿 Sanit.</button>
+          <button class="tab" onclick="preciosTab('electricidad',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#D4A017">💡 Eléct.</button>
+          <button class="tab" onclick="preciosTab('calefaccion',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#E67E22">🌡 Calef.</button>
+          <button class="tab" onclick="preciosTab('pintura',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#3A8A5C">🎨 Pintura</button>
+          <button class="tab" onclick="preciosTab('otros',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#6A6A6A">📦 Otros</button>
 
         </div>
         <div id="precios-content"></div>
+        <div id="materiales-content" style="display:none;padding:12px"></div>
         <div style="padding:8px 14px;border-top:1px solid var(--border)">
           <button class="btn btn-secondary btn-sm" style="border:1.5px dashed #DDD4C8;background:none;color:#888" onclick="addCatalogItem(currentPreciosTab)">+ ítem</button>
         </div>
@@ -572,253 +667,124 @@ const DEFAULT_PARAMS={margen_seguridad:0.02,costo_admin:0.05,margen:0.10,iibb:0.
 const PARAM_LABELS={margen_seguridad:'Margen seguridad',costo_admin:'Gastos Admin.',margen:'Margen ganancia',iibb:'Ingresos Brutos',ganancias:'Ganancias',sello:'Imp. Sello',debcred:'Déb/Créd Bancario',costo_financiero:'Costo Financiero',comision_agencia:'Comisión Agencia',iva:'IVA'};
 
 const DEFAULT_CATALOG={
+  preliminares:[
+    {id:'pr01',label:'Limpieza y nivelación del terreno',unit:'m²',precio:118887},
+    {id:'pr02',label:'Obrador, depósito y sanitarios',unit:'m²',precio:566201}
+  ],
+  demoliciones:[
+    {id:'d01',label:'Demolición de obra completa',unit:'m²',precio:7079584},
+    {id:'d02',label:'Demolición de estructura de hormigón',unit:'m³',precio:1613362}
+  ],
+  movimiento_tierra:[
+    {id:'mt01',label:'Excavación manual de bases',unit:'m³',precio:90886},
+    {id:'mt02',label:'Excavación manual de vigas de fundación',unit:'m³',precio:330190}
+  ],
+  estructura:[
+    {id:'e01',label:'Pilotín diámetro 20cm',unit:'u',precio:130084},
+    {id:'e02',label:'Bases céntricas cuantía 60 kg/m³',unit:'m³',precio:1455435}
+  ],
+  mamposteria:[
+    {id:'m01',label:'Bloques de hormigón 20x20x40',unit:'m²',precio:55762},
+    {id:'m02',label:'Bloques de hormigón 10x20x40',unit:'m²',precio:36678}
+  ],
+  construccion_seco:[
+    {id:'cs01',label:'Tabique simple esp. 9.5cm',unit:'m²',precio:50058},
+    {id:'cs02',label:'Pared divisoria unidades funcionales',unit:'m²',precio:89733}
+  ],
+  aislaciones:[
+    {id:'a01',label:'De sótano cementicia',unit:'m²',precio:50058},
+    {id:'a02',label:'Horizontal doble en muros cajón',unit:'m²',precio:20044}
+  ],
+  cubierta:[
+    {id:'cu01',label:'Cubierta c/membrana aluminio',unit:'m²',precio:257203},
+    {id:'cu02',label:'Cubierta transitable con baldosas',unit:'m²',precio:316556}
+  ],
+  revoques:[
+    {id:'r01',label:'Grueso y fino a la cal al fieltro',unit:'m²',precio:46355},
+    {id:'r02',label:'Revoque proyectable exterior',unit:'m²',precio:229374}
+  ],
+  revestimientos:[
+    {id:'rv01',label:'Cerámico 20x20cm en pared',unit:'m²',precio:31414},
+    {id:'rv02',label:'Porcellanato 30x30 rústico',unit:'m²',precio:46151}
+  ],
+  cielorrasos:[
+    {id:'cr01',label:'Aplicado a la cal fina fratasada',unit:'m²',precio:46440},
+    {id:'cr02',label:'Suspendido a la cal armado en madera',unit:'m²',precio:118643}
+  ],
+  contrapisos:[
+    {id:'cp01',label:'Hormigón de cascote 15cm s/terreno',unit:'m²',precio:70000},
+    {id:'cp02',label:'Hormigón de cascote sobre losa 7cm',unit:'m²',precio:34995}
+  ],
   pisos:[
-    {id:'p1',label:'Tarima y alfombra nueva',unit:'m²',precio:33800},
-    {id:'p2',label:'Tarima y alfombra usada',unit:'m²',precio:22200},
-    {id:'p3',label:'Alfombra nueva colocada',unit:'m²',precio:23400},
-    {id:'p4',label:'Alfombra usada colocada',unit:'m²',precio:13000},
-    {id:'p5',label:'Césped sintético',unit:'m²',precio:35000},
-    {id:'p6',label:'Baldosas blancas 50×50',unit:'m²',precio:32700},
-    {id:'p7',label:'Melamina blanca (placa entera)',unit:'m²',precio:63600},
-    {id:'p8',label:'Melamina color',unit:'m²',precio:0},
-    {id:'p9',label:'Fibro blanco',unit:'m²',precio:45300},
-    {id:'p10',label:'Fibro colores',unit:'m²',precio:53000}
+    {id:'p01',label:'Alisado de cemento ferrocementado 5cm',unit:'m²',precio:88720},
+    {id:'p02',label:'Porcelanato opaco 30x30',unit:'m²',precio:48580}
   ],
-  constructor:[
-    {id:'c1',label:'Constructor GL',unit:'m²',precio:350000},
-    {id:'c2',label:'Panelería 1,00x2,40',unit:'u',precio:130000},
-    {id:'c3',label:'Mostrador H90',unit:'m lineal',precio:75000}
+  escaleras:[
+    {id:'es01',label:'Alzada y pedada de cemento alisado',unit:'m²',precio:48712},
+    {id:'es02',label:'Alzada y pedada de cerámica 20x20',unit:'m²',precio:116218}
   ],
-  vidrios:[
-    {id:'v1',label:'Vidrio 4mm',unit:'m²',precio:45000},
-    {id:'v2',label:'Vidrio 6mm',unit:'m²',precio:70000},
-    {id:'v3',label:'Vidrio 3+3',unit:'m²',precio:150000},
-    {id:'v4',label:'Vidrio 3+3 cortes pequeños',unit:'m²',precio:130000},
-    {id:'v5',label:'Vitrina con pivot',unit:'m²',precio:80000},
-    {id:'v6',label:'Vitrina puertas corredizas',unit:'m lineal',precio:100000},
-    {id:'v7',label:'Vidrio para puertas corredizas 4mm',unit:'m²',precio:45000}
+  marmoleria:[
+    {id:'mr01',label:'Mesada de granito gris mara 60cm',unit:'ml',precio:318121},
+    {id:'mr02',label:'Piso de mármetas de granito',unit:'m²',precio:303984}
+  ],
+  carpinteria_metalica:[
+    {id:'cm01',label:'Marco chapa y puerta simple',unit:'m²',precio:353631},
+    {id:'cm02',label:'Escalera caracol diám. 1.40',unit:'u',precio:1978977}
+  ],
+  carpinteria_madera:[
+    {id:'cma01',label:'Mueble de cocina bajo mesada',unit:'ml',precio:489054},
+    {id:'cma02',label:'Alacena',unit:'u',precio:513924}
+  ],
+  sanitaria:[
+    {id:'sa01',label:'Baño completo',unit:'u',precio:8784982},
+    {id:'sa02',label:'Cocina y lavadero',unit:'u',precio:3098241}
   ],
   electricidad:[
-    {id:'e1',label:'Tablero monofásico',unit:'u',precio:130000},
-    {id:'e2',label:'Tablero trifásico',unit:'u',precio:285000},
-    {id:'e3',label:'Tomas dobles',unit:'u',precio:11600},
-    {id:'e4',label:'Primier LED con brazo',unit:'u',precio:34000},
-    {id:'e5',label:'Pantallita LED 100w',unit:'u',precio:34000},
-    {id:'e6',label:'Dicroica de embutir',unit:'u',precio:27200},
-    {id:'e7',label:'AR111 de embutir',unit:'u',precio:27200},
-    {id:'e8',label:'PAR 63 RGB',unit:'u',precio:35000},
-    {id:'e9',label:'Tira LED',unit:'m lineal',precio:30000},
-    {id:'e10',label:'Neon LED',unit:'m lineal',precio:45000},
-    {id:'e11',label:'Electricidad GL',unit:'global',precio:1300000},
-    {id:'e12',label:'Cableado GL',unit:'global',precio:315000}
+    {id:'el01',label:'Boca de iluminación y toma',unit:'u',precio:276298},
+    {id:'el02',label:'Tablero fuerza motriz',unit:'u',precio:946907}
   ],
-  grafica:[
-    {id:'g1',label:'Vinilo Mate',unit:'m²',precio:36000},
-    {id:'g2',label:'Vinilo Brillante',unit:'m²',precio:36000},
-    {id:'g3',label:'Lona Mate',unit:'m²',precio:36000},
-    {id:'g4',label:'Lona Backlight',unit:'m²',precio:36000},
-    {id:'g5',label:'Microperforado',unit:'m²',precio:42000},
-    {id:'g6',label:'Esmerilado',unit:'m²',precio:42000},
-    {id:'g7',label:'Vinilo de Corte',unit:'m²',precio:52000},
-    {id:'g8',label:'Corpóreos Acrílico Cajón',unit:'u',precio:970000},
-    {id:'g9',label:'Corpóreos Polifoam 20mm',unit:'u',precio:120000}
+  calefaccion:[
+    {id:'cl01',label:'Piso radiante conexiones a caldera',unit:'m²',precio:56646},
+    {id:'cl02',label:'Cañería y radiadores con caldera',unit:'m²',precio:162023}
   ],
-  equipamiento:[
-    {id:'s1',label:'[Sillas] LISI TAPIZADA',unit:'u',precio:17000},
-    {id:'s2',label:'[Sillas] LISI PLASTICA',unit:'u',precio:14000},
-    {id:'s3',label:'[Sillas] LISI CON PUPITRE',unit:'u',precio:30000},
-    {id:'s4',label:'[Sillas] S7 GIRATORIA',unit:'u',precio:68000},
-    {id:'s5',label:'[Sillas] JODI',unit:'u',precio:45000},
-    {id:'s6',label:'[Sillas] DELTA GIRATORIA',unit:'u',precio:60000},
-    {id:'s7',label:'[Sillas] VERONICA GIRATORIA CON BRAZOS',unit:'u',precio:38000},
-    {id:'s8',label:'[Sillas] LISI GIRATORIA',unit:'u',precio:42000},
-    {id:'s9',label:'[Sillas] ALUMINUM BAJA',unit:'u',precio:85000},
-    {id:'s10',label:'[Sillas] DELTA',unit:'u',precio:46000},
-    {id:'s11',label:'[Sillas] SILLA CAJERA',unit:'u',precio:55000},
-    {id:'s12',label:'[Sillas] SILLA RK8',unit:'u',precio:52000},
-    {id:'s13',label:'[Sillas] AUDITORIO',unit:'u',precio:16000},
-    {id:'s14',label:'[Sillas] SILLA TULUM',unit:'u',precio:35000},
-    {id:'s15',label:'[Sillas] PLEGABLE DE MADERA',unit:'u',precio:11000},
-    {id:'s16',label:'[Sillas] PARIS',unit:'u',precio:13000},
-    {id:'s17',label:'[Sillas] TANDEM LISI X3',unit:'u',precio:70000},
-    {id:'s18',label:'[Sillas] SILLON DIRECTOR',unit:'u',precio:40000},
-    {id:'s19',label:'[Sillas] EAMES',unit:'u',precio:30000},
-    {id:'s20',label:'[Sillas] TOLIX',unit:'u',precio:27000},
-    {id:'s21',label:'[Sillas] JACOBSEN',unit:'u',precio:44000},
-    {id:'s22',label:'[Sillas] BERTOIA',unit:'u',precio:50000},
-    {id:'s23',label:'[Sillas] SILLA PLASTICA',unit:'u',precio:5500},
-    {id:'s24',label:'[Sillas] SILLA GAMER',unit:'u',precio:90000},
-    {id:'s25',label:'[Sillas] SILLON MESH',unit:'u',precio:85000},
-    {id:'cp1',label:'[Compl.] CESTO ALUMINIO',unit:'u',precio:13000},
-    {id:'cp2',label:'[Compl.] PAPELERO PLASTICO',unit:'u',precio:7000},
-    {id:'cp3',label:'[Compl.] PERCHERO DE PIE PINTADO',unit:'u',precio:16000},
-    {id:'cp4',label:'[Compl.] PERCHERO CROMADO',unit:'u',precio:35000},
-    {id:'cp5',label:'[Compl.] CESTO GRANDE SIN TAPA',unit:'u',precio:17000},
-    {id:'cp6',label:'[Compl.] CESTO GRANDE CON TAPA',unit:'u',precio:22000},
-    {id:'cp7',label:'[Compl.] PERCHERO TRINEO',unit:'u',precio:30000},
-    {id:'cp8',label:'[Compl.] PERCHERO DE PARED',unit:'u',precio:7000},
-    {id:'cp9',label:'[Compl.] HELADERA BAJO MESADA',unit:'u',precio:160000},
-    {id:'cp10',label:'[Compl.] HELADERA BAJO MESADA CROMO',unit:'u',precio:165000},
-    {id:'cp11',label:'[Compl.] HELADERA GRANDE CON FREEZER',unit:'u',precio:300000},
-    {id:'cp12',label:'[Compl.] HELADERA GRANDE GRIS',unit:'u',precio:400000},
-    {id:'cp13',label:'[Compl.] HELADERA EXHIBIDORA',unit:'u',precio:400000},
-    {id:'cp14',label:'[Compl.] FREEZER POZO',unit:'u',precio:300000},
-    {id:'cp15',label:'[Compl.] PIZARRA DE PIE',unit:'u',precio:30000},
-    {id:'cp16',label:'[Compl.] PORTA FOLLETOS MELAMINA',unit:'u',precio:50000},
-    {id:'cp17',label:'[Compl.] PORTA FOLLETOS CROMO',unit:'u',precio:70000},
-    {id:'cp18',label:'[Compl.] POSTE PINTADO CON SOGA',unit:'u',precio:20000},
-    {id:'cp19',label:'[Compl.] POSTE CROMADO CON RETRACTIL',unit:'u',precio:35000},
-    {id:'cp20',label:'[Compl.] MOSTRADOR TAPA RECTA',unit:'u',precio:80000},
-    {id:'cp21',label:'[Compl.] MOSTRADOR RECTO SIN PUERTAS',unit:'u',precio:136000},
-    {id:'cp22',label:'[Compl.] MOSTRADOR RECTO CON GUARDADO',unit:'u',precio:105000},
-    {id:'cp23',label:'[Compl.] DRESUAR',unit:'u',precio:66000},
-    {id:'cp24',label:'[Compl.] DRESUAR DE CANO',unit:'u',precio:66000},
-    {id:'cp25',label:'[Compl.] GUARDARROPA',unit:'u',precio:30000},
-    {id:'cp26',label:'[Compl.] ESTANTERIA PARA DEPOSITO',unit:'u',precio:47000},
-    {id:'cp27',label:'[Compl.] BIBLIOTECA',unit:'u',precio:45000},
-    {id:'cp28',label:'[Compl.] MUEBLE DE GUARDADO',unit:'u',precio:58000},
-    {id:'cp29',label:'[Compl.] ESPEJO CAMARIN',unit:'u',precio:75000},
-    {id:'cp30',label:'[Compl.] ESPEJO CUERPO ENTERO',unit:'u',precio:115000},
-    {id:'cp31',label:'[Compl.] BEAUTY',unit:'u',precio:200000},
-    {id:'cp32',label:'[Compl.] PODIO ORADOR',unit:'u',precio:44000},
-    {id:'cp33',label:'[Compl.] MICROONDAS',unit:'u',precio:120000},
-    {id:'cp34',label:'[Compl.] HORNO ELECTRICO',unit:'u',precio:120000},
-    {id:'cp35',label:'[Compl.] CAFETERA DE FILTRO',unit:'u',precio:40000},
-    {id:'cp36',label:'[Compl.] MATAFUEGO 5 KG',unit:'u',precio:60000},
-    {id:'cp37',label:'[Compl.] CARRO AEROPUERTO',unit:'u',precio:80000},
-    {id:'cp38',label:'[Compl.] DISPENSER',unit:'u',precio:120000},
-    {id:'cp39',label:'[Compl.] BIDON ADICIONAL 20L',unit:'u',precio:17000},
-    {id:'t1',label:'[Taburetes] MILO',unit:'u',precio:29000},
-    {id:'t2',label:'[Taburetes] ZETA',unit:'u',precio:40000},
-    {id:'t3',label:'[Taburetes] BERTOIA',unit:'u',precio:55000},
-    {id:'t4',label:'[Taburetes] VITRO',unit:'u',precio:50000},
-    {id:'t5',label:'[Taburetes] CRETA',unit:'u',precio:26000},
-    {id:'t6',label:'[Taburetes] JB',unit:'u',precio:30000},
-    {id:'t7',label:'[Taburetes] NR REDONDO',unit:'u',precio:35000},
-    {id:'t8',label:'[Taburetes] NR MADERA',unit:'u',precio:38000},
-    {id:'t9',label:'[Taburetes] NR RESPALDO ALTO TAPIZADO',unit:'u',precio:49000},
-    {id:'t10',label:'[Taburetes] TOLIX',unit:'u',precio:33000},
-    {id:'t11',label:'[Taburetes] EAMES',unit:'u',precio:45000},
-    {id:'t12',label:'[Taburetes] TULIP',unit:'u',precio:40000},
-    {id:'t13',label:'[Taburetes] MESA ALTA + 3 TAB',unit:'set',precio:78000},
-    {id:'t14',label:'[Taburetes] MESA ALTA + 4 TAB',unit:'set',precio:105000},
-    {id:'t15',label:'[Taburetes] DRESUAR + 4 TAB',unit:'set',precio:115000},
-    {id:'t16',label:'[Taburetes] TULUM',unit:'u',precio:42000},
-    {id:'t17',label:'[Taburetes] DRESUAR + 4 TAB TOLIX',unit:'set',precio:118000},
-    {id:'t18',label:'[Taburetes] MILO WOOD',unit:'u',precio:75000},
-    {id:'l1',label:'[Living] LC 1 CUERPO',unit:'u',precio:170000},
-    {id:'l2',label:'[Living] LC 2 CUERPOS',unit:'u',precio:260000},
-    {id:'l3',label:'[Living] LC 3 CUERPOS',unit:'u',precio:400000},
-    {id:'l4',label:'[Living] VALENCIA 1 CUERPO',unit:'u',precio:70000},
-    {id:'l5',label:'[Living] VALENCIA 2 CUERPOS',unit:'u',precio:130000},
-    {id:'l6',label:'[Living] VALENCIA 3 CUERPOS',unit:'u',precio:185000},
-    {id:'l7',label:'[Living] AD150 1 CUERPO',unit:'u',precio:74000},
-    {id:'l8',label:'[Living] AD150 2 CUERPOS',unit:'u',precio:135000},
-    {id:'l9',label:'[Living] NORDICO',unit:'u',precio:65000},
-    {id:'l10',label:'[Living] NORDICO DOBLE',unit:'u',precio:120000},
-    {id:'l11',label:'[Living] GERVASONI 1 CUERPO',unit:'u',precio:85000},
-    {id:'l12',label:'[Living] GERVASONI 2 CUERPOS',unit:'u',precio:130000},
-    {id:'l13',label:'[Living] BARCELONA 1 CUERPO',unit:'u',precio:180000},
-    {id:'l14',label:'[Living] BARCELONA 2 CUERPOS',unit:'u',precio:300000},
-    {id:'l15',label:'[Living] SWAN',unit:'u',precio:120000},
-    {id:'l16',label:'[Living] BRNO',unit:'u',precio:80000},
-    {id:'l17',label:'[Living] PAULIN',unit:'u',precio:78000},
-    {id:'l18',label:'[Living] BANCO PLAZA',unit:'u',precio:80000},
-    {id:'l19',label:'[Living] PUFF SIMPLE',unit:'u',precio:15500},
-    {id:'l20',label:'[Living] JUEGO 10 PERSONAS',unit:'set',precio:153600},
-    {id:'l21',label:'[Living] PUFF NORDICO',unit:'u',precio:32000},
-    {id:'l22',label:'[Living] OTONAMA',unit:'u',precio:42000},
-    {id:'l23',label:'[Living] PUFF BASE CROMADA',unit:'u',precio:32000},
-    {id:'l24',label:'[Living] SILLON TULUM',unit:'u',precio:60000},
-    {id:'l25',label:'[Living] FIACAS ADULTOS',unit:'u',precio:26000},
-    {id:'me1',label:'[Mesas] MESA ALTA NR',unit:'u',precio:48000},
-    {id:'me2',label:'[Mesas] RATONA BARCELONA MELAMINA',unit:'u',precio:50000},
-    {id:'me3',label:'[Mesas] MESA RATONA PIE CENTRAL',unit:'u',precio:45000},
-    {id:'me4',label:'[Mesas] RATONA BARCELONA',unit:'u',precio:70000},
-    {id:'me5',label:'[Mesas] RATONA MELAMINA',unit:'u',precio:38000},
-    {id:'me6',label:'[Mesas] RATONA NOGUCHI',unit:'u',precio:190000},
-    {id:'me7',label:'[Mesas] RATONA NORDICA',unit:'u',precio:57000},
-    {id:'me8',label:'[Mesas] MESA BAJA PIE CENTRAL',unit:'u',precio:46000},
-    {id:'me9',label:'[Mesas] RATONA MDP',unit:'u',precio:35000},
-    {id:'me10',label:'[Mesas] MESA REUNION RENE',unit:'u',precio:310000},
-    {id:'me11',label:'[Mesas] ESCRITORIO 120x60',unit:'u',precio:55000},
-    {id:'me12',label:'[Mesas] MESA REUNION RECTANGULAR',unit:'u',precio:110000},
-    {id:'me13',label:'[Mesas] MESA REUNION RECTANGULAR CHICA',unit:'u',precio:85000},
-    {id:'me14',label:'[Mesas] MESA EAMES',unit:'u',precio:98000},
-    {id:'me15',label:'[Mesas] MESA DE CATERING',unit:'u',precio:30000},
-    {id:'me16',label:'[Mesas] MESA PLEGABLE EXTERIOR',unit:'u',precio:50000},
-    {id:'me17',label:'[Mesas] MESA REUNION 200',unit:'u',precio:130000},
-    {id:'me18',label:'[Mesas] MESA PATA PLEGABLE',unit:'u',precio:65000},
-    {id:'me19',label:'[Mesas] RATONA GOTA',unit:'u',precio:120000},
-    {id:'me20',label:'[Mesas] COMBO RATONAS NORDICAS',unit:'set',precio:100000},
-    {id:'me21',label:'[Mesas] MESA ALTA TAPA VIDRIO',unit:'u',precio:130000},
-    {id:'me22',label:'[Mesas] MESA DE REUNION MADERA',unit:'u',precio:130000},
-    {id:'me23',label:'[Mesas] MESA BAJA TAPA VIDRIO',unit:'u',precio:176000}
-  ],
-  audiovisual:[
-    {id:'av1',label:'LED TV 32\'\'',unit:'u',precio:280000},
-    {id:'av2',label:'LED TV 42\'\'',unit:'u',precio:300000},
-    {id:'av3',label:'LED TV 55\'\'',unit:'u',precio:350000},
-    {id:'av4',label:'LED TV 65\'\'',unit:'u',precio:450000},
-    {id:'av5',label:'Pantalla LED 2mm indoor',unit:'m²',precio:510000},
-    {id:'av6',label:'Pantalla LED 2mm outdoor',unit:'m²',precio:550000},
-    {id:'av7',label:'Pantalla LED Flex',unit:'m²',precio:630000},
-    {id:'av8',label:'Técnica especial',unit:'m²',precio:40000},
-    {id:'av9',label:'Pantalla LED 3mm biselada',unit:'m²',precio:510000},
-    {id:'av10',label:'Laptop',unit:'u',precio:70000},
-    {id:'av11',label:'Proyector',unit:'u',precio:90000}
+  pintura:[
+    {id:'pi01',label:'Látex sobre muros interiores',unit:'m²',precio:15949},
+    {id:'pi02',label:'Látex sobre cielo rasos',unit:'m²',precio:15994}
   ],
   otros:[
-    {id:'o1',label:'Limpieza de Obra',unit:'m²',precio:0},
-    {id:'o2',label:'Limpieza Final',unit:'m²',precio:0},
-    {id:'o3',label:'Ignifugado',unit:'m²',precio:0},
-    {id:'o4',label:'Internet',unit:'global',precio:0},
-    {id:'o5',label:'Instalación de Agua / Desagüe',unit:'global',precio:0},
-    {id:'o6',label:'Fotografía',unit:'global',precio:0},
-    {id:'o7',label:'Plantas mínimo',unit:'global',precio:0},
-    {id:'o8',label:'Decoración varias',unit:'global',precio:0}
+    {id:'o01',label:'Limpieza periódica',unit:'mes',precio:1494000},
+    {id:'o02',label:'Ayuda de gremios',unit:'m²',precio:3526}
   ],
   indirectos:[
-    {id:'b1',label:'Viáticos',unit:'global',precio:0},
-    {id:'b2',label:'Dirección de obra',unit:'global',precio:0},
-    {id:'b3',label:'Pasajes y combustibles',unit:'global',precio:0},
-    {id:'b4',label:'Hospedaje',unit:'global',precio:0},
-    {id:'b5',label:'Varios e imprevistos',unit:'global',precio:0},
-    {id:'b6',label:'Encomienda profesional',unit:'global',precio:0}
-  ],
-  entelados:[
-    {id:'en1',label:'Set de poliéster — provisión y colocación',unit:'m lineal',precio:26000},
-    {id:'en2',label:'Set de poliéster — provisión y colocación',unit:'m²',precio:17000},
-    {id:'en3',label:'Set de poliéster y nylon — provisión y colocación',unit:'m lineal',precio:31000},
-    {id:'en4',label:'Set de poliéster y nylon — provisión y colocación',unit:'m²',precio:20000},
-    {id:'en5',label:'Tela impresa — solo colocación',unit:'m lineal',precio:18000},
-    {id:'en6',label:'Tela impresa — solo colocación',unit:'m²',precio:12000},
-    {id:'en7',label:'Tela impresa con nylon — solo colocación',unit:'m lineal',precio:22000},
-    {id:'en8',label:'Tela impresa con nylon — solo colocación',unit:'m²',precio:14000},
-    {id:'en9',label:'Tela impresa con nylon — solo provisión y confección',unit:'m lineal',precio:18000},
-    {id:'en10',label:'Tela impresa con nylon — solo provisión y confección',unit:'m²',precio:12000},
-    {id:'en11',label:'Tela voile',unit:'m lineal',precio:25000},
-    {id:'en12',label:'Tela voile',unit:'m²',precio:12000},
-    {id:'en13',label:'Bastidor entelado (listones 1x1) — mín 10m',unit:'m²',precio:36000},
-    {id:'en14',label:'Bastidor entelado (listones 2x1) — mín 10m',unit:'m²',precio:45000},
-    {id:'en15',label:'Cortinas de hilo',unit:'m²',precio:50000},
-    {id:'en16',label:'Alquiler telón hasta 3,00m altura',unit:'m lineal',precio:45000},
-    {id:'en17',label:'Alquiler telón hasta 5,00m altura',unit:'m lineal',precio:60000},
-    {id:'en18',label:'Alquiler telón hasta 6,50m altura',unit:'m lineal',precio:70000},
-    {id:'en19',label:'Alquiler telón hasta 11,00m altura',unit:'m lineal',precio:75000},
+    {id:'b01',label:'Dirección de obra',unit:'global',precio:0},
+    {id:'b02',label:'Honorarios profesionales',unit:'global',precio:0},
+    {id:'b03',label:'Imprevistos',unit:'global',precio:0}
   ],
 };
 
 const RUBRO_SECTIONS=[
+  {key:'preliminares',label:'📋 Preliminares'},
+  {key:'demoliciones',label:'🔨 Demoliciones'},
+  {key:'movimiento_tierra',label:'⛏ Mov. de Tierra'},
+  {key:'estructura',label:'🏗 Estructura'},
+  {key:'mamposteria',label:'🧱 Mampostería'},
+  {key:'construccion_seco',label:'📐 En Seco'},
+  {key:'aislaciones',label:'🛡 Aislaciones'},
+  {key:'cubierta',label:'🏠 Cubierta'},
+  {key:'revoques',label:'🪣 Revoques'},
+  {key:'revestimientos',label:'🔲 Revestimientos'},
+  {key:'cielorrasos',label:'⬜ Cielorrasos'},
+  {key:'contrapisos',label:'🪨 Contrapisos'},
   {key:'pisos',label:'🪵 Pisos'},
-  {key:'constructor',label:'🏗 Constructor / Arquitectura'},
-  {key:'vidrios',label:'🪟 Vidrios'},
-  {key:'electricidad',label:'💡 Electricidad e iluminación'},
-  {key:'grafica',label:'🖨 Gráfica'},
-  {key:'equipamiento',label:'🪑 Equipamiento / Mobiliario'},
-  {key:'audiovisual',label:'📺 Audio y video'},
-  {key:'entelados',label:'🧵 Entelados'},
-  {key:'otros',label:'📦 Otros / Servicios'},
+  {key:'escaleras',label:'🪜 Escaleras'},
+  {key:'marmoleria',label:'🔳 Marmolería'},
+  {key:'carpinteria_metalica',label:'⚙ Carp. Metálica'},
+  {key:'carpinteria_madera',label:'🚪 Carp. Madera'},
+  {key:'sanitaria',label:'🚿 Sanitaria'},
+  {key:'electricidad',label:'💡 Eléctrica'},
+  {key:'calefaccion',label:'🌡 Calefacción'},
+  {key:'pintura',label:'🎨 Pintura'},
+  {key:'otros',label:'📦 Otros'},
 ];
 
 
@@ -898,7 +864,7 @@ async function initApp(user){
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   // Cargar config con fallback seguro
-  await Promise.all([loadParametros(),loadCatalog()]);
+  await Promise.all([loadParametros(),loadCatalog(),loadMateriales()]);
   await migrarCatalogoSiNecesario();
   initPIPRubros();
   showView('pip');
@@ -995,7 +961,7 @@ async function showView(v){
 // ── PARÁMETROS ──
 async function loadParametros(){
   try{
-    const{data,error}=await sb.from('config').select('value').eq('key','parametros').maybeSingle();
+    const{data,error}=await sb.from('config_obra').select('value').eq('key','parametros').maybeSingle();
     parametros=data?.value?{...DEFAULT_PARAMS,...JSON.parse(data.value)}:{...DEFAULT_PARAMS};
   }catch(e){ parametros={...DEFAULT_PARAMS}; }
   updateParamsSummary();
@@ -1004,7 +970,7 @@ async function saveParametros(){
   if(!isAdmin()) return toast('Solo los administradores pueden modificar parámetros','error');
   document.querySelectorAll('[data-param]').forEach(f=>{parametros[f.dataset.param]=parseFloat(f.value)/100||0;});
   try{
-    await sb.from('config').upsert({key:'parametros',value:JSON.stringify(parametros),updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'key'});
+    await sb.from('config_obra').upsert({key:'parametros',value:JSON.stringify(parametros),updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'key'});
     toast('✓ Parámetros guardados','success');
   }catch(e){toast('Error: '+e.message,'error');}
   updateParamsSummary();
@@ -1040,7 +1006,7 @@ async function loadCatalog(){
   });
 
   try{
-    const resp=await sb.from('catalogo')
+    const resp=await sb.from('catalogo_obra')
       .select('id,rubro,label,unit,precio,orden')
       .eq('activo',true)
       .order('rubro').order('orden');
@@ -1088,7 +1054,7 @@ async function savePrecios(){
   const rubro=currentPreciosTab;
   const items=preciosCatalog[rubro]||[];
   try{
-    const delResp=await sb.from('catalogo').delete().eq('rubro',rubro);
+    const delResp=await sb.from('catalogo_obra').delete().eq('rubro',rubro);
     if(delResp.error) throw new Error('Error al borrar: '+delResp.error.message);
     if(items.length>0){
       const rows=items.map((it,i)=>({
@@ -1102,7 +1068,7 @@ async function savePrecios(){
         updated_by: currentUser.id,
         updated_at: new Date().toISOString()
       }));
-      const insResp=await sb.from('catalogo').insert(rows);
+      const insResp=await sb.from('catalogo_obra').insert(rows);
       if(insResp.error) throw new Error('Error al insertar: '+insResp.error.message);
       preciosCatalog[rubro]=rows.map(r=>({id:r.id,label:r.label,unit:r.unit,precio:r.precio}));
     }
@@ -1146,11 +1112,11 @@ async function migrarCatalogoSiNecesario(){
   // Migrar una sola vez del config.catalogo JSON a tabla catalogo por ítems
   try{
     // Ver si la tabla catalogo ya tiene datos
-    const{data:existing}=await sb.from('catalogo').select('id').limit(1);
+    const{data:existing}=await sb.from('catalogo_obra').select('id').limit(1);
     if(existing&&existing.length>0) return; // ya migrado
 
     // Buscar catálogo viejo en config
-    const{data:oldConfig}=await sb.from('config').select('value').eq('key','catalogo').maybeSingle();
+    const{data:oldConfig}=await sb.from('config_obra').select('value').eq('key','catalogo').maybeSingle();
     if(!oldConfig?.value) return; // nada que migrar
 
     const oldCatalog=JSON.parse(oldConfig.value);
@@ -1166,7 +1132,7 @@ async function migrarCatalogoSiNecesario(){
       });
     });
     if(rows.length>0){
-      await sb.from('catalogo').upsert(rows,{onConflict:'id'});
+      await sb.from('catalogo_obra').upsert(rows,{onConflict:'id'});
       // Actualizar preciosCatalog con los datos migrados
       await loadCatalog();
       toast('✓ Catálogo migrado correctamente ('+rows.length+' ítems)','success');
@@ -1183,7 +1149,155 @@ function markPreciosDirty(){
     btn.textContent='Guardar rubro ●';
   }
 }
+let _materialesCatalog={}; // loaded from Supabase
+
+async function loadMateriales(){
+  try{
+    const{data,error}=await sb.from('materiales_obra').select('*').eq('activo',true).order('categoria').order('orden');
+    if(error)throw new Error(error.message);
+    if(data&&data.length){
+      // Reset both caches
+      _materialesDB={};
+      _materialesCatalog={};
+      data.forEach(function(m){
+        _materialesDB[m.label]=m;
+        if(!_materialesCatalog[m.categoria])_materialesCatalog[m.categoria]=[];
+        _materialesCatalog[m.categoria].push({id:m.id,label:m.label,unit:m.unit,precio:m.precio});
+      });
+      console.log('[materiales] cargados:',data.length,'en',Object.keys(_materialesCatalog).length,'categorías');
+    } else {
+      console.warn('[materiales] sin datos — tabla vacía o RLS bloqueando');
+    }
+  }catch(e){console.warn('[materiales] error:',e.message);}
+}
+
+let _currentMatCat=null;
+
+function switchToMateriales(btn){
+  // Hide normal precios content, show materiales
+  document.getElementById('precios-content').style.display='none';
+  document.getElementById('materiales-content').style.display='block';
+  document.querySelectorAll('#view-precios .tab').forEach(function(b){
+    b.classList.remove('active');b.style.color='';b.style.borderBottom='';b.style.fontWeight='';
+  });
+  btn.classList.add('active');
+  btn.style.color='#E67E22';btn.style.borderBottom='2.5px solid #E67E22';btn.style.fontWeight='700';
+  // Show materiales save btn, hide rubro save btn
+  const sb1=document.getElementById('btn-save-precios');if(sb1)sb1.style.display='none';
+  const sb2=document.getElementById('btn-save-materiales');if(sb2)sb2.style.display='';
+  // Reload from DB each time
+  loadMateriales().then(function(){renderMaterialesTab();setTimeout(function(){buildMaterialesView(_currentMatCat);},0);});
+}
+
+function renderMaterialesTab(){
+  const cont=document.getElementById('materiales-content');
+  if(!cont)return;
+  const cats=Object.keys(_materialesCatalog).sort();
+  if(!cats.length){
+    cont.innerHTML='<div class="card"><div class="card-body" style="text-align:center;padding:24px">'
+      +'<div style="font-size:32px;margin-bottom:8px">🧰</div>'
+      +'<div style="font-weight:700;margin-bottom:6px">Sin materiales cargados</div>'
+      +'<div style="font-size:12px;color:#888">Ejecutá <code>supabase_materiales.sql</code> en Supabase SQL Editor para cargar los 84 materiales con precios</div>'
+      +'</div></div>';
+    return;
+  }
+  if(!_currentMatCat||!cats.includes(_currentMatCat))_currentMatCat=cats[0];
+  // Category pills
+  let html='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';
+  cats.forEach(function(cat){
+    const active=_currentMatCat===cat;
+    html+='<button onclick="showMatCat(this.dataset.cat)" data-cat="'+escHtml(cat)+'"'
+      +' style="font-size:11px;padding:5px 10px;border-radius:15px;cursor:pointer;'
+      +'border:1.5px solid '+(active?'var(--accent)':'var(--border)')+';'
+      +'background:'+(active?'var(--accent)':'transparent')+';'
+      +'color:'+(active?'#fff':'#666')+'">'+escHtml(cat)+'</button>';
+  });
+  html+='</div><div id="matcat-content"></div>';
+  cont.innerHTML=html;
+  buildMaterialesView(_currentMatCat);
+}
+
+
+function showMatCat(cat){
+  _currentMatCat=cat;
+  renderMaterialesTab();
+}
+
+function buildMaterialesView(cat){
+  const items=_materialesCatalog[cat]||[];
+  const div=document.getElementById('matcat-content');
+  if(!div)return;
+  div.innerHTML='';
+  items.forEach(function(it,i){
+    const row=document.createElement('div');
+    row.className='precio-item';
+    const info=document.createElement('div');info.style.cssText='flex:1;min-width:0';
+    const lbl=document.createElement('div');lbl.style.cssText='font-size:12px;font-weight:600;color:var(--navy)';lbl.textContent=it.label;
+    const usel=document.createElement('select');
+    usel.style.cssText='font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 5px;background:#FDFAF7;color:#666;outline:none;margin-top:3px;display:block';
+    ['u','m²','m³','ml','kg','lt','barra','millar','Tn','mes','gl','set'].forEach(function(u){
+      const o=document.createElement('option');o.value=u;o.textContent=u;if(it.unit===u)o.selected=true;usel.appendChild(o);
+    });
+    usel.addEventListener('change',function(){it.unit=usel.value;markMaterialesDirty();});
+    info.appendChild(lbl);info.appendChild(usel);
+    const priceWrap=document.createElement('div');priceWrap.style.cssText='display:flex;align-items:center;gap:4px;flex-shrink:0';
+    const sym=document.createElement('span');sym.textContent='$';sym.style.cssText='font-size:11px;color:#888';
+    const pinp=document.createElement('input');pinp.type='number';pinp.value=it.precio||0;pinp.inputMode='decimal';
+    pinp.style.cssText='width:100px;border:1.5px solid var(--border);border-radius:6px;padding:5px 7px;font-size:13px;font-weight:700;color:var(--navy);background:#FDFAF7;outline:none;text-align:right';
+    pinp.addEventListener('focus',function(){pinp.style.borderColor='var(--accent)';});
+    pinp.addEventListener('blur',function(){pinp.style.borderColor='var(--border)';});
+    pinp.addEventListener('input',function(){it.precio=parseFloat(pinp.value)||0;markMaterialesDirty();});
+    priceWrap.appendChild(sym);priceWrap.appendChild(pinp);
+    const delBtn=document.createElement('button');delBtn.textContent='×';
+    delBtn.style.cssText='background:none;border:none;cursor:pointer;color:#ddd;font-size:18px;padding:0 4px;flex-shrink:0;line-height:1';
+    delBtn.addEventListener('mouseenter',function(){delBtn.style.color='#C0392B';});
+    delBtn.addEventListener('mouseleave',function(){delBtn.style.color='#ddd';});
+    delBtn.addEventListener('click',function(){
+      _materialesCatalog[cat].splice(i,1);
+      if(it.id&&!String(it.id).startsWith('new'))sb.from('materiales_obra').delete().eq('id',it.id).then(function(){});
+      buildMaterialesView(cat);markMaterialesDirty();
+    });
+    row.appendChild(info);row.appendChild(priceWrap);row.appendChild(delBtn);
+    div.appendChild(row);
+  });
+}
+
+function markMaterialesDirty(){
+  const btn=document.getElementById('btn-save-materiales');
+  if(btn){btn.style.background='var(--accent)';btn.textContent='Guardar materiales ●';}
+}
+
+async function saveMateriales(){
+  if(!isAdmin())return toast('Solo administradores pueden modificar materiales','error');
+  const btn=document.getElementById('btn-save-materiales');
+  if(btn){btn.disabled=true;btn.textContent='Guardando...';}
+  try{
+    const allItems=[];
+    Object.keys(_materialesCatalog).forEach(function(cat){
+      (_materialesCatalog[cat]||[]).forEach(function(it,i){
+        allItems.push({id:it.id||('mat_new_'+Date.now()+'_'+i),label:it.label,unit:it.unit,precio:it.precio||0,categoria:cat,activo:true,orden:i,updated_by:currentUser.id,updated_at:new Date().toISOString()});
+      });
+    });
+    const{error}=await sb.from('materiales_obra').upsert(allItems,{onConflict:'id'});
+    if(error)throw new Error(error.message);
+    // Reload
+    await loadMateriales();
+    toast('✓ Materiales guardados','success');
+    if(btn){btn.style.background='var(--green)';btn.textContent='✓ Guardado';}
+    setTimeout(function(){if(btn){btn.style.background='';btn.textContent='Guardar materiales';btn.disabled=false;}},2500);
+  }catch(e){
+    toast('Error: '+e.message,'error');
+    if(btn){btn.disabled=false;btn.textContent='Guardar materiales';}
+  }
+}
+
+
 function preciosTab(tab,btn){
+  // Reset materiales view
+  document.getElementById('precios-content').style.display='block';
+  document.getElementById('materiales-content').style.display='none';
+  const sb1x=document.getElementById('btn-save-precios');if(sb1x)sb1x.style.display='';
+  const sb2x=document.getElementById('btn-save-materiales');if(sb2x)sb2x.style.display='none';
   currentPreciosTab=tab;
   document.querySelectorAll('#view-precios .tab').forEach(b=>{
     b.classList.remove('active');
@@ -1279,7 +1393,7 @@ async function deleteCatalogItem(tab,i){
   // Eliminar de Supabase si tiene ID fijo
   if(item&&item.id&&!String(item.id).startsWith('new')){
     try{
-      await sb.from('catalogo').delete().eq('id',item.id);
+      await sb.from('catalogo_obra').delete().eq('id',item.id);
     }catch(e){console.warn('No se pudo eliminar de Supabase:',e.message);}
   }
   preciosCatalog[tab].splice(i,1);
@@ -1746,6 +1860,39 @@ async function autoFillFromAI(){
 // ── PASO 1: CALCULAR PRECIO (sin IA) ──
 let _calcSnapshot = null; // guarda el cálculo actual
 
+async function guardarYVerResultado(){
+  if(!_calcSnapshot)return toast('Calculá el precio primero','error');
+  const res=_calcSnapshot;
+  // Calculate material cost if available
+  let costoMateriales=0;
+  if(_lastResultado&&_lastResultado.rubrosA){
+    const tots=calcularMateriales(_lastResultado.rubrosA||res.rubrosA||[]);
+    costoMateriales=Object.values(tots).reduce(function(s,m){return s+m.qty*m.precio;},0);
+  }
+  const resultado={...res,propuestas:[],costoMateriales:Math.round(costoMateriales),planta:JSON.parse(JSON.stringify(_planta))};
+  try{
+    if(_editingProyectoId){
+      await sb.from('proyectos_obra').update({
+        nombre:res.nombre,cliente:res.cliente,brief_texto:res.brief,
+        superficie_m2:res.m2||null,resultado,updated_at:new Date().toISOString()
+      }).eq('id',_editingProyectoId);
+      const idx=_proyectosData.findIndex(x=>x.id===_editingProyectoId);
+      if(idx>=0)_proyectosData[idx]={..._proyectosData[idx],nombre:res.nombre,cliente:res.cliente,superficie_m2:res.m2||null,resultado};
+      toast('✓ Proyecto actualizado','success');
+      _editingProyectoId=null;
+      const banner=document.getElementById('edit-banner');
+      if(banner)banner.remove();
+    } else {
+      await sb.from('proyectos_obra').insert({
+        nombre:res.nombre,cliente:res.cliente,brief_texto:res.brief,
+        superficie_m2:res.m2||null,resultado,created_by:currentUser.id
+      });
+    }
+  }catch(e){console.warn('No se pudo guardar:',e.message);}
+  renderPIPResult(resultado);
+}
+
+
 function calcularPrecio(){
   const nombre=document.getElementById('pip-nombre').value.trim();
   if(!nombre)return toast('Ingresá un nombre para el proyecto','error');
@@ -1804,6 +1951,13 @@ function calcularPrecio(){
     +statBox('Margen neto',(calc.pctUtilidadNeta*100).toFixed(1)+'%',calc.pctUtilidadNeta>=0.08?'var(--green)':'var(--red)')
     +statBox('Markup',calc.markup.toFixed(2)+'x',calc.markup>=1.3?'var(--green)':'var(--red)')
     +'</div>'
+    +(function(){
+      try{
+        var tots=calcularMateriales(_calcSnapshot?_calcSnapshot.rubrosA:[]);
+        var cm=Object.values(tots).reduce(function(s,m){return s+m.qty*(m.precio||0);},0);
+        return cm>0?'<div style="margin-top:10px;padding:8px 12px;background:#FFF8F0;border-radius:7px;border:1px solid #F0E0C0;font-size:12px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><span style="font-weight:700;color:var(--navy)">$ '+fmt(cm)+'</span></div>':'';
+      }catch(e){return '';}
+    })()
     +(pautaOk?'<div style="margin-top:10px;padding:8px 12px;border-radius:7px;background:'+(enPauta?'#E8F5EE':'#FFF0EE')+';font-size:12px;font-weight:700;color:'+(enPauta?'var(--green)':'var(--red)')+'">'+
       (enPauta?'✓ Precio dentro de la pauta del cliente':'⚠ Supera la pauta en $ '+fmt(calc.precioNeto-parseFloat(pauta)))+'</div>':'')
     +'</div>';
@@ -1899,7 +2053,7 @@ Respondé SOLO JSON sin markdown:
     // Guardar o actualizar en Supabase
     try{
       if(_editingProyectoId){
-        await sb.from('proyectos').update({
+        await sb.from('proyectos_obra').update({
           nombre:res.nombre,cliente:res.cliente,brief_texto:res.brief,
           superficie_m2:res.m2||null,resultado,updated_at:new Date().toISOString()
         }).eq('id',_editingProyectoId);
@@ -1911,7 +2065,7 @@ Respondé SOLO JSON sin markdown:
         const banner=document.getElementById('edit-banner');
         if(banner)banner.remove();
       } else {
-        await sb.from('proyectos').insert({
+        await sb.from('proyectos_obra').insert({
           nombre:res.nombre,cliente:res.cliente,brief_texto:res.brief,
           superficie_m2:res.m2||null,resultado,created_by:currentUser.id
         });
@@ -1934,7 +2088,7 @@ Respondé SOLO JSON sin markdown:
 async function generatePIP(){ calcularPrecio(); }
 
 // ── RENDER RESULTADO ──
-function renderPIPResult(res){
+function renderPIPResult(res){_lastResultado=res;
   document.getElementById('pip-form').style.display='none';
   const rv=document.getElementById('pip-result');rv.style.display='';
   const c=res.calc;const p=res.params;
@@ -1975,7 +2129,7 @@ function renderPIPResult(res){
     <div class="tabs" id="res-tabs">
       <button class="tab active" onclick="resTab('precio',this)">💰 Precio</button>
       <button class="tab" onclick="resTab('rubros',this)">📋 Rubros</button>
-      <button class="tab" onclick="resTab('propuestas',this)">✦ Diseño</button>
+      <button class="tab" onclick="resTab('propuestas',this)">🧱 Materiales</button>
       <button class="tab" onclick="resTab('oferta',this)">📄 Oferta</button>
     </div>
 
@@ -2047,9 +2201,8 @@ function mbox(label,val,color){return `<div class="metric-box" style="border-lef
 function pct(n){return((n||0)*100).toFixed(1)+'%';}
 
 function dataRow2(H,D,l1,v1,l2,v2){
-  // Fila con dos campos: label arriba en gris, valor debajo
-  var c1='<td style="'+H+';width:25%">'+l1+'</td><td style="'+D+';width:25%">'+v1+'</td>';
-  var c2=l2?('<td style="'+H+';width:25%">'+l2+'</td><td style="'+D+'">'+v2+'</td>'):'<td colspan="2"></td>';
+  var c1='<td style="'+H+';width:22%">'+l1+'</td><td style="'+D+';width:28%">'+v1+'</td>';
+  var c2=l2?('<td style="'+H+';width:22%">'+l2+'</td><td style="'+D+'">'+v2+'</td>'):'<td colspan="2" style="border:none"></td>';
   return '<tr>'+c1+c2+'</tr>';
 }
 
@@ -2129,17 +2282,14 @@ function renderOferta(res,c,m2,monSym,fmtM){
     +dataRow2(H2,D2,'PROYECTO N°',escHtml(r.nro||'—'),'MODALIDAD',escHtml(r.modalidad||'—'))
     +'<tr><td style="'+H2+'">PROPIETARIO / CLIENTE</td><td colspan="3" style="'+D2+'">'+escHtml(r.cliente||'—')+'</td></tr>'
     +dataRow2(H2,D2,'DIRECCIÓN',escHtml(r.evento||'—'),'BARRIO / LOCALIDAD',escHtml(r.lugar||'—'))
-    +dataRow2(H2,D2,'TIPO DE OBRA',escHtml(r.tipo||'—'),'REF. / PROPIETARIO',escHtml(r.predio||'—'))
+    +dataRow2(H2,D2,'TIPO DE OBRA',escHtml(r.tipo||'—'),'REF. PROP.',escHtml(r.predio||'—'))
     +dataRow2(H2,D2,'INICIO DE OBRA',escHtml(r.fechaApertura||'—'),'FIN DE OBRA',escHtml(r.fechaCierre||'—'))
     +dataRow2(H2,D2,'FIRMA CONTRATO',escHtml(r.fechaMontaje||'—'),'ENTREGA FINAL',escHtml(r.fechaDesmontaje||'—'))
     +dataRow2(H2,D2,'PARC. / MANZ.',escHtml(r.loteNro||'—'),'M² TOTALES',escHtml(r.m2||'0')+' m²')
-    +'</table>'    +'</td>'
-    +'</tr>'
     +'</table>'
-
         // Detalle descriptivo por rubro
     +(detalleRows?
-      '<div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Composición de la obra</div>'
+      '<div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">COMPOSICIÓN DE LA OBRA</div>'
       +'<table style="width:100%;border-collapse:collapse;margin-bottom:14px">'
       +detalleRows
       +'</table>'
@@ -2153,6 +2303,10 @@ function renderOferta(res,c,m2,monSym,fmtM){
       :'')
     +'</div>'
 
+    // Materiales referencia si existen
+    +(r.costoMateriales>0
+      ?'<div style="margin-bottom:10px;padding:8px 12px;background:#F7F3EE;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><b>'+fV(Math.round(r.costoMateriales*(isARS?1:1/tcFinal)))+'</b></div>'
+      :'')
     // Precio — solo totales, sin desglose
     +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">'
     +'<tr>'
@@ -2224,6 +2378,7 @@ function renderProposal(p,i){
 
 function resTab(id,btn){
   ['precio','rubros','propuestas','oferta'].forEach(t=>document.getElementById('res-'+t).style.display=t===id?'':'none');
+  if(id==='propuestas'){if(_lastResultado)renderMateriales(_lastResultado);else{const c=document.getElementById('res-propuestas');if(c)c.innerHTML='<div class="card"><div class="card-body"><div class="empty-state">Calculá el precio primero para ver los materiales.</div></div></div>';}}
   document.querySelectorAll('#res-tabs .tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
@@ -2236,6 +2391,10 @@ function resetPIP(){
   if(document.getElementById('calc-preview'))document.getElementById('calc-preview').innerHTML='';
   _calcSnapshot=null;
   _editingProyectoId=null;
+  // Reset planta for new project
+  _planta.ambientes=[];
+  _planta.aberturas=[];
+  _planta.nextId=1;
   const banner=document.getElementById('edit-banner');
   if(banner)banner.remove();
   uploadedFiles={brief:null,planta:null,render:null};
@@ -2252,12 +2411,13 @@ function resetPIP(){
 // ── PROYECTOS ──
 let _proyectosData=[];
 let _editingProyectoId=null;
-let _ofertaRender=null; // imagen del render para la oferta // ID del proyecto que se está editando
+let _ofertaRender=null;
+let _lastResultado=null; // imagen del render para la oferta // ID del proyecto que se está editando
 
 async function loadProyectos(){
   const el=document.getElementById('proyectos-list');
   el.innerHTML='<div class="empty-state"><span class="spinner">⟳</span></div>';
-  const{data}=await sb.from('proyectos').select('*,p:profiles(full_name)').order('created_at',{ascending:false});
+  const{data}=await sb.from('proyectos_obra').select('*,p:profiles(full_name)').order('created_at',{ascending:false});
   _proyectosData=data||[];
   renderProyectosList();
 }
@@ -2359,14 +2519,20 @@ function renderProyectosList(){
 }
 
 async function cambiarEstado(id,estado){
-  await sb.from('proyectos').update({estado,updated_at:new Date().toISOString()}).eq('id',id);
+  await sb.from('proyectos_obra').update({estado,updated_at:new Date().toISOString()}).eq('id',id);
   const p=_proyectosData.find(x=>x.id===id);
   if(p) p.estado=estado;
   toast('Estado actualizado: '+estado,'success');
 }
 
 async function openProyecto(id){
-  const p=_proyectosData.find(x=>x.id===id)||await sb.from('proyectos').select('*').eq('id',id).single().then(r=>r.data);
+  const p=_proyectosData.find(x=>x.id===id)||await sb.from('proyectos_obra').select('*').eq('id',id).single().then(r=>r.data);
+  // Restore planta
+  if(p&&p.resultado&&p.resultado.planta&&p.resultado.planta.ambientes){
+    _planta.ambientes=p.resultado.planta.ambientes;
+    _planta.aberturas=p.resultado.planta.aberturas||[];
+    _planta.nextId=p.resultado.planta.nextId||(_planta.ambientes.length+1);
+  }
   if(!p?.resultado)return toast('Sin resultado guardado','error');
   showView('pip');
   renderPIPResult(p.resultado);
@@ -2437,8 +2603,15 @@ function editProyecto(id){
   renderPIPRubrosA();
   renderPIPRubrosB();
 
-  // Banner de modo edición
-  const banner=document.createElement('div');
+  // Restaurar planta si existe
+  if(res.planta&&res.planta.ambientes&&res.planta.ambientes.length){
+    _planta.ambientes=res.planta.ambientes;
+    _planta.aberturas=res.planta.aberturas||[];
+    _planta.nextId=res.planta.nextId||(_planta.ambientes.length+1);
+    toast('✓ Planta restaurada — '+_planta.ambientes.length+' ambientes','success');
+  }
+
+anner=document.createElement('div');
   banner.id='edit-banner';
   banner.style.cssText='background:#1B2A3B;color:#fff;border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:10px';
   banner.innerHTML='<span>✏ Editando: <strong>'+escHtml(p.nombre)+'</strong> — modificá y recalculá para guardar los cambios</span>'
@@ -2463,7 +2636,7 @@ async function guardarEditProyecto(id){
 async function duplicarProyecto(id){
   const p=_proyectosData.find(x=>x.id===id);
   if(!p)return;
-  const{data}=await sb.from('proyectos').insert({
+  const{data}=await sb.from('proyectos_obra').insert({
     nombre:'Copia — '+p.nombre,
     cliente:p.cliente,
     brief_texto:p.brief_texto,
@@ -2491,7 +2664,7 @@ function confirmarEliminar(id,nombre){
 }
 
 async function eliminarProyecto(id){
-  await sb.from('proyectos').delete().eq('id',id);
+  await sb.from('proyectos_obra').delete().eq('id',id);
   _proyectosData=_proyectosData.filter(x=>x.id!==id);
   closeModal();
   renderProyectosList();
@@ -2666,6 +2839,1332 @@ function copyPrompt(btn){
 }
 
 function fmt(n){return Math.round(n||0).toLocaleString('es-AR');}
+// ── RENDIMIENTOS DE MATERIALES ──
+const RENDIMIENTOS={"preliminares_pr01": [["Bolsas de consorcio 240L (u)", 0.08, "u"]], "preliminares_pr02": [["Cemento portland 50kg (u)", 0.5, "u"], ["Ladrillos comunes (u)", 50, "u"]], "demoliciones_d01": [["Volquete 4m³ (u)", 0.1, "u"]], "demoliciones_d03": [["Volquete 4m³ (u)", 0.3, "u"]], "estructura_e03": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 4.2, "barra"], ["Hierro aletado 8mm (barra)", 1.4, "barra"], ["Alambre n°16 (kg)", 0.55, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 8.5, "ml"]], "estructura_e08": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 5.0, "barra"], ["Malla hierro ø6 15x15 (2.40x6m) (m²)", 1.15, "m²"], ["Alambre n°16 (kg)", 0.65, "kg"], ["Fenólico 18mm (m²)", 1.15, "m²"], ["Puntal metálico (u)", 0.9, "u"]], "estructura_e14": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 4.8, "barra"], ["Hierro aletado 8mm (barra)", 2.2, "barra"], ["Alambre n°16 (kg)", 0.85, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 14.0, "ml"]], "estructura_e13": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 6.5, "barra"], ["Hierro aletado 8mm (barra)", 2.8, "barra"], ["Alambre n°16 (kg)", 1.0, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 18.0, "ml"]], "mamposteria_m01": [["Bloque estándar 20x20x40 (u)", 12.5, "u"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.28, "u"]], "mamposteria_m05": [["Ladrillos comunes (millar)", 0.082, "millar"], ["Cemento portland 50kg (u)", 0.14, "u"], ["Cal hidráulica (25kg) (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.35, "u"]], "mamposteria_m10": [["Ladrillos huecos 8x18x33 (millar)", 0.02, "millar"], ["Cemento portland 50kg (u)", 0.09, "u"], ["Cal hidráulica (25kg) (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.2, "u"]], "mamposteria_m13": [["Ladrillos huecos 12x18x33 (millar)", 0.016, "millar"], ["Cemento portland 50kg (u)", 0.11, "u"], ["Cal hidráulica (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "construccion_seco_cs01": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Montante acero galv. 69mm x 2.60m (u)", 0.55, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Masilla Durlock (32kg) (u)", 0.14, "u"], ["Cinta papel kraft 50m (u)", 0.05, "u"]], "construccion_seco_cs05": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Perfil omega x 2.60m (u)", 0.52, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Varilla roscada 3/8\" (ml)", 0.45, "ml"], ["Masilla Durlock (32kg) (u)", 0.12, "u"]], "aislaciones_a04": [["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "aislaciones_a06": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.15, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "cubierta_cu01": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.2, "m²"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "cubierta_cu05": [["Chapa ondulada N24 (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "cubierta_cu06": [["Chapa prepintada (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "revoques_r01": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.22, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.55, "u"]], "revoques_r04": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.55, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.1, "u"]], "revoques_r05": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.5, "u"]], "revoques_r09": [["Yeso tuyango (30kg) (u)", 0.45, "u"]], "revestimientos_rv01": [["Adhesivo blanco revestimientos (30kg) (u)", 0.22, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.25, "u"]], "revestimientos_rv03": [["Adhesivo blanco revestimientos (30kg) (u)", 0.23, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "revestimientos_rv04": [["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "cielorrasos_cr01": [["Cal aérea tipo El Milagro (25kg) (u)", 0.14, "u"], ["Cemento portland 50kg (u)", 0.06, "u"], ["Arena en bolsa (u)", 0.12, "u"]], "cielorrasos_cr09": [["Yeso tuyango (30kg) (u)", 0.48, "u"]], "contrapisos_cp01": [["Cascote limpio (m³)", 0.14, "m³"], ["Cemento portland 50kg (u)", 0.15, "u"], ["Arena en bolsa (u)", 0.35, "u"], ["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "contrapisos_cp02": [["Cascote limpio (m³)", 0.07, "m³"], ["Cemento portland 50kg (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "contrapisos_cp05": [["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.4, "u"]], "pisos_p04": [["Porcelanato pulido 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.15, "u"]], "pisos_p05": [["Porcelanato rústico 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "pisos_p08": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.25, "u"]], "pisos_p12": [["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "pisos_p15": [["Poliestireno expandido 2cm 20kg/m³ (m²)", 0.2, "lt"]], "escaleras_es02": [["Cemento portland 50kg (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "escaleras_es05": [["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "sanitaria_sa01": [["Inodoro corto blanco común (u)", 1, "u"], ["Bidet blanco común (u)", 1, "u"], ["Lavatorio común blanco chico (u)", 1, "u"], ["Accesorios loza blancos (9 pzas.) (set)", 1, "set"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 4, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 5, "u"], ["Pegamento PVC (u)", 0.3, "u"]], "sanitaria_sa02": [["Pileta cocina acero inox. doble bacha (u)", 1, "u"], ["Pileta lavar Ferrum c/fregadero (u)", 1, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 4, "u"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 3, "u"]], "electricidad_el01": [["Caño acero liviano 5/8\" (ml)", 5.0, "ml"], ["Cable 4mm² c/100m (u)", 0.06, "u"]], "electricidad_el02": [["Caño acero liviano 5/8\" (ml)", 6.0, "ml"], ["Cable 6mm² c/100m (u)", 0.08, "u"]], "calefaccion_cl01": [["Caño Sigas thermofusión 20mm x 4m (u)", 1.8, "u"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.22, "u"], ["Arena en bolsa (u)", 0.45, "u"]], "pintura_pi01": [["Látex interior (20lt) (u)", 0.022, "u"], ["Fijador al agua (lt) (u)", 0.12, "u"], ["Masilla Durlock (32kg) (u)", 0.015, "u"]], "pintura_pi02": [["Látex interior (20lt) (u)", 0.02, "u"], ["Fijador al agua (lt) (u)", 0.1, "u"]], "pintura_pi03": [["Látex satinado primera marca (20lt) (u)", 0.018, "u"], ["Fijador exterior (lt) (u)", 0.12, "u"]], "pintura_pi05": [["Látex satinado primera marca (20lt) (u)", 0.016, "u"]], "pintura_pi09": [["Látex exterior primera marca (20lt) (u)", 0.065, "u"]]};
+
+let _materialesDB={}; // materiales con precios cargados de Supabase
+
+
+// Búsqueda por label (más robusto que por ID)
+const RENDIMIENTOS_BY_LABEL={"limpieza y nivelación": [["Bolsas de consorcio 240L (u)", 0.08, "u"]], "obrador": [["Cemento portland 50kg (u)", 0.5, "u"], ["Ladrillos comunes (u)", 50, "u"]], "demolición de obra completa": [["Volquete 4m³ (u)", 0.1, "u"]], "excavación manual de bases": [["Volquete 4m³ (u)", 0.3, "u"]], "platea de fundación": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 4.2, "barra"], ["Hierro aletado 8mm (barra)", 1.4, "barra"], ["Alambre n°16 (kg)", 0.55, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 8.5, "ml"]], "losas espesor": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 5.0, "barra"], ["Malla hierro ø6 15x15 (2.40x6m) (m²)", 1.15, "m²"], ["Alambre n°16 (kg)", 0.65, "kg"], ["Fenólico 18mm (m²)", 1.15, "m²"], ["Puntal metálico (u)", 0.9, "u"]], "vigas cuantía": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 6.5, "barra"], ["Hierro aletado 8mm (barra)", 2.8, "barra"], ["Alambre n°16 (kg)", 1.0, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 18.0, "ml"]], "columnas cuantía": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 4.8, "barra"], ["Hierro aletado 8mm (barra)", 2.2, "barra"], ["Alambre n°16 (kg)", 0.85, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 14.0, "ml"]], "bloques de hormigón 20x20x40": [["Bloque estándar 20x20x40 (u)", 12.5, "u"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.28, "u"]], "ladrillos comunes elevación": [["Ladrillos comunes (millar)", 0.082, "millar"], ["Cemento portland 50kg (u)", 0.14, "u"], ["Cal hidráulica (25kg) (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.35, "u"]], "ladrillo hueco de 8x18x33": [["Ladrillos huecos 8x18x33 (millar)", 0.02, "millar"], ["Cemento portland 50kg (u)", 0.09, "u"], ["Cal hidráulica (25kg) (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.2, "u"]], "ladrillo cerámico portante": [["Ladrillos huecos 12x18x33 (millar)", 0.016, "millar"], ["Cemento portland 50kg (u)", 0.11, "u"], ["Cal hidráulica (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "tabique simple esp": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Montante acero galv. 69mm x 2.60m (u)", 0.55, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Masilla Durlock (32kg) (u)", 0.14, "u"], ["Cinta papel kraft 50m (u)", 0.05, "u"]], "cielo raso suspendido junta": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Perfil omega x 2.60m (u)", 0.52, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Varilla roscada 3/8\" (ml)", 0.45, "ml"], ["Masilla Durlock (32kg) (u)", 0.12, "u"]], "film de polietileno": [["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "horizontal sobre losa": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.15, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "cubierta c/membrana aluminio": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.2, "m²"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "chapa ondulada n24": [["Chapa ondulada N24 (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "chapa prepintada": [["Chapa prepintada (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "grueso y fino a la cal": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.22, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.55, "u"]], "revoque proyectable exterior": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.55, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.1, "u"]], "revoque proyectable grueso interior": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.5, "u"]], "enlucido de yeso": [["Yeso tuyango (30kg) (u)", 0.48, "u"]], "cerámico 20x20": [["Adhesivo blanco revestimientos (30kg) (u)", 0.22, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.25, "u"]], "cerámica esmaltada 30x30": [["Adhesivo blanco revestimientos (30kg) (u)", 0.23, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "porcellanato 30x30": [["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "aplicado a la cal fina": [["Cal aérea tipo El Milagro (25kg) (u)", 0.14, "u"], ["Cemento portland 50kg (u)", 0.06, "u"], ["Arena en bolsa (u)", 0.12, "u"]], "hormigón de cascote armado 15cm": [["Cascote limpio (m³)", 0.14, "m³"], ["Cemento portland 50kg (u)", 0.15, "u"], ["Arena en bolsa (u)", 0.35, "u"], ["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "hormigón de cascote sobre losa": [["Cascote limpio (m³)", 0.07, "m³"], ["Cemento portland 50kg (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "carpeta de concreto": [["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.4, "u"]], "porcelanato opaco 30x30": [["Porcelanato pulido 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.15, "u"]], "cerámico esmaltado 20x20": [["Porcelanato rústico 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "mosaico granítico 30x30": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.25, "u"]], "parquet eucaliptus": [["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "pulido y plastificado": [["Poliestireno expandido 2cm 20kg/m³ (m²)", 0.2, "lt"]], "alzada y pedada de cemento": [["Cemento portland 50kg (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "alzada y pedada de cerámica": [["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "baño completo": [["Inodoro corto blanco común (u)", 1, "u"], ["Bidet blanco común (u)", 1, "u"], ["Lavatorio común blanco chico (u)", 1, "u"], ["Accesorios loza blancos (9 pzas.) (set)", 1, "set"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 4, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 5, "u"], ["Pegamento PVC (u)", 0.3, "u"]], "cocina y lavadero": [["Pileta cocina acero inox. doble bacha (u)", 1, "u"], ["Pileta lavar Ferrum c/fregadero (u)", 1, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 4, "u"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 3, "u"]], "boca de iluminación y toma": [["Caño acero liviano 5/8\" (ml)", 5.0, "ml"], ["Cable 4mm² c/100m (u)", 0.06, "u"]], "boca de te": [["Caño acero liviano 5/8\" (ml)", 6.0, "ml"], ["Cable 6mm² c/100m (u)", 0.08, "u"]], "piso radiante": [["Caño Sigas thermofusión 20mm x 4m (u)", 1.8, "u"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.22, "u"], ["Arena en bolsa (u)", 0.45, "u"]], "látex sobre muros interiores": [["Látex interior (20lt) (u)", 0.022, "u"], ["Fijador al agua (lt) (u)", 0.12, "u"], ["Masilla Durlock (32kg) (u)", 0.015, "u"]], "látex sobre cielo rasos": [["Látex interior (20lt) (u)", 0.02, "u"], ["Fijador al agua (lt) (u)", 0.1, "u"]], "látex acrílico sobre muros exteriores": [["Látex satinado primera marca (20lt) (u)", 0.018, "u"], ["Fijador exterior (lt) (u)", 0.12, "u"]], "esmalte sintético s/carpinterías": [["Látex satinado primera marca (20lt) (u)", 0.016, "u"]], "impermeabilizante fibrado": [["Látex exterior primera marca (20lt) (u)", 0.065, "u"]]};
+
+function findRendimientos(it){
+  // 1. Try by Supabase ID directly
+  if(RENDIMIENTOS[it.id])return RENDIMIENTOS[it.id];
+  // 2. Try section_id
+  if(RENDIMIENTOS[it.section+'_'+it.id])return RENDIMIENTOS[it.section+'_'+it.id];
+  // 3. Try by label substring match
+  const labelLow=(it.label||'').toLowerCase();
+  for(var desc in RENDIMIENTOS_BY_LABEL){
+    if(labelLow.indexOf(desc)>=0||desc.indexOf(labelLow.substring(0,20))>=0){
+      if(RENDIMIENTOS_BY_LABEL[desc].length>0)return RENDIMIENTOS_BY_LABEL[desc];
+    }
+  }
+  return null;
+}
+
+// Unidades mínimas comerciales por unidad de medida
+const UNIDAD_MINIMA={
+  'lt': 1,        // pinturas, fijadores → mínimo 1 litro
+  'u': 1,         // unidades → mínimo 1
+  'm²': 1,        // m² → mínimo 1
+  'm³': 0.5,      // hormigón → mínimo 0.5m³
+  'ml': 1,        // metros lineales → mínimo 1ml
+  'kg': 1,        // kg → mínimo 1kg
+  'barra': 1,     // barras → mínimo 1
+  'millar': 0.05, // millar → mínimo 50 unidades
+  'set': 1,
+  'm': 1,
+  'Tn': 0.5,
+  'gl': 1,
+};
+
+function redondearComercial(qty, unit){
+  const min=UNIDAD_MINIMA[unit]||1;
+  return Math.ceil(qty/min)*min;
+}
+
+function calcularMateriales(rubrosA){
+  const totales={};
+
+  rubrosA.forEach(function(it){
+    if(!it.cant||it.cant<=0)return;
+    const rends=findRendimientos(it);
+    if(!rends)return;
+
+    rends.forEach(function(r){
+      const matLabel=r[0];
+      const qtyBase=r[1];
+      const unit=r[2];
+      const qty=qtyBase*it.cant*1.10; // +10% desperdicio ya incluido en algunos, doble check
+      if(!totales[matLabel]){
+        const matDB=_materialesDB[matLabel]||{};
+        totales[matLabel]={
+          qty:0,
+          unit:unit,
+          precio:matDB.precio||0,
+          categoria:matDB.categoria||'Varios',
+          enDB:!!matDB.precio
+        };
+      }
+      totales[matLabel].qty+=qty;
+    });
+  });
+  return totales;
+}
+
+function renderMateriales(resultado){
+  const cont=document.getElementById('res-propuestas');
+  if(!cont)return;
+  const rubrosA=resultado.rubrosA||[];
+
+  // Debug visible
+  const debug='rubrosA: '+rubrosA.length+' items — '
+    +rubrosA.map(function(i){return i.label+' ('+i.cant+') id='+i.id;}).join(' | ');
+
+  const totales=calcularMateriales(rubrosA);
+  const keys=Object.keys(totales);
+
+  if(!keys.length){
+    cont.innerHTML='<div class="card"><div class="card-body">'
+      +'<div style="font-size:11px;color:#888;margin-bottom:10px;padding:8px;background:#f5f5f5;border-radius:6px;word-break:break-all">DEBUG: '+escHtml(debug)+'</div>'
+      +'<div class="empty-state">Sin ítems con rendimientos definidos.<br><small>Cargá rubros en el PIP para ver el desglose de materiales.</small></div>'
+      +'</div></div>';
+    return;
+  }
+
+  // Agrupar por categoría
+  const byCat={};
+  keys.forEach(function(k){
+    const cat=totales[k].categoria||'Varios';
+    if(!byCat[cat])byCat[cat]=[];
+    byCat[cat].push({label:k,...totales[k]});
+  });
+
+  let totalMateriales=0;
+  let sinPrecio=0;
+  keys.forEach(function(k){
+    const m=totales[k];
+    totalMateriales+=m.qty*m.precio;
+    if(!m.enDB)sinPrecio++;
+  });
+
+  let html='<div class="card" style="margin-bottom:12px">'
+    +'<div class="card-header"><div><div class="card-title">🧱 Estimación de materiales</div>'
+    +'<div style="font-size:11px;color:#888;margin-top:2px">Rendimientos estándar + 10% desperdicio</div></div>'
+    +'<div style="text-align:right">'
+    +(sinPrecio?'<div style="font-size:10px;color:var(--accent);margin-bottom:4px">⚠ '+sinPrecio+' materiales sin precio — actualizá en Precios base</div>':'')
+    +'<div style="font-size:11px;color:#888">Total materiales estimado</div>'
+    +'<div style="font-size:20px;font-weight:700;color:var(--navy)">$ '+fmt(totalMateriales)+'</div>'
+    +'</div></div></div>';
+
+  Object.keys(byCat).sort().forEach(function(cat){
+    const items=byCat[cat];
+    html+='<div class="card" style="margin-bottom:10px">'
+      +'<div class="card-header" style="cursor:pointer" onclick="var b=this.nextElementSibling;b.style.display=b.style.display===\'none\'?\'block\':\'none\'">'
+      +'<div class="card-title" style="font-size:13px">'+escHtml(cat)+'</div>'
+      +'<span style="font-size:12px;color:var(--accent)">$ '+fmt(items.reduce(function(s,m){return s+m.qty*m.precio;},0))+'</span>'
+      +'</div>'
+      +'<div class="card-body" style="padding:0">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<tr style="background:#f5f5f5"><td style="padding:6px 10px;font-weight:700;border-bottom:1px solid var(--border)">Material</td>'
+      +'<td style="padding:6px 10px;font-weight:700;border-bottom:1px solid var(--border);text-align:right">Cantidad</td>'
+      +'<td style="padding:6px 10px;font-weight:700;border-bottom:1px solid var(--border);text-align:right">Precio unit.</td>'
+      +'<td style="padding:6px 10px;font-weight:700;border-bottom:1px solid var(--border);text-align:right">Subtotal</td>'
+      +'</tr>'
+      +items.map(function(m){
+        var subtotal=m.qty*m.precio;
+        return '<tr>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0">'+escHtml(m.label)+'</td>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right">'
+          +(m.qtyCruda&&Math.abs(m.qtyCruda-m.qty)>0.01
+            ?'<span style="color:#888;text-decoration:line-through;font-size:10px;margin-right:4px">'+m.qtyCruda.toFixed(2)+'</span>'
+            :'')
+          +m.qty.toFixed(2)+' '+escHtml(m.unit)+'</td>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right'+(m.enDB?'':';color:var(--accent)')+'">'+
+            (m.enDB?'$ '+fmt(m.precio):'sin precio')+'</td>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:700">'+
+            (m.enDB?'$ '+fmt(subtotal):'-')+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</table></div></div>';
+  });
+
+  // Botón imprimir
+  html='<div class="no-print" style="margin-bottom:10px"><button class="btn btn-gold btn-sm" onclick="printContent(document.getElementById(\'res-propuestas\'))">🖨 Imprimir Materiales</button></div>'+html;
+
+  cont.innerHTML=html;
+}
+
+
+
+// ═══════════════════════════════════════════════════════════
+// EDITOR DE PLANTA — Obra Estimator DALI
+// ═══════════════════════════════════════════════════════════
+
+let _planta = {
+  ambientes: [],      // [{id, nombre, x, y, w, h, altura, color}]
+  aberturas: [],      // [{id, ambienteId, pared, posCell, tipo, ancho, alto, label, orientacion}]
+  gridSize: 20,       // px por celda = 0.25m → 1 celda = 0.25m
+  escala: 0.25,       // metros por celda
+  nextId: 1,
+};
+
+// Colores por ambiente
+const AMBIENTE_COLORS = [
+  '#E8F4F8','#FFF3E0','#F3E5F5','#E8F5E9','#FBE9E7',
+  '#E0F2F1','#F9FBE7','#FCE4EC','#E8EAF6','#FFF8E1'
+];
+
+const AMBIENTE_NAMES = [
+  'Living','Comedor','Cocina','Baño','Dormitorio 1',
+  'Dormitorio 2','Dormitorio 3','Estudio','Lavadero','Garaje',
+  'Hall','Pasillo','Terraza','Jardín','Depósito'
+];
+
+// Estado del editor
+let _plantaState = {
+  tool: 'select',
+  drawing: false,
+  startX: 0, startY: 0,
+  curX: 0, curY: 0,
+  dragAmb: null,
+  dragOffX: 0, dragOffY: 0,
+  draggingAb: null,
+  selectedAbId: null,
+  resizing: null,
+  selectedId: null,
+  hoveredWall: null,
+  canvas: null,
+  ctx: null,
+  panX: 0, panY: 0,
+};
+
+function togglePlantaSection(){
+  const sec=document.getElementById('planta-section');
+  const icon=document.getElementById('planta-toggle-icon');
+  if(!sec)return;
+  const open=sec.style.display==='none';
+  sec.style.display=open?'':'none';
+  if(icon)icon.textContent=open?'▼':'▶';
+  if(open){
+    const cont=document.getElementById('planta-editor-pip');
+    if(cont&&!cont.querySelector('canvas')){
+      renderPlantaEditor();
+    } else {
+      // Re-draw if canvas exists (planta may have been restored)
+      drawPlanta();
+      renderAmbientesList();
+      updateComputo();
+      if(_planta.ambientes.length>0)setTimeout(plantaFit,100);
+    }
+  }
+}
+
+function renderPlantaEditor(){
+  const cont = document.getElementById('planta-editor-pip')||document.getElementById('res-planta');
+  if(!cont) return;
+  const computo=document.getElementById('planta-computo-pip');
+
+  cont.innerHTML = `
+  <div style="font-family:Arial,sans-serif">
+    <!-- Toolbar -->
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:#F7F3EE;border-radius:10px;border:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-right:4px">Herramientas:</div>
+      <button id="planta-tool-select" onclick="setPlantaTool('select')" class="btn btn-sm" style="background:var(--navy);color:#fff">↖ Seleccionar</button>
+      <button id="planta-tool-ambiente" onclick="setPlantaTool('ambiente')" class="btn btn-sm" style="background:#F0EAE2;color:#666">⬛ Ambiente</button>
+      <button id="planta-tool-abertura" onclick="setPlantaTool('abertura')" class="btn btn-sm" style="background:#F0EAE2;color:#666">🚪 Abertura</button>
+      <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
+      <button onclick="plantaZoom(1.2)" class="btn btn-sm" style="background:#F0EAE2;color:#666">＋</button>
+      <button onclick="plantaZoom(0.8)" class="btn btn-sm" style="background:#F0EAE2;color:#666">－</button>
+      <button onclick="plantaFit()" class="btn btn-sm" style="background:#F0EAE2;color:#666">⊡ Ajustar</button>
+      <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
+      <span style="font-size:10px;color:#888">Escala: 1 celda = 0.25m</span>
+      <button onclick="printContent(document.getElementById('res-planta'))" class="btn btn-sm no-print" style="margin-left:auto;background:#F0EAE2;color:#666">🖨 Imprimir</button>
+    </div>
+
+    <!-- Canvas + Panel -->
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <!-- Canvas -->
+      <div style="flex:1;min-width:0;border:2px solid var(--border);border-radius:10px;overflow:hidden;position:relative;background:#fff">
+        <canvas id="planta-canvas" style="display:block;cursor:crosshair;touch-action:none"></canvas>
+        <div id="planta-tooltip" style="display:none;position:absolute;background:#1B2A3B;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;pointer-events:none;z-index:10"></div>
+      </div>
+
+      <!-- Panel lateral -->
+      <div style="width:220px;flex-shrink:0">
+        <!-- Ambientes list -->
+        <div class="card" style="margin-bottom:8px">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">Ambientes</div>
+            <button onclick="addAmbienteManual()" class="btn btn-sm" style="font-size:10px;padding:3px 8px">+ Agregar</button>
+          </div>
+          <div id="planta-amb-list" style="max-height:200px;overflow-y:auto"></div>
+        </div>
+
+        <!-- Propiedades del seleccionado -->
+        <div id="planta-props" class="card" style="margin-bottom:8px;display:none">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">Propiedades</div>
+            <button onclick="deletePlantaSelected()" style="background:none;border:none;color:#C0392B;cursor:pointer;font-size:14px">🗑</button>
+          </div>
+          <div id="planta-props-content" style="padding:8px 12px"></div>
+        </div>
+
+        <!-- Cómputo -->
+        <div class="card">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">📊 Cómputo</div>
+            <button onclick="aplicarCometutoAlPIP()" class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--navy);color:#fff">→ Al PIP</button>
+          </div>
+          <div id="planta-computo" style="padding:8px 12px;font-size:11px"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  initPlantaCanvas();
+  renderAmbientesList();
+  updateComputo();
+}
+
+function initPlantaCanvas(){
+  const canvas = document.getElementById('planta-canvas');
+  if(!canvas) return;
+  // Don't re-init if same canvas already set up
+  if(_plantaState.canvas===canvas) return;
+  _plantaState.canvas = canvas;
+  _plantaState.ctx = canvas.getContext('2d');
+
+  // Size canvas to container
+  const cont = canvas.parentElement;
+  const W = cont.clientWidth || 600;
+  const H = Math.max(400, window.innerHeight * 0.55);
+  canvas.width = W;
+  canvas.height = H;
+
+  // Center grid
+  _plantaState.panX = W/2 - 10 * _planta.gridSize;
+  _plantaState.panY = H/2 - 8 * _planta.gridSize;
+
+  // Events
+  canvas.addEventListener('mousedown', plantaMouseDown);
+  canvas.addEventListener('mousemove', plantaMouseMove);
+  canvas.addEventListener('mouseup', plantaMouseUp);
+  canvas.addEventListener('mouseleave', ()=>{ _plantaState.drawing=false; _plantaState.dragAmb=null; drawPlanta(); });
+  canvas.addEventListener('wheel', plantaWheel, {passive:false});
+
+  // Touch
+  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); plantaMouseDown(touchToMouse(e)); }, {passive:false});
+  canvas.addEventListener('touchmove', e=>{ e.preventDefault(); plantaMouseMove(touchToMouse(e)); }, {passive:false});
+  canvas.addEventListener('touchend', e=>{ e.preventDefault(); plantaMouseUp(touchToMouse(e)); }, {passive:false});
+
+  drawPlanta();
+}
+
+function touchToMouse(e){
+  const t = e.touches[0] || e.changedTouches[0];
+  const rect = _plantaState.canvas.getBoundingClientRect();
+  return { clientX: t.clientX, offsetX: t.clientX-rect.left, offsetY: t.clientY-rect.top, preventDefault:()=>e.preventDefault() };
+}
+
+// ── COORDENADAS ──
+function screenToGrid(sx, sy){
+  const g = _planta.gridSize;
+  const gx = Math.round((sx - _plantaState.panX) / g);
+  const gy = Math.round((sy - _plantaState.panY) / g);
+  return {gx, gy};
+}
+function gridToScreen(gx, gy){
+  return {
+    sx: gx * _planta.gridSize + _plantaState.panX,
+    sy: gy * _planta.gridSize + _plantaState.panY
+  };
+}
+function snapToGrid(px){
+  return Math.round(px / _planta.gridSize) * _planta.gridSize;
+}
+
+// ── DIBUJO ──
+function drawPlanta(){
+  const {canvas, ctx, panX, panY, drawing, startX, startY} = _plantaState;
+  if(!ctx) return;
+  const W = canvas.width, H = canvas.height;
+  const g = _planta.gridSize;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  ctx.fillStyle = '#FAFAFA';
+  ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle = '#E8E8E8';
+  ctx.lineWidth = 0.5;
+  const startGX = Math.floor(-panX/g);
+  const endGX = Math.ceil((W-panX)/g);
+  const startGY = Math.floor(-panY/g);
+  const endGY = Math.ceil((H-panY)/g);
+
+  for(let x=startGX; x<=endGX; x++){
+    ctx.beginPath();
+    ctx.moveTo(x*g+panX, 0);
+    ctx.lineTo(x*g+panX, H);
+    ctx.stroke();
+  }
+  for(let y=startGY; y<=endGY; y++){
+    ctx.beginPath();
+    ctx.moveTo(0, y*g+panY);
+    ctx.lineTo(W, y*g+panY);
+    ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#CCC';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(panX,0); ctx.lineTo(panX,H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,panY); ctx.lineTo(W,panY); ctx.stroke();
+
+  // Scale label
+  ctx.fillStyle = '#AAA';
+  ctx.font = '10px Arial';
+  ctx.fillText(`0.25m`, panX+g+2, panY-4);
+  ctx.beginPath(); ctx.moveTo(panX,panY-3); ctx.lineTo(panX+g,panY-3); ctx.stroke();
+
+  // Ambientes
+  _planta.ambientes.forEach(amb => drawAmbiente(ctx, amb));
+
+  // Wall hover highlight (abertura tool)
+  if(_plantaState.hoveredWall){
+    const hw=_plantaState.hoveredWall;
+    const amb=_planta.ambientes.find(a=>a.id===hw.ambId);
+    if(amb){
+      const g=_planta.gridSize,s=gridToScreen(amb.x,amb.y),W=amb.w*g,H=amb.h*g;
+      ctx.strokeStyle='rgba(230,126,34,0.6)';ctx.lineWidth=6;
+      ctx.beginPath();
+      if(hw.wall==='N'){ctx.moveTo(s.sx,s.sy);ctx.lineTo(s.sx+W,s.sy);}
+      else if(hw.wall==='S'){ctx.moveTo(s.sx,s.sy+H);ctx.lineTo(s.sx+W,s.sy+H);}
+      else if(hw.wall==='O'){ctx.moveTo(s.sx,s.sy);ctx.lineTo(s.sx,s.sy+H);}
+      else{ctx.moveTo(s.sx+W,s.sy);ctx.lineTo(s.sx+W,s.sy+H);}
+      ctx.stroke();
+    }
+  }
+
+  // Aberturas
+  _planta.aberturas.forEach(ab => drawAbertura(ctx, ab));
+
+  // Preview while drawing
+  if(drawing && _plantaState.tool==='ambiente'){
+    const {gx:ex, gy:ey} = screenToGrid(_plantaState.curX||startX, _plantaState.curY||startY);
+    const {gx:sx2, gy:sy2} = screenToGrid(startX, startY);
+    const s1 = gridToScreen(sx2,sy2);
+    const s2 = gridToScreen(ex,ey);
+    ctx.fillStyle = 'rgba(26,39,68,0.08)';
+    ctx.fillRect(Math.min(s1.sx,s2.sx), Math.min(s1.sy,s2.sy),
+      Math.abs(s2.sx-s1.sx), Math.abs(s2.sy-s1.sy));
+    ctx.strokeStyle = 'var(--navy)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5,3]);
+    ctx.strokeRect(Math.min(s1.sx,s2.sx), Math.min(s1.sy,s2.sy),
+      Math.abs(s2.sx-s1.sx), Math.abs(s2.sy-s1.sy));
+    ctx.setLineDash([]);
+    // dimensions
+    const wm = Math.abs(ex-sx2)*_planta.escala;
+    const hm = Math.abs(ey-sy2)*_planta.escala;
+    ctx.fillStyle = '#1A2744';
+    ctx.font = 'bold 11px Arial';
+    ctx.fillText(`${wm.toFixed(1)}m × ${hm.toFixed(1)}m`,
+      Math.min(s1.sx,s2.sx)+4, Math.min(s1.sy,s2.sy)-4);
+  }
+}
+
+function drawAmbiente(ctx, amb){
+  const g = _planta.gridSize;
+  const s = gridToScreen(amb.x, amb.y);
+  const W = amb.w * g;
+  const H = amb.h * g;
+  const selected = _plantaState.selectedId === amb.id;
+
+  // Fill
+  ctx.fillStyle = amb.color || '#E8F4F8';
+  ctx.fillRect(s.sx, s.sy, W, H);
+
+  // Walls — color by type
+  const walls = getAmbienteWalls(amb);
+  walls.forEach(wall => {
+    // S=shared(auto), ext=exterior, int=interior, med=medianera
+    const colors={S:'#7A9BC0',ext:'#1A2744',int:'#BBBBBB',med:'#E67E22'};
+    const widths={S:2,ext:5,int:1,med:2.5};
+    ctx.strokeStyle=colors[wall.tipo]||'#1A2744';
+    ctx.lineWidth=widths[wall.tipo]||2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(wall.x1, wall.y1);
+    ctx.lineTo(wall.x2, wall.y2);
+    ctx.stroke();
+  });
+
+  // Selection
+  if(selected){
+    ctx.strokeStyle = '#E67E22';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4,3]);
+    ctx.strokeRect(s.sx-2, s.sy-2, W+4, H+4);
+    ctx.setLineDash([]);
+    // Resize handles
+    [[0,0],[1,0],[0,1],[1,1]].forEach(([hx,hy])=>{
+      ctx.fillStyle = '#E67E22';
+      ctx.fillRect(s.sx+hx*W-5, s.sy+hy*H-5, 10, 10);
+    });
+  }
+
+  // Label — only if room is big enough to show text
+  if(W>40&&H>30){
+    const wm = (amb.w * _planta.escala).toFixed(2);
+    const hm = (amb.h * _planta.escala).toFixed(2);
+    const area = (amb.w * amb.h * _planta.escala * _planta.escala).toFixed(2);
+    ctx.fillStyle = '#1A2744';
+    const fontSize=Math.min(12,Math.max(8,Math.min(W/10,H/4)));
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.fillText(amb.nombre, s.sx+W/2, s.sy+H/2-(H>50?8:0));
+    if(H>50){
+      ctx.font = `${Math.max(8,fontSize-2)}px Arial`;
+      ctx.fillStyle = '#666';
+      ctx.fillText(`${wm}×${hm}m = ${area}m²`, s.sx+W/2, s.sy+H/2+10);
+    }
+    ctx.textAlign = 'left';
+  }
+}
+
+function getAberturaCoords(ab){
+  const amb=_planta.ambientes.find(a=>a.id===ab.ambienteId);
+  if(!amb)return null;
+  const g=_planta.gridSize;
+  const s=gridToScreen(amb.x,amb.y);
+  const W=amb.w*g, H=amb.h*g;
+  const abCells=Math.round(ab.ancho/_planta.escala);
+  const abPx=abCells*g;
+  const posPx=(ab.posCell||0)*g; // offset in px from corner of wall
+  let x1,y1,x2,y2,nx,ny; // nx,ny = outward normal
+  if(ab.pared==='N'){x1=s.sx+posPx;y1=s.sy;x2=x1+abPx;y2=s.sy;nx=0;ny=-1;}
+  else if(ab.pared==='S'){x1=s.sx+posPx;y1=s.sy+H;x2=x1+abPx;y2=s.sy+H;nx=0;ny=1;}
+  else if(ab.pared==='O'){x1=s.sx;y1=s.sy+posPx;x2=s.sx;y2=y1+abPx;nx=-1;ny=0;}
+  else{x1=s.sx+W;y1=s.sy+posPx;x2=s.sx+W;y2=y1+abPx;nx=1;ny=0;}
+  return{x1,y1,x2,y2,nx,ny,abPx};
+}
+
+function drawAbertura(ctx, ab){
+  const coords=getAberturaCoords(ab);
+  if(!coords)return;
+  const{x1,y1,x2,y2,nx,ny,abPx}=coords;
+  const isV=ab.tipo==='ventana', isVano=ab.tipo==='vano';
+
+  // Erase wall line (draw background color over it)
+  ctx.strokeStyle='#fff';
+  ctx.lineWidth=6;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+
+  if(isVano){
+    // Vano: naranja, línea doble indicando dintel
+    ctx.strokeStyle='#F39C12';
+    ctx.lineWidth=3;
+    ctx.setLineDash([4,2]);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.setLineDash([]);
+    // Label VANO
+    ctx.fillStyle='#F39C12';
+    ctx.font='bold 8px Arial';
+    ctx.textAlign='center';
+    const mx=(x1+x2)/2,my=(y1+y2)/2;
+    ctx.fillText('VANO'+(ab.ancho?(' '+ab.ancho+'m'):''),mx+nx*8,my+ny*8);
+    ctx.textAlign='left';
+    return;
+  }
+
+  if(isV){
+    // Ventana: línea triple azul
+    ctx.strokeStyle='#3498DB';
+    ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.strokeStyle='#3498DB';ctx.lineWidth=1;
+    const off=3;
+    ctx.beginPath();ctx.moveTo(x1+ny*off,y1+nx*off);ctx.lineTo(x2+ny*off,y2+nx*off);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x1-ny*off,y1-nx*off);ctx.lineTo(x2-ny*off,y2-nx*off);ctx.stroke();
+  } else {
+    // Puerta: símbolo arquitectónico estándar
+    // x1,y1 = punto de bisagra (inicio de la abertura)
+    // x2,y2 = fin de la abertura
+    // nx,ny = normal HACIA AFUERA del ambiente
+    // La hoja abre HACIA ADENTRO del ambiente por defecto (ori=1)
+    // Adentro = dirección opuesta a la normal = (-nx, -ny)
+
+    const ori=ab.orientacion||1; // 1=adentro, -1=afuera
+    const sign=ori>0?1:-1;
+
+    // Dirección perpendicular a la pared hacia adentro del ambiente
+    const perpX=-nx*sign;
+    const perpY=-ny*sign;
+
+    // Extremo de la hoja (perpendicular desde x1, largo = abPx)
+    const leafX=x1+perpX*abPx;
+    const leafY=y1+perpY*abPx;
+
+    // 1. Marco: línea fina sobre la abertura
+    ctx.strokeStyle='#1A2744';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+
+    // 2. Hoja: línea desde bisagra (x1,y1) perpendicular hacia adentro
+    ctx.strokeStyle='#1A2744';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(leafX,leafY);ctx.stroke();
+
+    // 3. Arco: cuarto de círculo desde punta de la hoja hasta x2,y2
+    // Centro del arco = x1,y1 (la bisagra), radio = abPx
+    // Ángulo desde bisagra hasta leafX,leafY
+    const startAngle=Math.atan2(leafY-y1, leafX-x1);
+    // Ángulo desde bisagra hasta x2,y2 (a lo largo de la pared)
+    const endAngle=Math.atan2(y2-y1, x2-x1);
+    // El arco va de la hoja hasta el extremo de la abertura
+    // Dirección del arco depende de orientación
+    const anticlockwise=ori<0;
+    ctx.strokeStyle='#1A2744';ctx.lineWidth=1;
+    ctx.setLineDash([3,2]);
+    ctx.beginPath();
+    ctx.arc(x1,y1,abPx,startAngle,endAngle,anticlockwise);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Label
+  const color=isV?'#3498DB':'#1A2744';
+  ctx.fillStyle=color;
+  ctx.font='bold 8px Arial';
+  ctx.textAlign='center';
+  ctx.fillText(ab.label||(isV?'V':'P'),(x1+x2)/2+nx*10,(y1+y2)/2+ny*10-2);
+  ctx.textAlign='left';
+}
+
+// ── PAREDES ──
+function getAmbienteWalls(amb){
+  const g = _planta.gridSize;
+  const s = gridToScreen(amb.x, amb.y);
+  const W = amb.w*g, H = amb.h*g;
+  const wt=amb.wallTypes||{N:'ext',S:'ext',E:'ext',O:'ext'};
+  const walls = [
+    {side:'N', x1:s.sx, y1:s.sy, x2:s.sx+W, y2:s.sy},
+    {side:'S', x1:s.sx, y1:s.sy+H, x2:s.sx+W, y2:s.sy+H},
+    {side:'O', x1:s.sx, y1:s.sy, x2:s.sx, y2:s.sy+H},
+    {side:'E', x1:s.sx+W, y1:s.sy, x2:s.sx+W, y2:s.sy+H},
+  ];
+  walls.forEach(wall => {
+    const shared = isWallShared(amb, wall.side);
+    // Auto shared overrides manual type
+    wall.tipo = shared ? 'S' : (wt[wall.side]||'ext');
+  });
+  return walls;
+}
+
+function isWallShared(amb, side){
+  return !!getSharedNeighbor(amb,side);
+}
+
+function getSharedNeighbor(amb, side){
+  return _planta.ambientes.find(other => {
+    if(other.id===amb.id) return false;
+    // Check adjacency AND overlap
+    const overlapX=!(other.x>=amb.x+amb.w || other.x+other.w<=amb.x);
+    const overlapY=!(other.y>=amb.y+amb.h || other.y+other.h<=amb.y);
+    if(side==='E') return other.x===amb.x+amb.w && overlapY;
+    if(side==='O') return other.x+other.w===amb.x && overlapY;
+    if(side==='S') return other.y===amb.y+amb.h && overlapX;
+    if(side==='N') return other.y+other.h===amb.y && overlapX;
+    return false;
+  })||null;
+}
+
+// ── EVENTOS ──
+function plantaMouseDown(e){
+  const ox = e.offsetX, oy = e.offsetY;
+  const {tool} = _plantaState;
+
+  if(tool==='select'){
+    // Check resize handle first
+    const amb = _planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+    if(amb){
+      const g=_planta.gridSize, s=gridToScreen(amb.x,amb.y);
+      const corners=[{hx:0,hy:0},{hx:1,hy:0},{hx:0,hy:1},{hx:1,hy:1}];
+      for(let c of corners){
+        const cx=s.sx+c.hx*amb.w*g, cy=s.sy+c.hy*amb.h*g;
+        if(Math.abs(ox-cx)<8&&Math.abs(oy-cy)<8){
+          _plantaState.resizing={id:amb.id,corner:c,startX:ox,startY:oy,
+            origX:amb.x,origY:amb.y,origW:amb.w,origH:amb.h};
+          return;
+        }
+      }
+    }
+    // Check click on abertura first (for dragging)
+    const clickedAb=getAberturaAt(ox,oy);
+    if(clickedAb){
+      _plantaState.draggingAb={id:clickedAb.id};
+      _plantaState.selectedAbId=clickedAb.id;
+      showPlantaProps();
+      drawPlanta();
+      return;
+    }
+
+    // Check click on ambiente
+    const clicked = getAmbienteAt(ox,oy);
+    if(clicked){
+      _plantaState.selectedId = clicked.id;
+      _plantaState.selectedAbId = null;
+      const s=gridToScreen(clicked.x,clicked.y);
+      _plantaState.dragAmb = clicked.id;
+      _plantaState.dragOffX = ox-s.sx;
+      _plantaState.dragOffY = oy-s.sy;
+    } else {
+      _plantaState.selectedId = null;
+      _plantaState.selectedAbId = null;
+    }
+    showPlantaProps();
+    renderAmbientesList();
+    drawPlanta();
+  }
+
+  if(tool==='ambiente'){
+    _plantaState.drawing = true;
+    _plantaState.startX = ox;
+    _plantaState.startY = oy;
+    _plantaState.curX = ox;
+    _plantaState.curY = oy;
+  }
+
+  if(tool==='abertura'){
+    const amb=getAmbienteAt(ox,oy);
+    if(amb){
+      const wall=getNearestWall(amb,ox,oy);
+      const g=_planta.gridSize;
+      const s=gridToScreen(amb.x,amb.y);
+      // Calculate posCell = offset along wall from top/left corner
+      let posCell=0;
+      if(wall==='N'||wall==='S') posCell=Math.round((ox-s.sx)/g);
+      else posCell=Math.round((oy-s.sy)/g);
+      posCell=Math.max(0,posCell);
+      addAbertura(amb,wall,posCell,ox,oy);
+    }
+  }
+}
+
+function plantaMouseMove(e){
+  const ox=e.offsetX, oy=e.offsetY;
+  _plantaState.curX=ox; _plantaState.curY=oy;
+
+  // Highlight wall on hover when using abertura tool
+  if(_plantaState.tool==='abertura'&&!_plantaState.draggingAb){
+    const amb=getAmbienteAt(ox,oy);
+    _plantaState.hoveredWall=amb?{ambId:amb.id,wall:getNearestWall(amb,ox,oy)}:null;
+    drawPlanta();
+    return;
+  }
+
+  // Drag abertura along wall
+  if(_plantaState.draggingAb){
+    const da=_plantaState.draggingAb;
+    const ab=_planta.aberturas.find(a=>a.id===da.id);
+    if(ab){
+      const g=_planta.gridSize;
+      const amb=_planta.ambientes.find(a=>a.id===ab.ambienteId);
+      if(amb){
+        const s=gridToScreen(amb.x,amb.y);
+        let posCell;
+        if(ab.pared==='N'||ab.pared==='S') posCell=Math.round((ox-s.sx)/g);
+        else posCell=Math.round((oy-s.sy)/g);
+        const maxCells=(ab.pared==='N'||ab.pared==='S'?amb.w:amb.h)-Math.round(ab.ancho/_planta.escala);
+        ab.posCell=Math.max(0,Math.min(maxCells,posCell));
+        drawPlanta();
+      }
+    }
+    return;
+  }
+
+  // Resize
+  if(_plantaState.resizing){
+    const r=_plantaState.resizing;
+    const g=_planta.gridSize;
+    const dGx=Math.round((ox-r.startX)/g);
+    const dGy=Math.round((oy-r.startY)/g);
+    const amb=_planta.ambientes.find(a=>a.id===r.id);
+    if(!amb)return;
+    if(r.corner.hx===0){ amb.x=r.origX+dGx; amb.w=Math.max(1,r.origW-dGx); }
+    else { amb.w=Math.max(1,r.origW+dGx); }
+    if(r.corner.hy===0){ amb.y=r.origY+dGy; amb.h=Math.max(1,r.origH-dGy); }
+    else { amb.h=Math.max(1,r.origH+dGy); }
+    updateComputo(); drawPlanta(); showPlantaProps(); return;
+  }
+
+  // Drag
+  if(_plantaState.dragAmb){
+    const amb=_planta.ambientes.find(a=>a.id===_plantaState.dragAmb);
+    if(!amb)return;
+    const g=_planta.gridSize;
+    const newX=snapToGrid(ox-_plantaState.dragOffX);
+    const newY=snapToGrid(oy-_plantaState.dragOffY);
+    amb.x=Math.round(newX/g);
+    amb.y=Math.round(newY/g);
+    updateComputo(); drawPlanta(); return;
+  }
+
+  if(_plantaState.drawing) drawPlanta();
+}
+
+function plantaMouseUp(e){
+  const ox=e.offsetX||_plantaState.curX, oy=e.offsetY||_plantaState.curY;
+
+  if(_plantaState.resizing){ _plantaState.resizing=null; updateComputo(); renderAmbientesList(); return; }
+  if(_plantaState.draggingAb){ _plantaState.draggingAb=null; updateComputo(); drawPlanta(); return; }
+  if(_plantaState.dragAmb){ _plantaState.dragAmb=null; return; }
+
+  if(_plantaState.drawing && _plantaState.tool==='ambiente'){
+    _plantaState.drawing=false;
+    const g=_planta.gridSize;
+    const {gx:sx,gy:sy}=screenToGrid(_plantaState.startX,_plantaState.startY);
+    const {gx:ex,gy:ey}=screenToGrid(ox,oy);
+    const x=Math.min(sx,ex), y=Math.min(sy,ey);
+    const w=Math.abs(ex-sx), h=Math.abs(ey-sy);
+    if(w>0&&h>0){
+      // Validate reasonable dimensions (max 30m = 120 cells)
+      const wm=(w*_planta.escala).toFixed(2);
+      const hm=(h*_planta.escala).toFixed(2);
+      const nombre=AMBIENTE_NAMES[_planta.ambientes.length%AMBIENTE_NAMES.length]||('Amb. '+(_planta.ambientes.length+1));
+      const color=AMBIENTE_COLORS[_planta.ambientes.length%AMBIENTE_COLORS.length];
+      const id='amb_'+(_planta.nextId++);
+      _planta.ambientes.push({id,nombre,x,y,w,h,altura:2.6,color,
+        wallTypes:{N:'ext',S:'ext',E:'ext',O:'ext'}});
+      _plantaState.selectedId=id;
+      showPlantaProps();
+      renderAmbientesList();
+      updateComputo();
+    }
+    drawPlanta();
+  }
+}
+
+function plantaWheel(e){
+  e.preventDefault();
+  const factor=e.deltaY<0?1.1:0.9;
+  plantaZoom(factor, e.offsetX, e.offsetY);
+}
+
+function plantaZoom(factor, cx, cy){
+  const canvas=_plantaState.canvas;
+  cx=cx||canvas.width/2; cy=cy||canvas.height/2;
+  _plantaState.panX=cx+((_plantaState.panX-cx)*factor);
+  _plantaState.panY=cy+((_plantaState.panY-cy)*factor);
+  _planta.gridSize=Math.max(10,Math.min(60,_planta.gridSize*factor));
+  drawPlanta();
+}
+
+function plantaFit(){
+  const canvas=_plantaState.canvas;
+  if(!_planta.ambientes.length){ _plantaState.panX=canvas.width/2-200; _plantaState.panY=canvas.height/2-100; drawPlanta(); return; }
+  const minX=Math.min(..._planta.ambientes.map(a=>a.x));
+  const maxX=Math.max(..._planta.ambientes.map(a=>a.x+a.w));
+  const minY=Math.min(..._planta.ambientes.map(a=>a.y));
+  const maxY=Math.max(..._planta.ambientes.map(a=>a.y+a.h));
+  const pw=maxX-minX, ph=maxY-minY;
+  const margin=60;
+  const gx=(canvas.width-margin*2)/Math.max(pw,1);
+  const gy=(canvas.height-margin*2)/Math.max(ph,1);
+  _planta.gridSize=Math.max(10,Math.min(50,Math.min(gx,gy)));
+  _plantaState.panX=margin-minX*_planta.gridSize;
+  _plantaState.panY=margin-minY*_planta.gridSize;
+  drawPlanta();
+}
+
+function setPlantaTool(tool){
+  _plantaState.tool=tool;
+  ['select','ambiente','abertura'].forEach(t=>{
+    const btn=document.getElementById('planta-tool-'+t);
+    if(btn) btn.style.background=t===tool?'var(--navy)':'#F0EAE2';
+    if(btn) btn.style.color=t===tool?'#fff':'#666';
+  });
+  const canvas=_plantaState.canvas;
+  if(canvas) canvas.style.cursor=tool==='select'?'default':'crosshair';
+}
+
+function getAberturaAt(ox,oy){
+  // Check if click is near an abertura
+  for(const ab of _planta.aberturas){
+    const coords=getAberturaCoords(ab);
+    if(!coords)continue;
+    const{x1,y1,x2,y2}=coords;
+    // Distance from point to line segment
+    const dx=x2-x1, dy=y2-y1;
+    const len=Math.sqrt(dx*dx+dy*dy)||1;
+    const t=Math.max(0,Math.min(1,((ox-x1)*dx+(oy-y1)*dy)/(len*len)));
+    const px=x1+t*dx, py=y1+t*dy;
+    const dist=Math.sqrt((ox-px)**2+(oy-py)**2);
+    if(dist<8)return ab;
+  }
+  return null;
+}
+
+function getAmbienteAt(ox,oy){
+  const g=_planta.gridSize;
+  return _planta.ambientes.slice().reverse().find(amb=>{
+    const s=gridToScreen(amb.x,amb.y);
+    return ox>=s.sx&&ox<=s.sx+amb.w*g&&oy>=s.sy&&oy<=s.sy+amb.h*g;
+  })||null;
+}
+
+function getNearestWall(amb,ox,oy){
+  const g=_planta.gridSize, s=gridToScreen(amb.x,amb.y);
+  const W=amb.w*g, H=amb.h*g;
+  const dists={N:Math.abs(oy-s.sy),S:Math.abs(oy-s.sy-H),O:Math.abs(ox-s.sx),E:Math.abs(ox-s.sx-W)};
+  return Object.keys(dists).reduce((a,b)=>dists[a]<dists[b]?a:b);
+}
+
+// ── AMBIENTES ──
+function addAmbienteManual(){
+  const id='amb_'+(_planta.nextId++);
+  const color=AMBIENTE_COLORS[_planta.ambientes.length%AMBIENTE_COLORS.length];
+  // Place next to last or at origin
+  const lastAmb=_planta.ambientes[_planta.ambientes.length-1];
+  const x=lastAmb?lastAmb.x+lastAmb.w+1:2;
+  const y=lastAmb?lastAmb.y:2;
+  _planta.ambientes.push({id,nombre:'Ambiente '+(_planta.ambientes.length+1),x,y,w:8,h:6,altura:2.6,color,
+    wallTypes:{N:'ext',S:'ext',E:'ext',O:'ext'}});
+  _plantaState.selectedId=id;
+  renderAmbientesList(); showPlantaProps(); updateComputo(); drawPlanta();
+}
+
+function renderAmbientesList(){
+  const list=document.getElementById('planta-amb-list');
+  if(!list)return;
+  if(!_planta.ambientes.length){
+    list.innerHTML='<div style="padding:10px 12px;font-size:11px;color:#aaa">Dibujá un ambiente en la grilla</div>';
+    return;
+  }
+  list.innerHTML=_planta.ambientes.map(amb=>{
+    const area=(amb.w*amb.h*_planta.escala*_planta.escala).toFixed(1);
+    const sel=_plantaState.selectedId===amb.id;
+    return '<div onclick="selectAmbiente(\''+amb.id+'\')" style="padding:7px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;background:'+(sel?'#FFF8F0':'#fff')+';display:flex;align-items:center;gap:8px">'
+      +'<div style="width:12px;height:12px;border-radius:3px;background:'+amb.color+';border:1px solid #ccc;flex-shrink:0"></div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:var(--navy)">'+escHtml(amb.nombre)+'</div>'
+      +'<div style="font-size:10px;color:#888">'+area+' m² · h:'+amb.altura+'m</div></div>'
+      +'</div>';
+  }).join('');
+}
+
+function selectAmbiente(id){
+  _plantaState.selectedId=id;
+  showPlantaProps(); renderAmbientesList(); drawPlanta();
+}
+
+function showPlantaProps(){
+  const panel=document.getElementById('planta-props');
+  const cont=document.getElementById('planta-props-content');
+  if(!panel||!cont)return;
+  const amb=_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+  if(!amb){ panel.style.display='none'; return; }
+  panel.style.display='';
+
+  cont.innerHTML=`
+  <div class="mb-10">
+    <label class="field-label">Nombre</label>
+    <input id="prop-nombre" value="${escHtml(amb.nombre)}" style="width:100%;font-size:12px" oninput="updateProp('nombre',this.value)">
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+    <div><label class="field-label">Ancho (m)</label>
+    <input type="text" inputmode="decimal" id="prop-w" value="${(amb.w*_planta.escala).toFixed(2)}" style="width:100%;font-size:12px"
+      onblur="updatePropM('w',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
+    <div><label class="field-label">Largo (m)</label>
+    <input type="text" inputmode="decimal" id="prop-h" value="${(amb.h*_planta.escala).toFixed(2)}" style="width:100%;font-size:12px"
+      onblur="updatePropM('h',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
+  </div>
+  <div class="mb-10">
+    <label class="field-label">Altura (m)</label>
+    <input type="number" id="prop-alt" value="${amb.altura}" step="0.1" min="2" max="6" style="width:100%;font-size:12px"
+      oninput="updateProp('altura',parseFloat(this.value)||2.6)">
+  </div>
+  <div class="mb-10">
+    <label class="field-label">Color</label>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+    ${AMBIENTE_COLORS.map(c=>`<div onclick="updateProp('color','${c}')" style="width:18px;height:18px;background:${c};border:2px solid ${c===amb.color?'var(--accent)':'#ccc'};border-radius:3px;cursor:pointer"></div>`).join('')}
+    </div>
+  </div>
+  <div style="margin-bottom:10px">
+    <label class="field-label">Tipo de paredes <small style="color:#888;font-weight:400">(clickeá para cambiar)</small></label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
+      ${['N','S','O','E'].map(side=>{
+        const t=(amb.wallTypes&&amb.wallTypes[side])||'ext';
+        const shared=isWallShared(amb,side);
+        const colors={ext:'#1A2744',int:'#AAA',med:'#E67E22'};
+        const labels={ext:'Exterior',int:'Interior',med:'Medianera'};
+        const sideNames={N:'Norte',S:'Sur',O:'Oeste',E:'Este'};
+        if(shared)return '<div style="font-size:10px;padding:4px 6px;border-radius:5px;background:#E8F0F8;color:#7A9BC0;text-align:center">'+sideNames[side]+' (compartida)</div>';
+        return '<button onclick="toggleWallType(this.dataset.a,this.dataset.s)" data-a="'+amb.id+'" data-s="'+side+'" style="font-size:10px;padding:4px 6px;border-radius:5px;border:2px solid '+colors[t]+';color:'+colors[t]+';background:transparent;cursor:pointer;text-align:center">'+sideNames[side]+'<br><b>'+labels[t]+'</b></button>';
+      }).join('')}
+    </div>
+  </div>
+
+  <div>
+    <label class="field-label">Aberturas <small style="color:#888;font-weight:400">(usá herramienta 🚪 y clickeá la pared, luego arrastrala)</small></label>
+    <div style="display:flex;gap:4px;margin-top:4px">
+      <button onclick="addAbertura(null,'N')" class="btn btn-sm" style="font-size:10px;flex:1">＋N</button>
+      <button onclick="addAbertura(null,'S')" class="btn btn-sm" style="font-size:10px;flex:1">＋S</button>
+      <button onclick="addAbertura(null,'O')" class="btn btn-sm" style="font-size:10px;flex:1">＋O</button>
+      <button onclick="addAbertura(null,'E')" class="btn btn-sm" style="font-size:10px;flex:1">＋E</button>
+    </div>
+    <div style="margin-top:6px">
+    ${_planta.aberturas.filter(ab=>ab.ambienteId===amb.id).map(ab=>`
+      <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:10px">
+        <span>${ab.tipo==='puerta'?'🚪':ab.tipo==='ventana'?'🪟':'⬜'}</span>
+        <span style="flex:1">${escHtml(ab.label||ab.tipo)} · pared ${ab.pared} · ${ab.ancho}m × ${ab.alto}m</span>
+        <button onclick="deleteAbertura('${ab.id}')" style="background:none;border:none;cursor:pointer;color:#C0392B;font-size:12px">×</button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function updateProp(key,val){
+  const amb=_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+  if(!amb)return;
+  amb[key]=val;
+  renderAmbientesList(); updateComputo(); drawPlanta();
+}
+
+function updatePropM(key,val){
+  const amb=_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+  if(!amb)return;
+  // Accept comma as decimal separator
+  const clean=String(val).replace(',','.');
+  const m=parseFloat(clean)||0;
+  if(m<=0)return;
+  // Snap to nearest 0.25m — escala is always 0.25 regardless of zoom
+  const ESCALA=0.25;
+  const cells=Math.max(1,Math.round(m/ESCALA));
+  amb[key]=cells;
+  const inp=document.getElementById('prop-'+key);
+  if(inp)inp.value=(cells*ESCALA).toFixed(2);
+  renderAmbientesList(); updateComputo(); drawPlanta();
+}
+
+function deletePlantaSelected(){
+  _planta.ambientes=_planta.ambientes.filter(a=>a.id!==_plantaState.selectedId);
+  _planta.aberturas=_planta.aberturas.filter(ab=>ab.ambienteId!==_plantaState.selectedId);
+  _plantaState.selectedId=null;
+  showPlantaProps(); renderAmbientesList(); updateComputo(); drawPlanta();
+}
+
+// ── ABERTURAS ──
+function addAbertura(ambOrNull, pared, posCell, clickX, clickY){
+  const selAmb=ambOrNull||_planta.ambientes.find(a=>a.id===_plantaState.selectedId);
+  if(!selAmb)return;
+  // Show inline dialog instead of prompt
+  const tipos=['puerta','ventana','vano'];
+  const defaults={puerta:{ancho:0.90,alto:2.10,label:'P'},ventana:{ancho:1.20,alto:1.10,label:'V'},vano:{ancho:2.00,alto:2.30,label:''}};
+
+  const id='ab_'+(_planta.nextId++);
+  // Show modal
+  showModal(`
+    <h3 style="font-family:Georgia,serif;color:var(--navy);margin-bottom:14px">Nueva abertura</h3>
+    <div class="mb-10">
+      <label class="field-label">Tipo</label>
+      <select id="ab-tipo" onchange="updateAbDefaults()" style="width:100%">
+        <option value="puerta">🚪 Puerta</option>
+        <option value="ventana">🪟 Ventana</option>
+        <option value="vano">⬜ Vano sin carpintería</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><label class="field-label">Ancho (m)</label><input type="number" id="ab-ancho" value="0.90" step="0.05" style="width:100%"></div>
+      <div><label class="field-label">Alto (m)</label><input type="number" id="ab-alto" value="2.10" step="0.05" style="width:100%"></div>
+    </div>
+    <div class="mb-10">
+      <label class="field-label">Etiqueta</label>
+      <input id="ab-label" value="P1" style="width:100%">
+    </div>
+    <div class="mb-10" id="ab-ori-wrap">
+      <label class="field-label">Apertura</label>
+      <select id="ab-ori" style="width:100%">
+        <option value="1">Hacia adentro</option>
+        <option value="-1">Hacia afuera</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmarAbertura('${id}','${selAmb.id}','${pared||'N'}',${posCell||0})">Agregar</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>
+  `);
+}
+
+function updateAbDefaults(){
+  const tipo=document.getElementById('ab-tipo')?.value;
+  const defaults={puerta:{ancho:0.90,alto:2.10,label:'P1'},ventana:{ancho:1.20,alto:1.10,label:'V1'},vano:{ancho:2.00,alto:2.30,label:''}};
+  const d=defaults[tipo]||defaults.puerta;
+  if(document.getElementById('ab-ancho'))document.getElementById('ab-ancho').value=d.ancho;
+  if(document.getElementById('ab-alto'))document.getElementById('ab-alto').value=d.alto;
+  if(document.getElementById('ab-label'))document.getElementById('ab-label').value=d.label;
+  if(document.getElementById('ab-ori-wrap'))document.getElementById('ab-ori-wrap').style.display=tipo==='vano'?'none':'';
+}
+
+function confirmarAbertura(id,ambId,pared,posCell){
+  const tipo=document.getElementById('ab-tipo')?.value||'puerta';
+  const ancho=parseFloat(document.getElementById('ab-ancho')?.value||0.9);
+  const alto=parseFloat(document.getElementById('ab-alto')?.value||2.1);
+  const label=document.getElementById('ab-label')?.value||'';
+  const ori=parseInt(document.getElementById('ab-ori')?.value||1);
+  _planta.aberturas.push({id,ambienteId:ambId,pared,posCell:posCell||0,tipo,ancho,alto,label,orientacion:ori});
+  closeModal();
+  showPlantaProps();
+  updateComputo();
+  drawPlanta();
+}
+
+function deleteAbertura(id){
+  _planta.aberturas=_planta.aberturas.filter(ab=>ab.id!==id);
+  showPlantaProps(); drawPlanta();
+}
+
+// ── CÓMPUTO ──
+function calcPlantaComputo(){
+  const e=_planta.escala;
+  const ambs=_planta.ambientes;
+
+  // M² piso total
+  const m2piso=ambs.reduce((s,a)=>s+a.w*a.h*e*e,0);
+
+  // Paredes — clasificadas por tipo
+  // Nomenclatura:
+  //   ext = cara exterior (revoque ext + cara int del mismo muro)
+  //   int = pared interior libre (revoque ambas caras)
+  //   med = medianera (solo cara propia)
+  //   S   = compartida con otro ambiente (una sola vez, cara única)
+
+  let mlPerimExt=0;
+  let m2careExt=0;   // caras exteriores (revoque/pintura exterior)
+  let m2careIntDeExt=0; // caras interiores de muros exteriores (revoque/pintura interior)
+  let m2paredesInt=0;   // paredes internas (2 caras pero 1 muro)
+  let m2paredesMed=0;
+  const sharedCounted=new Set();
+
+  ambs.forEach(amb=>{
+    const walls=getAmbienteWalls(amb);
+    walls.forEach(wall=>{
+      const isH=wall.side==='N'||wall.side==='S';
+      const ml=(isH?amb.w:amb.h)*e;
+      const alt=amb.altura||2.6;
+      const m2=ml*alt;
+
+      if(wall.tipo==='S'){
+        // Compartida — contar solo una vez como pared interior
+        const other=getSharedNeighbor(amb,wall.side);
+        if(other){
+          const key=[amb.id,other.id].sort().join('_')+wall.side;
+          if(!sharedCounted.has(key)){
+            sharedCounted.add(key);
+            const altMax=Math.max(alt,other.altura||2.6);
+            m2paredesInt+=ml*altMax;
+          }
+        }
+      } else if(wall.tipo==='ext'){
+        mlPerimExt+=ml;
+        m2careExt+=m2;       // cara exterior
+        m2careIntDeExt+=m2;  // cara interior del mismo muro (también se revoca/pinta)
+      } else if(wall.tipo==='int'){
+        // Pared interior libre: dos caras (frente a espacio vacío/pasillo)
+        m2paredesInt+=m2*2;
+      } else if(wall.tipo==='med'){
+        m2paredesMed+=m2; // solo cara propia
+      }
+    });
+  });
+
+  // Totales para cómputo
+  const m2paredesExt=m2careExt;
+  const m2totalCarasInteriores=m2careIntDeExt+m2paredesInt; // todo lo que se pinta/revoca por dentro
+
+  // Altura promedio
+  const altProm=ambs.length?ambs.reduce((s,a)=>s+a.altura,0)/ambs.length:2.6;
+
+  // Aberturas
+  const puertas=_planta.aberturas.filter(ab=>ab.tipo==='puerta');
+  const ventanas=_planta.aberturas.filter(ab=>ab.tipo==='ventana');
+  const vanos=_planta.aberturas.filter(ab=>ab.tipo==='vano');
+  const m2puertas=puertas.reduce((s,ab)=>s+ab.ancho*(ab.alto||2.1),0);
+  const m2ventanas=ventanas.reduce((s,ab)=>s+ab.ancho*(ab.alto||1.2),0);
+  const m2vanos=vanos.reduce((s,ab)=>s+ab.ancho*(ab.alto||2.3),0);
+  const mlVanos=vanos.reduce((s,ab)=>s+ab.ancho,0); // descuenta ml de pared
+
+  // Columnas: 1 por esquina de cada ambiente, descontando esquinas compartidas
+  let columnas=0;
+  ambs.forEach(amb=>{
+    const corners=[[amb.x,amb.y],[amb.x+amb.w,amb.y],[amb.x,amb.y+amb.h],[amb.x+amb.w,amb.y+amb.h]];
+    corners.forEach(([cx,cy])=>{
+      const shared=ambs.filter(o=>o.id!==amb.id&&
+        (o.x===cx||o.x+o.w===cx)&&(o.y===cy||o.y+o.h===cy)).length;
+      if(shared===0) columnas++;
+      else columnas+=1/Math.max(shared,1);
+    });
+  });
+  columnas=Math.round(columnas);
+
+  const m2aberturas=m2puertas+m2ventanas+m2vanos;
+  // Netas exteriores (caras ext − aberturas en ext)
+  const m2netasExt=Math.round(Math.max(0,m2careExt-m2aberturas)*100)/100;
+  // Netas interiores (caras int de muros ext + paredes int − aberturas en int)
+  const m2netasInt=Math.round(Math.max(0,m2totalCarasInteriores-m2aberturas)*100)/100;
+  const m2netas=Math.round(Math.max(0,m2careExt+m2totalCarasInteriores+m2paredesMed-m2aberturas*2)*100)/100;
+  return {
+    ambientes:ambs.length,
+    m2piso:Math.round(m2piso*100)/100,
+    mlPerimExt:Math.round(mlPerimExt*100)/100,
+    m2careExt:Math.round(m2careExt*100)/100,
+    m2careIntDeExt:Math.round(m2careIntDeExt*100)/100,
+    m2paredesExt:Math.round(m2careExt*100)/100,
+    m2paredesInt:Math.round(m2paredesInt*100)/100,
+    m2totalCarasInt:Math.round(m2totalCarasInteriores*100)/100,
+    m2paredesTotal:Math.round((m2paredesExt+m2paredesInt+m2paredesMed)*100)/100,
+    m2paredesMed:Math.round(m2paredesMed*100)/100,
+    altProm:Math.round(altProm*100)/100,
+    columnas,
+    vigas:Math.round((mlPerimExt-mlVanos)*100)/100, // vigas no se descuentan (llevan dintel)
+    vigasBrutas:Math.round(mlPerimExt*100)/100,
+    puertas:puertas.length,
+    ventanas:ventanas.length,
+    vanos:vanos.length,
+    m2puertas:Math.round(m2puertas*100)/100,
+    m2ventanas:Math.round(m2ventanas*100)/100,
+    m2vanos:Math.round(m2vanos*100)/100,
+    mlVanos:Math.round(mlVanos*100)/100,
+    m2netas,
+    m2netasExt,
+    m2netasInt,
+  };
+}
+
+function updateComputo(){
+  const cont=document.getElementById('planta-computo')||document.getElementById('planta-computo-pip');
+  if(cont&&document.getElementById('planta-computo-pip'))document.getElementById('planta-computo-pip').style.display=_planta.ambientes.length?'':'none';
+  if(!cont||!_planta.ambientes.length){
+    if(cont)cont.innerHTML='<div style="color:#aaa;text-align:center;padding:10px">Sin ambientes</div>';
+    return;
+  }
+  const c=calcPlantaComputo();
+  cont.innerHTML=`
+  <table style="width:100%;border-collapse:collapse">
+    ${row('Ambientes',c.ambientes,'u')}
+    ${row('M² de piso',c.m2piso,'m²')}
+    ${row('M² techo/losa',c.m2piso,'m²')}
+    ${row('Perímetro exterior',c.mlPerimExt,'ml')}
+    ${row('Caras exteriores',c.m2careExt||c.m2paredesExt,'m²')}
+    ${row('Caras int. de muros ext.',c.m2careIntDeExt||0,'m²')}
+    ${row('Paredes interiores',c.m2paredesInt,'m²')}
+    ${row('Medianeras',c.m2paredesMed,'m²')}
+    ${row('⊖ Aberturas','-'+Math.round((c.m2puertas+c.m2ventanas+c.m2vanos)*100)/100,'m²')}
+    ${row('Revoque ext. neto',c.m2netasExt,'m²')}
+    ${row('Revoque int. neto',c.m2netasInt,'m²')}
+    ${row('Columnas estimadas',c.columnas,'u')}
+    ${row('Vigas encadenado',c.vigas,'ml')}
+    ${row('Puertas',c.puertas,'u')}
+    ${row('Ventanas',c.ventanas,'u')}
+    ${row('Vanos sin carp.',c.vanos,'u')}
+    ${row('Alt. promedio',c.altProm,'m')}
+  </table>`;
+
+  function row(label,val,unit){
+    return `<tr><td style="padding:3px 0;color:#555;font-size:10px">${label}</td>
+    <td style="padding:3px 0;text-align:right;font-weight:700;font-size:11px;color:var(--navy)">${typeof val==='number'?val.toFixed(val%1===0?0:2):val} <span style="font-weight:400;color:#888;font-size:10px">${unit}</span></td></tr>`;
+  }
+}
+
+// ── APLICAR AL PIP ──
+function aplicarPlantaAlPIP(){
+  if(!_planta.ambientes.length)return toast('Sin ambientes en la planta','error');
+  const c=calcPlantaComputo();
+
+  // Precargar m2 total
+  const m2inp=document.getElementById('pip-m2');
+  if(m2inp)m2inp.value=c.m2piso.toFixed(1);
+
+  // Buscar ítems en pipRubrosA y actualizar cantidades automáticamente
+  const m2intNeto=c.m2netasInt||c.m2totalCarasInt||c.m2paredesInt||0;
+  const m2extNeto=c.m2netasExt||c.m2careExt||c.m2paredesExt||0;
+  const m2paredesBruto=c.m2paredesTotal||(c.m2paredesExt+c.m2paredesInt)||0;
+
+  const mappings=[
+    // Estructura
+    {keys:['platea','fundación','base céntr'],cant:c.m2piso,section:'estructura'},
+    {keys:['losa','entrepiso'],cant:c.m2piso,section:'estructura'},
+    {keys:['columna'],cant:c.columnas,section:'estructura'},
+    {keys:['viga','encadenado'],cant:c.vigas,section:'estructura'},
+    // Mampostería
+    {keys:['mampostería','ladrillo','bloque'],cant:m2paredesBruto,section:'mamposteria'},
+    {keys:['contrapiso','carpeta'],cant:c.m2piso,section:'contrapisos'},
+    // Pisos
+    {keys:['piso','cerámica','porcellanato','parquet','mosaico','alisado'],cant:c.m2piso,section:'pisos'},
+    // Cielorrasos
+    {keys:['cielo raso','cielorraso','suspendido'],cant:c.m2piso,section:'cielorrasos'},
+    // Revoques — int y ext separados
+    {keys:['revoque proyectable exterior','revoque grueso exterior','revoque exterior'],cant:m2extNeto,section:'revoques'},
+    {keys:['revoque','grueso','fino','enlucido','yeso'],cant:m2intNeto,section:'revoques'},
+    // Revestimientos
+    {keys:['revestimiento','cerámico pared','azulejo'],cant:m2intNeto,section:'revestimientos'},
+    // Pintura — CRUCIAL: interior usa caras interiores netas, exterior usa caras exteriores netas
+    {keys:['látex sobre muros interiores','pintura interior','látex interior','látex sobre muros'],cant:m2intNeto,section:'pintura'},
+    {keys:['látex acrílico sobre muros exteriores','látex exterior','silicona sobre ladrillo','pintura exterior'],cant:m2extNeto,section:'pintura'},
+    {keys:['látex sobre cielo','cielo raso','pintura cielo'],cant:c.m2piso,section:'pintura'},
+    {keys:['impermeabilizante'],cant:c.m2piso,section:'pintura'},
+    {keys:['esmalte'],cant:m2intNeto,section:'pintura'},
+    // Aberturas
+    {keys:['puerta'],cant:c.puertas,section:'carpinteria_madera'},
+    {keys:['ventana','abertura aluminio'],cant:c.ventanas,section:'carpinteria_madera'},
+  ];
+
+  let applied=0;
+  pipRubrosA.forEach(function(it){
+    const labelLow=(it.label||'').toLowerCase();
+    for(const m of mappings){
+      if(m.keys.some(function(k){return labelLow.indexOf(k)>=0;})){
+        it.cant=parseFloat(m.cant.toFixed(2));
+        applied++;
+        break;
+      }
+    }
+  });
+
+  renderPIPRubrosA();
+  toast('✓ Planta aplicada — '+c.m2piso+'m² piso, '+c.columnas+' columnas, '+c.vigas+'ml vigas'+(applied?' ('+applied+' ítems actualizados)':''),'success');
+}
+
+function aplicarCometutoAlPIP(){
+  if(!_planta.ambientes.length)return toast('Sin ambientes en la planta','error');
+  const c=calcPlantaComputo();
+  // Update m2 field
+  const m2inp=document.getElementById('pip-m2');
+  if(m2inp){ m2inp.value=c.m2piso.toFixed(1); }
+  toast('✓ M² aplicados al PIP: '+c.m2piso+' m²','success');
+  // Store planta data in snapshot for later
+  if(_calcSnapshot) _calcSnapshot.planta=c;
+  // Switch to PIP form
+  document.getElementById('pip-result').style.display='none';
+  document.getElementById('pip-form').style.display='';
+}
+
+function toggleWallType(ambId,side){
+  if(typeof ambId==='object'&&ambId.dataset){side=ambId.dataset.s;ambId=ambId.dataset.a;}
+  const amb=_planta.ambientes.find(a=>a.id===ambId);
+  if(!amb)return;
+  if(!amb.wallTypes)amb.wallTypes={N:'ext',S:'ext',E:'ext',O:'ext'};
+  const cycle={ext:'int',int:'med',med:'ext'};
+  amb.wallTypes[side]=cycle[amb.wallTypes[side]]||'ext';
+  showPlantaProps();
+  updateComputo();
+  drawPlanta();
+}
+
 function escHtml(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toast(msg,type=''){
   const el=document.getElementById('toast');
