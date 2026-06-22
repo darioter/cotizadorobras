@@ -1860,7 +1860,13 @@ let _calcSnapshot = null; // guarda el cálculo actual
 async function guardarYVerResultado(){
   if(!_calcSnapshot)return toast('Calculá el precio primero','error');
   const res=_calcSnapshot;
-  const resultado={...res,propuestas:[]};
+  // Calculate material cost if available
+  let costoMateriales=0;
+  if(_lastResultado&&_lastResultado.rubrosA){
+    const tots=calcularMateriales(_lastResultado.rubrosA||res.rubrosA||[]);
+    costoMateriales=Object.values(tots).reduce(function(s,m){return s+m.qty*m.precio;},0);
+  }
+  const resultado={...res,propuestas:[],costoMateriales:Math.round(costoMateriales)};
   try{
     if(_editingProyectoId){
       await sb.from('proyectos_obra').update({
@@ -1942,6 +1948,10 @@ function calcularPrecio(){
     +statBox('Margen neto',(calc.pctUtilidadNeta*100).toFixed(1)+'%',calc.pctUtilidadNeta>=0.08?'var(--green)':'var(--red)')
     +statBox('Markup',calc.markup.toFixed(2)+'x',calc.markup>=1.3?'var(--green)':'var(--red)')
     +'</div>'
+    +(costoMateriales>0?'<div style="margin-top:10px;padding:8px 12px;background:#FFF8F0;border-radius:7px;border:1px solid #F0E0C0;font-size:12px;display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="color:#888">🧱 Costo estimado de materiales</span>'
+      +'<span style="font-weight:700;color:var(--navy)">$ '+fmt(costoMateriales)+'</span>'
+      +'</div>':'')
     +(pautaOk?'<div style="margin-top:10px;padding:8px 12px;border-radius:7px;background:'+(enPauta?'#E8F5EE':'#FFF0EE')+';font-size:12px;font-weight:700;color:'+(enPauta?'var(--green)':'var(--red)')+'">'+
       (enPauta?'✓ Precio dentro de la pauta del cliente':'⚠ Supera la pauta en $ '+fmt(calc.precioNeto-parseFloat(pauta)))+'</div>':'')
     +'</div>';
@@ -2298,6 +2308,10 @@ function renderOferta(res,c,m2,monSym,fmtM){
       :'')
     +'</div>'
 
+    // Materiales referencia si existen
+    +(r.costoMateriales>0
+      ?'<div style="margin-bottom:10px;padding:8px 12px;background:#F7F3EE;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><b>'+fV(Math.round(r.costoMateriales*(isARS?1:1/tcFinal)))+'</b></div>'
+      :'')
     // Precio — solo totales, sin desglose
     +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">'
     +'<tr>'
@@ -2837,6 +2851,27 @@ function findRendimientos(it){
   return null;
 }
 
+// Unidades mínimas comerciales por unidad de medida
+const UNIDAD_MINIMA={
+  'lt': 1,        // pinturas, fijadores → mínimo 1 litro
+  'u': 1,         // unidades → mínimo 1
+  'm²': 1,        // m² → mínimo 1
+  'm³': 0.5,      // hormigón → mínimo 0.5m³
+  'ml': 1,        // metros lineales → mínimo 1ml
+  'kg': 1,        // kg → mínimo 1kg
+  'barra': 1,     // barras → mínimo 1
+  'millar': 0.05, // millar → mínimo 50 unidades
+  'set': 1,
+  'm': 1,
+  'Tn': 0.5,
+  'gl': 1,
+};
+
+function redondearComercial(qty, unit){
+  const min=UNIDAD_MINIMA[unit]||1;
+  return Math.ceil(qty/min)*min;
+}
+
 function calcularMateriales(rubrosA){
   const totales={};
 
@@ -2929,7 +2964,11 @@ function renderMateriales(resultado){
         var subtotal=m.qty*m.precio;
         return '<tr>'
           +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0">'+escHtml(m.label)+'</td>'
-          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right">'+m.qty.toFixed(2)+' '+escHtml(m.unit)+'</td>'
+          +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right">'
+          +(m.qtyCruda&&Math.abs(m.qtyCruda-m.qty)>0.01
+            ?'<span style="color:#888;text-decoration:line-through;font-size:10px;margin-right:4px">'+m.qtyCruda.toFixed(2)+'</span>'
+            :'')
+          +m.qty.toFixed(2)+' '+escHtml(m.unit)+'</td>'
           +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right'+(m.enDB?'':';color:var(--accent)')+'">'+
             (m.enDB?'$ '+fmt(m.precio):'sin precio')+'</td>'
           +'<td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:700">'+
