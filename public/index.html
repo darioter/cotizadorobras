@@ -254,6 +254,9 @@ html,body{overflow-x:hidden;max-width:100vw}
   /* Precios tabs */
   #view-precios .tabs{overflow-x:auto;flex-wrap:nowrap}
   #view-precios .tab{white-space:nowrap;flex-shrink:0;font-size:10px;padding:7px 8px}
+  #precios-tabs-bar{overflow-x:auto!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch}
+  #precios-tabs-bar::-webkit-scrollbar{display:none}
+  #precios-tabs-bar .tab{white-space:nowrap;flex-shrink:0}
   .precio-item{flex-wrap:wrap;gap:6px}
 }
 @media(min-width:601px){
@@ -578,7 +581,7 @@ html,body{overflow-x:hidden;max-width:100vw}
         <div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:flex-end">
           <button id="tab-materiales" onclick="switchToMateriales(this)" style="font-size:11px;padding:5px 14px;border-radius:15px;border:1.5px solid #E67E22;background:transparent;color:#E67E22;cursor:pointer;font-weight:600">🧰 Precios de Materiales</button>
         </div>
-        <div style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--border);-ms-overflow-style:none;scrollbar-width:none">
+        <div id="precios-tabs-bar" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--border);-ms-overflow-style:none;scrollbar-width:none;-webkit-overflow-scrolling:touch">
           <button class="tab active" onclick="preciosTab('preliminares',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#6A6A6A">📋 Prelim.</button>
           <button class="tab" onclick="preciosTab('demoliciones',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#8B4513">🔨 Demol.</button>
           <button class="tab" onclick="preciosTab('movimiento_tierra',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#A0522D">⛏ Tierra</button>
@@ -2297,7 +2300,7 @@ function renderOferta(res,c,m2,monSym,fmtM){
 
         // Detalle descriptivo por rubro
     +(detalleRows?
-      '<div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Composición del stand</div>'
+      '<div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Composición de la obra</div>'
       +'<table style="width:100%;border-collapse:collapse;margin-bottom:14px">'
       +detalleRows
       +'</table>'
