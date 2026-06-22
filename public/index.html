@@ -4035,23 +4035,37 @@ function aplicarPlantaAlPIP(){
   if(m2inp)m2inp.value=c.m2piso.toFixed(1);
 
   // Buscar ítems en pipRubrosA y actualizar cantidades automáticamente
+  const m2intNeto=c.m2netasInt||c.m2totalCarasInt||c.m2paredesInt||0;
+  const m2extNeto=c.m2netasExt||c.m2careExt||c.m2paredesExt||0;
+  const m2paredesBruto=c.m2paredesTotal||(c.m2paredesExt+c.m2paredesInt)||0;
+
   const mappings=[
-    // [keywords en el label, cantidad, sección]
+    // Estructura
     {keys:['platea','fundación','base céntr'],cant:c.m2piso,section:'estructura'},
     {keys:['losa','entrepiso'],cant:c.m2piso,section:'estructura'},
-    {keys:['mampostería','ladrillo','bloque'],cant:c.m2paredesTotal,section:'mamposteria'},
-    {keys:['piso','cerámica','porcellanato','parquet','mosaico','alisado'],cant:c.m2piso,section:'pisos'},
-    {keys:['cielo raso','cielorraso'],cant:c.m2piso,section:'cielorrasos'},
-    {keys:['revoque','grueso','fino'],cant:c.m2netas,section:'revoques'},
-    {keys:['revestimiento','cerámico'],cant:c.m2netas,section:'revestimientos'},
-    {keys:['pintura','látex interior'],cant:c.m2paredesInt,section:'pintura'},
-    {keys:['látex exterior','exterior'],cant:c.m2paredesExt,section:'pintura'},
-    {keys:['contrapiso','carpeta'],cant:c.m2piso,section:'contrapisos'},
-    {keys:['impermeabilizante'],cant:c.m2piso,section:'pintura'},
     {keys:['columna'],cant:c.columnas,section:'estructura'},
     {keys:['viga','encadenado'],cant:c.vigas,section:'estructura'},
+    // Mampostería
+    {keys:['mampostería','ladrillo','bloque'],cant:m2paredesBruto,section:'mamposteria'},
+    {keys:['contrapiso','carpeta'],cant:c.m2piso,section:'contrapisos'},
+    // Pisos
+    {keys:['piso','cerámica','porcellanato','parquet','mosaico','alisado'],cant:c.m2piso,section:'pisos'},
+    // Cielorrasos
+    {keys:['cielo raso','cielorraso','suspendido'],cant:c.m2piso,section:'cielorrasos'},
+    // Revoques — int y ext separados
+    {keys:['revoque proyectable exterior','revoque grueso exterior','revoque exterior'],cant:m2extNeto,section:'revoques'},
+    {keys:['revoque','grueso','fino','enlucido','yeso'],cant:m2intNeto,section:'revoques'},
+    // Revestimientos
+    {keys:['revestimiento','cerámico pared','azulejo'],cant:m2intNeto,section:'revestimientos'},
+    // Pintura — CRUCIAL: interior usa caras interiores netas, exterior usa caras exteriores netas
+    {keys:['látex sobre muros interiores','pintura interior','látex interior','látex sobre muros'],cant:m2intNeto,section:'pintura'},
+    {keys:['látex acrílico sobre muros exteriores','látex exterior','silicona sobre ladrillo','pintura exterior'],cant:m2extNeto,section:'pintura'},
+    {keys:['látex sobre cielo','cielo raso','pintura cielo'],cant:c.m2piso,section:'pintura'},
+    {keys:['impermeabilizante'],cant:c.m2piso,section:'pintura'},
+    {keys:['esmalte'],cant:m2intNeto,section:'pintura'},
+    // Aberturas
     {keys:['puerta'],cant:c.puertas,section:'carpinteria_madera'},
-    {keys:['ventana','abertura'],cant:c.ventanas,section:'carpinteria_madera'},
+    {keys:['ventana','abertura aluminio'],cant:c.ventanas,section:'carpinteria_madera'},
   ];
 
   let applied=0;
