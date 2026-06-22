@@ -1,953 +1,768 @@
 {
   "preliminares_pr01": [
     [
-      "Bolsas de consorcio 240L",
-      0.05,
+      "Bolsas de consorcio 240L (u)",
+      0.08,
+      "u"
+    ]
+  ],
+  "preliminares_pr02": [
+    [
+      "Cemento portland 50kg (u)",
+      0.5,
+      "u"
+    ],
+    [
+      "Ladrillos comunes (u)",
+      50,
       "u"
     ]
   ],
   "demoliciones_d01": [
     [
-      "Volquete 4m³",
-      0.08,
+      "Volquete 4m³ (u)",
+      0.1,
       "u"
     ]
   ],
-  "demoliciones_d05": [
+  "demoliciones_d03": [
     [
-      "Volquete 4m³",
-      0.02,
-      "u"
-    ]
-  ],
-  "movimiento_tierra_mt01": [
-    [
-      "Volquete 4m³",
-      0.25,
+      "Volquete 4m³ (u)",
+      0.3,
       "u"
     ]
   ],
   "estructura_e03": [
     [
-      "Hormigón H-21 (m³)",
+      "Hormigón H-21 (elaborado) (m³)",
       1.05,
       "m³"
     ],
     [
-      "Hierro Ø10 (kg)",
-      35,
-      "kg"
+      "Hierro aletado 10mm (barra)",
+      4.2,
+      "barra"
     ],
     [
-      "Hierro Ø8 (kg)",
-      10,
-      "kg"
+      "Hierro aletado 8mm (barra)",
+      1.4,
+      "barra"
     ],
     [
-      "Alambre recocido 1.2mm (kg)",
-      0.5,
+      "Alambre n°16 (kg)",
+      0.55,
       "kg"
     ],
     [
       "Tabla encofrado 1\"x10\" (ml)",
-      8,
+      8.5,
       "ml"
     ]
   ],
   "estructura_e08": [
     [
-      "Hormigón H-21 (m³)",
+      "Hormigón H-21 (elaborado) (m³)",
       1.05,
       "m³"
     ],
     [
-      "Hierro Ø10 (kg)",
-      45,
-      "kg"
+      "Hierro aletado 10mm (barra)",
+      5.0,
+      "barra"
     ],
     [
-      "Hierro Ø8 (kg)",
-      15,
-      "kg"
-    ],
-    [
-      "Malla de acero Q188 (m²)",
-      1.1,
+      "Malla hierro ø6 15x15 (2.40x6m) (m²)",
+      1.15,
       "m²"
     ],
     [
-      "Alambre recocido 1.2mm (kg)",
-      0.6,
+      "Alambre n°16 (kg)",
+      0.65,
       "kg"
     ],
     [
       "Fenólico 18mm (m²)",
-      1.1,
+      1.15,
       "m²"
     ],
     [
-      "Puntales metálicos (u)",
-      0.8,
+      "Puntal metálico (u)",
+      0.9,
       "u"
     ]
   ],
   "estructura_e14": [
     [
-      "Hormigón H-21 (m³)",
+      "Hormigón H-21 (elaborado) (m³)",
       1.05,
       "m³"
     ],
     [
-      "Hierro Ø16 (kg)",
-      55,
+      "Hierro aletado 16mm (barra)",
+      4.8,
+      "barra"
+    ],
+    [
+      "Hierro aletado 8mm (barra)",
+      2.2,
+      "barra"
+    ],
+    [
+      "Alambre n°16 (kg)",
+      0.85,
       "kg"
     ],
     [
-      "Hierro Ø8 estribos (kg)",
-      15,
+      "Tabla encofrado 1\"x10\" (ml)",
+      14.0,
+      "ml"
+    ]
+  ],
+  "estructura_e13": [
+    [
+      "Hormigón H-21 (elaborado) (m³)",
+      1.05,
+      "m³"
+    ],
+    [
+      "Hierro aletado 16mm (barra)",
+      6.5,
+      "barra"
+    ],
+    [
+      "Hierro aletado 8mm (barra)",
+      2.8,
+      "barra"
+    ],
+    [
+      "Alambre n°16 (kg)",
+      1.0,
       "kg"
     ],
     [
-      "Alambre recocido 1.2mm (kg)",
-      0.8,
-      "kg"
-    ],
-    [
-      "Tabla encofrado (ml)",
-      12,
+      "Tabla encofrado 1\"x10\" (ml)",
+      18.0,
       "ml"
     ]
   ],
   "mamposteria_m01": [
     [
-      "Bloques hormigón 20x20x40 (u)",
+      "Bloque estándar 20x20x40 (u)",
       12.5,
       "u"
     ],
     [
-      "Cemento portland (kg)",
-      8,
-      "kg"
+      "Cemento portland 50kg (u)",
+      0.18,
+      "u"
     ],
     [
-      "Arena gruesa (m³)",
-      0.025,
-      "m³"
+      "Arena en bolsa (u)",
+      0.28,
+      "u"
     ]
   ],
   "mamposteria_m05": [
     [
-      "Ladrillos comunes (u)",
-      75,
+      "Ladrillos comunes (millar)",
+      0.082,
+      "millar"
+    ],
+    [
+      "Cemento portland 50kg (u)",
+      0.14,
       "u"
     ],
     [
-      "Cemento portland (kg)",
-      6,
-      "kg"
+      "Cal hidráulica (25kg) (u)",
+      0.18,
+      "u"
     ],
     [
-      "Cal hidratada (kg)",
-      4,
-      "kg"
-    ],
-    [
-      "Arena fina (m³)",
-      0.02,
-      "m³"
+      "Arena en bolsa (u)",
+      0.35,
+      "u"
     ]
   ],
   "mamposteria_m10": [
     [
-      "Ladrillos huecos 8x18x33 (u)",
-      18,
+      "Ladrillos huecos 8x18x33 (millar)",
+      0.02,
+      "millar"
+    ],
+    [
+      "Cemento portland 50kg (u)",
+      0.09,
       "u"
     ],
     [
-      "Cemento portland (kg)",
-      4,
-      "kg"
+      "Cal hidráulica (25kg) (u)",
+      0.1,
+      "u"
     ],
     [
-      "Cal hidratada (kg)",
-      2,
-      "kg"
-    ],
-    [
-      "Arena fina (m³)",
-      0.015,
-      "m³"
+      "Arena en bolsa (u)",
+      0.2,
+      "u"
     ]
   ],
   "mamposteria_m13": [
     [
-      "Ladrillos cerámicos portante 12x19x33 (u)",
-      16,
+      "Ladrillos huecos 12x18x33 (millar)",
+      0.016,
+      "millar"
+    ],
+    [
+      "Cemento portland 50kg (u)",
+      0.11,
       "u"
     ],
     [
-      "Cemento portland (kg)",
-      5,
-      "kg"
+      "Cal hidráulica (25kg) (u)",
+      0.12,
+      "u"
     ],
     [
-      "Cal hidratada (kg)",
-      3,
-      "kg"
-    ],
-    [
-      "Arena fina (m³)",
-      0.018,
-      "m³"
-    ]
-  ],
-  "mamposteria_cp01": [
-    [
-      "Hormigón pobre H-8 (m³)",
-      0.15,
-      "m³"
-    ],
-    [
-      "Arena gruesa (m³)",
-      0.02,
-      "m³"
-    ],
-    [
-      "Film polietileno 150µ (m²)",
-      1.1,
-      "m²"
+      "Arena en bolsa (u)",
+      0.22,
+      "u"
     ]
   ],
   "construccion_seco_cs01": [
     [
-      "Placa Durlock ST 12.5mm (m²)",
-      2.2,
-      "m²"
+      "Placa roca de yeso 9.5mm (1.20x2.40) (u)",
+      0.4,
+      "u"
     ],
     [
-      "Montante 70mm 3m (u)",
+      "Montante acero galv. 69mm x 2.60m (u)",
       0.55,
       "u"
     ],
     [
-      "Solera 70mm 3m (u)",
-      0.35,
+      "Solera acero galv. 70mm x 2.60m (u)",
+      0.36,
       "u"
     ],
     [
-      "Tornillos Durlock punta aguja x500 (cja)",
-      0.04,
-      "u"
-    ],
-    [
-      "Masilla Durlock 30kg (balde)",
-      0.15,
+      "Masilla Durlock (32kg) (u)",
+      0.14,
       "u"
     ],
     [
       "Cinta papel kraft 50m (u)",
-      0.06,
+      0.05,
       "u"
     ]
   ],
   "construccion_seco_cs05": [
     [
-      "Placa Durlock ST 12.5mm (m²)",
-      1.1,
-      "m²"
-    ],
-    [
-      "Perfil omega 60mm 3m (u)",
-      0.5,
+      "Placa roca de yeso 9.5mm (1.20x2.40) (u)",
+      0.4,
       "u"
     ],
     [
-      "Solera 60mm 3m (u)",
-      0.35,
+      "Perfil omega x 2.60m (u)",
+      0.52,
+      "u"
+    ],
+    [
+      "Solera acero galv. 70mm x 2.60m (u)",
+      0.36,
       "u"
     ],
     [
       "Varilla roscada 3/8\" (ml)",
-      0.4,
+      0.45,
       "ml"
     ],
     [
-      "Tornillos Durlock punta aguja x500 (cja)",
-      0.03,
-      "u"
-    ],
-    [
-      "Masilla Durlock 30kg (balde)",
+      "Masilla Durlock (32kg) (u)",
       0.12,
-      "u"
-    ],
-    [
-      "Cinta papel kraft 50m (u)",
-      0.05,
       "u"
     ]
   ],
   "aislaciones_a04": [
     [
-      "Film polietileno 150µ (m²)",
-      1.1,
+      "Membrana polietileno 2mm (m²)",
+      1.15,
       "m²"
     ]
   ],
   "aislaciones_a06": [
     [
-      "Membrana asfáltica 4mm (m²)",
+      "Membrana polietileno c/alum. Isolant 5mm (m²)",
       1.15,
       "m²"
     ],
     [
-      "Imprimante asfáltico (lt)",
-      0.3,
-      "lt"
+      "Pegamento cerámicos (25kg) (u)",
+      0.08,
+      "u"
     ]
   ],
   "cubierta_cu01": [
     [
-      "Membrana aluminio 4mm (m²)",
-      1.15,
+      "Membrana polietileno c/alum. Isolant 5mm (m²)",
+      1.2,
       "m²"
     ],
     [
-      "Imprimante asfáltico (lt)",
+      "Poliestireno expandido 2cm 20kg/m³ (m²)",
+      1.1,
+      "m²"
+    ],
+    [
+      "Cemento portland 50kg (u)",
+      0.18,
+      "u"
+    ],
+    [
+      "Arena en bolsa (u)",
       0.3,
-      "lt"
-    ],
-    [
-      "Hormigón pobre H-8 (m³)",
-      0.08,
-      "m³"
-    ],
-    [
-      "Arena gruesa (m³)",
-      0.02,
-      "m³"
-    ],
-    [
-      "Pendientes (kg cemento)",
-      8,
-      "kg"
+      "u"
     ]
   ],
   "cubierta_cu05": [
     [
       "Chapa ondulada N24 (m²)",
-      1.12,
+      1.15,
       "m²"
     ],
     [
       "Tornillos autoperforantes (u)",
-      8,
+      9.0,
       "u"
     ],
     [
-      "Burletes de sellado (ml)",
-      0.5,
-      "ml"
+      "Sellador neutro (cartucho 310cm³) (u)",
+      0.08,
+      "u"
     ]
   ],
   "cubierta_cu06": [
     [
       "Chapa prepintada (m²)",
-      1.12,
+      1.15,
       "m²"
     ],
     [
       "Tornillos autoperforantes (u)",
-      8,
+      9.0,
       "u"
     ],
     [
-      "Sellador asfáltico (lt)",
-      0.05,
-      "lt"
+      "Sellador neutro (cartucho 310cm³) (u)",
+      0.08,
+      "u"
     ]
   ],
   "revoques_r01": [
     [
-      "Cemento portland (kg)",
-      5,
-      "kg"
+      "Cemento portland 50kg (u)",
+      0.1,
+      "u"
     ],
     [
-      "Cal hidratada (kg)",
-      8,
-      "kg"
+      "Cal hidráulica (25kg) (u)",
+      0.22,
+      "u"
     ],
     [
-      "Arena fina (m³)",
-      0.025,
-      "m³"
+      "Cal aérea tipo El Milagro (25kg) (u)",
+      0.12,
+      "u"
     ],
     [
-      "Cal fina aérea (kg)",
-      2,
-      "kg"
+      "Arena en bolsa (u)",
+      0.55,
+      "u"
     ]
   ],
   "revoques_r04": [
     [
-      "Revoque proyectable seco (kg)",
-      18,
-      "kg"
+      "Yeso proyectable tipo Alpress (35kg) (u)",
+      0.55,
+      "u"
     ],
     [
-      "Hidrófugo líquido (lt)",
-      0.3,
-      "lt"
-    ],
-    [
-      "Agua (lt)",
-      5,
-      "lt"
+      "Cal aérea tipo El Milagro (25kg) (u)",
+      0.1,
+      "u"
     ]
   ],
   "revoques_r05": [
     [
-      "Revoque proyectable seco (kg)",
-      16,
-      "kg"
-    ],
+      "Yeso proyectable tipo Alpress (35kg) (u)",
+      0.5,
+      "u"
+    ]
+  ],
+  "revoques_r09": [
     [
-      "Agua (lt)",
-      4.5,
-      "lt"
+      "Yeso tuyango (30kg) (u)",
+      0.45,
+      "u"
     ]
   ],
   "revestimientos_rv01": [
     [
-      "Cerámico 20x20 (m²)",
-      1.1,
-      "m²"
+      "Adhesivo blanco revestimientos (30kg) (u)",
+      0.22,
+      "u"
     ],
     [
-      "Adhesivo cerámico (kg)",
-      5,
-      "kg"
-    ],
-    [
-      "Junta cerámica (kg)",
+      "Sellador neutro (cartucho 310cm³) (u)",
       0.25,
-      "kg"
-    ],
-    [
-      "Crucetas 2mm (u)",
-      30,
       "u"
     ]
   ],
   "revestimientos_rv03": [
     [
-      "Cerámica esmaltada 30x30 (m²)",
-      1.1,
-      "m²"
+      "Adhesivo blanco revestimientos (30kg) (u)",
+      0.23,
+      "u"
     ],
     [
-      "Adhesivo cerámico (kg)",
-      5.5,
-      "kg"
-    ],
-    [
-      "Junta cerámica (kg)",
+      "Sellador neutro (cartucho 310cm³) (u)",
       0.2,
-      "kg"
-    ],
-    [
-      "Crucetas 3mm (u)",
-      15,
       "u"
     ]
   ],
   "revestimientos_rv04": [
     [
-      "Porcellanato 30x30 (m²)",
-      1.1,
-      "m²"
+      "Pegamento porcellanato (25kg) (u)",
+      0.28,
+      "u"
     ],
     [
-      "Adhesivo flexible (kg)",
-      6,
-      "kg"
-    ],
-    [
-      "Junta porcellanato (kg)",
+      "Sellador neutro (cartucho 310cm³) (u)",
       0.2,
-      "kg"
-    ],
-    [
-      "Crucetas 3mm (u)",
-      15,
       "u"
     ]
   ],
   "cielorrasos_cr01": [
     [
-      "Cal fina aérea (kg)",
-      3,
-      "kg"
+      "Cal aérea tipo El Milagro (25kg) (u)",
+      0.14,
+      "u"
     ],
     [
-      "Cemento portland (kg)",
-      1,
-      "kg"
+      "Cemento portland 50kg (u)",
+      0.06,
+      "u"
     ],
     [
-      "Arena fina (m³)",
-      0.008,
-      "m³"
-    ]
-  ],
-  "cielorrasos_cr03": [
-    [
-      "Cal fina aérea (kg)",
-      3,
-      "kg"
-    ],
-    [
-      "Cemento portland (kg)",
-      1,
-      "kg"
-    ],
-    [
-      "Listones de madera 2x2\" (ml)",
-      3,
-      "ml"
-    ],
-    [
-      "Clavos 2\" (kg)",
-      0.05,
-      "kg"
+      "Arena en bolsa (u)",
+      0.12,
+      "u"
     ]
   ],
   "cielorrasos_cr09": [
     [
-      "Yeso proyectable (kg)",
-      12,
-      "kg"
-    ],
-    [
-      "Agua (lt)",
-      6,
-      "lt"
-    ],
-    [
-      "Cinta papel kraft 50m (u)",
-      0.05,
+      "Yeso tuyango (30kg) (u)",
+      0.48,
       "u"
     ]
   ],
   "contrapisos_cp01": [
     [
-      "Cascote partido (m³)",
-      0.12,
+      "Cascote limpio (m³)",
+      0.14,
       "m³"
     ],
     [
-      "Cemento portland (kg)",
-      6,
-      "kg"
+      "Cemento portland 50kg (u)",
+      0.15,
+      "u"
     ],
     [
-      "Arena gruesa (m³)",
-      0.02,
-      "m³"
+      "Arena en bolsa (u)",
+      0.35,
+      "u"
     ],
     [
-      "Film polietileno 150µ (m²)",
-      1.1,
+      "Membrana polietileno 2mm (m²)",
+      1.15,
       "m²"
     ]
   ],
   "contrapisos_cp02": [
     [
-      "Cascote partido (m³)",
-      0.06,
+      "Cascote limpio (m³)",
+      0.07,
       "m³"
     ],
     [
-      "Cemento portland (kg)",
-      4,
-      "kg"
+      "Cemento portland 50kg (u)",
+      0.1,
+      "u"
     ],
     [
-      "Arena gruesa (m³)",
-      0.012,
-      "m³"
+      "Arena en bolsa (u)",
+      0.22,
+      "u"
     ]
   ],
   "contrapisos_cp05": [
     [
-      "Cemento portland (kg)",
-      8,
-      "kg"
+      "Cemento portland 50kg (u)",
+      0.18,
+      "u"
     ],
     [
-      "Arena fina (m³)",
-      0.018,
-      "m³"
+      "Arena en bolsa (u)",
+      0.4,
+      "u"
     ]
   ],
   "pisos_p04": [
     [
-      "Porcellanato 30x30 (m²)",
-      1.1,
+      "Porcelanato pulido 50x50/60x60 (m²)",
+      1.12,
       "m²"
     ],
     [
-      "Adhesivo flexible (kg)",
-      6,
-      "kg"
-    ],
-    [
-      "Junta porcellanato (kg)",
-      0.2,
-      "kg"
-    ],
-    [
-      "Crucetas 3mm (u)",
-      15,
+      "Pegamento porcellanato (25kg) (u)",
+      0.28,
       "u"
     ],
     [
-      "Zócalo porcellanato 10x60 (ml)",
-      0.0,
-      "ml"
+      "Sellador neutro (cartucho 310cm³) (u)",
+      0.15,
+      "u"
     ]
   ],
   "pisos_p05": [
     [
-      "Cerámico 20x20 (m²)",
-      1.1,
+      "Porcelanato rústico 50x50/60x60 (m²)",
+      1.12,
       "m²"
     ],
     [
-      "Adhesivo cerámico (kg)",
-      5,
-      "kg"
+      "Pegamento cerámicos (25kg) (u)",
+      0.27,
+      "u"
     ],
     [
-      "Junta cerámica (kg)",
-      0.25,
-      "kg"
-    ],
-    [
-      "Crucetas 2mm (u)",
-      30,
+      "Sellador neutro (cartucho 310cm³) (u)",
+      0.18,
       "u"
     ]
   ],
   "pisos_p08": [
     [
-      "Mosaico granítico 30x30 (m²)",
-      1.1,
-      "m²"
+      "Cemento portland 50kg (u)",
+      0.1,
+      "u"
     ],
     [
-      "Cal hidratada (kg)",
-      3,
-      "kg"
+      "Cal hidráulica (25kg) (u)",
+      0.14,
+      "u"
     ],
     [
-      "Cemento portland (kg)",
-      2,
-      "kg"
-    ],
-    [
-      "Arena fina (m³)",
-      0.01,
-      "m³"
+      "Arena en bolsa (u)",
+      0.25,
+      "u"
     ]
   ],
   "pisos_p12": [
     [
-      "Parquet eucaliptus (m²)",
-      1.12,
-      "m²"
-    ],
-    [
-      "Adhesivo epoxi bicomponente (kg)",
-      1.5,
-      "kg"
-    ],
-    [
-      "Lija para madera (u)",
-      0.3,
+      "Pegamento cerámicos (25kg) (u)",
+      0.08,
       "u"
     ]
   ],
   "pisos_p15": [
     [
-      "Lija para madera N°80 (u)",
-      0.5,
-      "u"
-    ],
-    [
-      "Lija para madera N°120 (u)",
-      0.3,
-      "u"
-    ],
-    [
-      "Plastificante poliuretánico (lt)",
+      "Poliestireno expandido 2cm 20kg/m³ (m²)",
       0.2,
       "lt"
     ]
   ],
   "escaleras_es02": [
     [
-      "Cemento portland (kg)",
-      6,
-      "kg"
+      "Cemento portland 50kg (u)",
+      0.14,
+      "u"
     ],
     [
-      "Arena fina (m³)",
-      0.015,
-      "m³"
-    ],
-    [
-      "Ferrocemento (kg)",
-      1,
-      "kg"
+      "Arena en bolsa (u)",
+      0.3,
+      "u"
     ]
   ],
   "escaleras_es05": [
     [
-      "Cerámico 20x20 (m²)",
-      1.12,
-      "m²"
-    ],
-    [
-      "Adhesivo cerámico (kg)",
-      5,
-      "kg"
-    ],
-    [
-      "Junta cerámica (kg)",
-      0.25,
-      "kg"
-    ]
-  ],
-  "marmoleria_mr01": [
-    [
-      "Mesada granito gris mara 60cm (ml)",
-      1.05,
-      "ml"
-    ],
-    [
-      "Silicona neutra (u)",
-      0.3,
+      "Pegamento cerámicos (25kg) (u)",
+      0.27,
       "u"
     ],
     [
-      "Soporte mesada (u)",
-      2,
-      "u"
-    ]
-  ],
-  "pintura_pi01": [
-    [
-      "Látex interior 1ª marca (lt)",
-      0.15,
-      "lt"
-    ],
-    [
-      "Fijador al agua (lt)",
-      0.05,
-      "lt"
-    ],
-    [
-      "Enduído plástico (kg)",
-      0.2,
-      "kg"
-    ],
-    [
-      "Lija N°120 (u)",
-      0.05,
-      "u"
-    ]
-  ],
-  "pintura_pi02": [
-    [
-      "Látex interior 1ª marca (lt)",
-      0.15,
-      "lt"
-    ],
-    [
-      "Fijador al agua (lt)",
-      0.05,
-      "lt"
-    ],
-    [
-      "Rodillo para cielo raso (u)",
-      0.02,
-      "u"
-    ]
-  ],
-  "pintura_pi03": [
-    [
-      "Látex exterior 1ª marca (lt)",
+      "Sellador neutro (cartucho 310cm³) (u)",
       0.18,
-      "lt"
-    ],
-    [
-      "Fijador exterior (lt)",
-      0.06,
-      "lt"
-    ],
-    [
-      "Enduído exterior (kg)",
-      0.25,
-      "kg"
-    ]
-  ],
-  "pintura_pi09": [
-    [
-      "Impermeabilizante fibrado (lt)",
-      0.6,
-      "lt"
-    ],
-    [
-      "Pincel de 4\" (u)",
-      0.01,
       "u"
     ]
   ],
   "sanitaria_sa01": [
     [
-      "Inodoro (u)",
+      "Inodoro corto blanco común (u)",
       1,
       "u"
     ],
     [
-      "Bidet (u)",
+      "Bidet blanco común (u)",
       1,
       "u"
     ],
     [
-      "Vanitory (u)",
+      "Lavatorio común blanco chico (u)",
       1,
       "u"
     ],
     [
-      "Grifería monocomando baño (u)",
+      "Accesorios loza blancos (9 pzas.) (set)",
       1,
-      "u"
+      "set"
     ],
     [
-      "Ducha (u)",
-      1,
-      "u"
-    ],
-    [
-      "Cañería PVC 110mm (ml)",
+      "Caño PVC 3.2 110mm x 2m cloacal (u)",
       4,
-      "ml"
+      "u"
     ],
     [
-      "Cañería PVC 63mm (ml)",
-      3,
-      "ml"
-    ],
-    [
-      "Cañería polipropileno 20mm (ml)",
-      8,
-      "ml"
+      "Caño Sigas thermofusión 20mm x 4m (u)",
+      5,
+      "u"
     ],
     [
       "Pegamento PVC (u)",
-      0.1,
+      0.3,
       "u"
     ]
   ],
   "sanitaria_sa02": [
     [
-      "Pileta cocina (u)",
+      "Pileta cocina acero inox. doble bacha (u)",
       1,
       "u"
     ],
     [
-      "Grifería monocomando cocina (u)",
+      "Pileta lavar Ferrum c/fregadero (u)",
       1,
       "u"
     ],
     [
-      "Pileta lavadero (u)",
-      1,
+      "Caño Sigas thermofusión 20mm x 4m (u)",
+      4,
       "u"
     ],
     [
-      "Cañería PVC 63mm (ml)",
+      "Caño PVC 3.2 110mm x 2m cloacal (u)",
       3,
-      "ml"
-    ],
-    [
-      "Cañería polipropileno 20mm (ml)",
-      6,
-      "ml"
+      "u"
     ]
   ],
   "electricidad_el01": [
     [
-      "Cable 2.5mm² (ml)",
-      8,
+      "Caño acero liviano 5/8\" (ml)",
+      5.0,
       "ml"
     ],
     [
-      "Caño corrugado 3/4\" (ml)",
-      4,
-      "ml"
-    ],
-    [
-      "Caja de paso 10x10 (u)",
-      0.3,
-      "u"
-    ],
-    [
-      "Bornera conexión (u)",
-      2,
+      "Cable 4mm² c/100m (u)",
+      0.06,
       "u"
     ]
   ],
   "electricidad_el02": [
     [
-      "Cable 4mm² (ml)",
-      10,
+      "Caño acero liviano 5/8\" (ml)",
+      6.0,
       "ml"
     ],
     [
-      "Caño corrugado 1\" (ml)",
-      5,
-      "ml"
-    ],
-    [
-      "Toma corriente schuko (u)",
-      1,
+      "Cable 6mm² c/100m (u)",
+      0.08,
       "u"
     ]
   ],
   "calefaccion_cl01": [
     [
-      "Tubo pex 16mm (ml)",
-      6,
-      "ml"
-    ],
-    [
-      "Clips sujeción (u)",
-      30,
+      "Caño Sigas thermofusión 20mm x 4m (u)",
+      1.8,
       "u"
     ],
     [
-      "Malla metálica piso radiante (m²)",
+      "Poliestireno expandido 2cm 20kg/m³ (m²)",
       1.1,
       "m²"
     ],
     [
-      "Mortero autonivelante (kg)",
-      20,
-      "kg"
+      "Cemento portland 50kg (u)",
+      0.22,
+      "u"
+    ],
+    [
+      "Arena en bolsa (u)",
+      0.45,
+      "u"
+    ]
+  ],
+  "pintura_pi01": [
+    [
+      "Látex interior (20lt) (u)",
+      0.022,
+      "u"
+    ],
+    [
+      "Fijador al agua (lt) (u)",
+      0.12,
+      "u"
+    ],
+    [
+      "Masilla Durlock (32kg) (u)",
+      0.015,
+      "u"
+    ]
+  ],
+  "pintura_pi02": [
+    [
+      "Látex interior (20lt) (u)",
+      0.02,
+      "u"
+    ],
+    [
+      "Fijador al agua (lt) (u)",
+      0.1,
+      "u"
+    ]
+  ],
+  "pintura_pi03": [
+    [
+      "Látex satinado primera marca (20lt) (u)",
+      0.018,
+      "u"
+    ],
+    [
+      "Fijador exterior (lt) (u)",
+      0.12,
+      "u"
+    ]
+  ],
+  "pintura_pi05": [
+    [
+      "Látex satinado primera marca (20lt) (u)",
+      0.016,
+      "u"
+    ]
+  ],
+  "pintura_pi09": [
+    [
+      "Látex exterior primera marca (20lt) (u)",
+      0.065,
+      "u"
     ]
   ]
 }
