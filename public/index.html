@@ -2218,6 +2218,9 @@ function renderOferta(res,c,m2,monSym,fmtM){
   var fV=function(v){return sym+' '+fmt(v);};
   var m2n=parseFloat(r.m2||1);
 
+  var H2='padding:5px 7px;font-weight:700;background:#f0f0f0;border:1px solid #ccc;font-size:11px;vertical-align:middle;word-break:break-word';
+  var D2='padding:5px 7px;border:1px solid #ccc;font-size:11px;vertical-align:middle;word-break:break-word;overflow-wrap:break-word';
+
   // Agrupar ítems por sección (sectionLabel) manteniendo orden
   var sections=[];
   var secMap={};
