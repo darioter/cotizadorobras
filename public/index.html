@@ -276,6 +276,18 @@ html,body{overflow-x:hidden;max-width:100vw}
 #precios-tabs-bar::-webkit-scrollbar-thumb { background: #C4B8AD; border-radius: 2px; }
 #precios-tabs-bar::-webkit-scrollbar-track { background: #F7F3EE; }
 #precios-tabs-bar .tab { flex-shrink: 0 !important; white-space: nowrap !important; }
+
+/* PLANTA MOBILE */
+@media(max-width:640px){
+  #planta-layout{flex-direction:column !important}
+  #planta-layout > div:first-child{width:100% !important}
+  #planta-layout > div:last-child{width:100% !important;flex-direction:row !important;flex-wrap:wrap !important;gap:6px !important}
+  #planta-layout > div:last-child .card{flex:1;min-width:140px}
+  #planta-props-content{max-height:180px !important;overflow-y:auto}
+  #planta-amb-list{max-height:100px !important}
+  /* Bigger touch targets for tools */
+  #planta-tool-select,#planta-tool-ambiente,#planta-tool-abertura{min-width:44px !important;height:44px !important;font-size:18px !important}
+}
 </style>
 </head>
 <body>
@@ -3080,60 +3092,71 @@ function togglePlantaSection(){
 function renderPlantaEditor(){
   const cont = document.getElementById('planta-editor-pip')||document.getElementById('res-planta');
   if(!cont) return;
-  const computo=document.getElementById('planta-computo-pip');
+  const isMobile = window.innerWidth < 640;
 
   cont.innerHTML = `
   <div style="font-family:Arial,sans-serif">
-    <!-- Toolbar -->
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:#F7F3EE;border-radius:10px;border:1px solid var(--border)">
-      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-right:4px">Herramientas:</div>
-      <button id="planta-tool-select" onclick="setPlantaTool('select')" class="btn btn-sm" style="background:var(--navy);color:#fff">↖ Seleccionar</button>
-      <button id="planta-tool-ambiente" onclick="setPlantaTool('ambiente')" class="btn btn-sm" style="background:#F0EAE2;color:#666">⬛ Ambiente</button>
-      <button id="planta-tool-abertura" onclick="setPlantaTool('abertura')" class="btn btn-sm" style="background:#F0EAE2;color:#666">🚪 Abertura</button>
-      <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
-      <button onclick="plantaZoom(1.2)" class="btn btn-sm" style="background:#F0EAE2;color:#666">＋</button>
-      <button onclick="plantaZoom(0.8)" class="btn btn-sm" style="background:#F0EAE2;color:#666">－</button>
-      <button onclick="plantaFit()" class="btn btn-sm" style="background:#F0EAE2;color:#666">⊡ Ajustar</button>
-      <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
-      <span style="font-size:10px;color:#888">Escala: 1 celda = 0.25m</span>
-      <button onclick="printContent(document.getElementById('res-planta'))" class="btn btn-sm no-print" style="margin-left:auto;background:#F0EAE2;color:#666">🖨 Imprimir</button>
+    <!-- Toolbar compacta -->
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#F7F3EE;border-radius:10px;border:1px solid var(--border)">
+      <div style="display:flex;gap:4px;flex:1;min-width:0">
+        <button id="planta-tool-select" onclick="setPlantaTool('select')" title="Seleccionar"
+          style="flex:1;min-width:36px;height:36px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:15px;cursor:pointer">↖</button>
+        <button id="planta-tool-ambiente" onclick="setPlantaTool('ambiente')" title="Dibujar ambiente"
+          style="flex:1;min-width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:15px;cursor:pointer">⬛</button>
+        <button id="planta-tool-abertura" onclick="setPlantaTool('abertura')" title="Agregar abertura"
+          style="flex:1;min-width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:18px;cursor:pointer">🚪</button>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button onclick="plantaZoom(1.25)" style="width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:18px;cursor:pointer">+</button>
+        <button onclick="plantaZoom(0.8)" style="width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:18px;cursor:pointer">−</button>
+        <button onclick="plantaFit()" style="width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:13px;cursor:pointer">⊡</button>
+      </div>
+      <span style="font-size:9px;color:#aaa;white-space:nowrap">0.25m/celda</span>
+      <button onclick="printContent(document.getElementById('planta-editor-pip'))" class="no-print"
+        style="width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:14px;cursor:pointer">🖨</button>
     </div>
 
-    <!-- Canvas + Panel -->
-    <div style="display:flex;gap:10px;align-items:flex-start">
+    <!-- Canvas + Panel: flex-col en mobile, flex-row en desktop -->
+    <div id="planta-layout" style="display:flex;flex-direction:${isMobile?'column':'row'};gap:10px;align-items:flex-start">
+
       <!-- Canvas -->
-      <div style="flex:1;min-width:0;border:2px solid var(--border);border-radius:10px;overflow:hidden;position:relative;background:#fff">
-        <canvas id="planta-canvas" style="display:block;cursor:crosshair;touch-action:none"></canvas>
-        <div id="planta-tooltip" style="display:none;position:absolute;background:#1B2A3B;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;pointer-events:none;z-index:10"></div>
+      <div style="flex:1;width:100%;min-width:0;border:2px solid var(--border);border-radius:10px;overflow:hidden;position:relative;background:#fff">
+        <canvas id="planta-canvas" style="display:block;touch-action:none;width:100%"></canvas>
+        <div id="planta-tooltip" style="display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);background:#1B2A3B;color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;pointer-events:none;z-index:10;white-space:nowrap"></div>
+        <!-- Mobile: hint -->
+        <div id="planta-hint" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);color:#fff;font-size:10px;padding:3px 10px;border-radius:12px;pointer-events:none;white-space:nowrap">
+          ${_plantaState.tool==='ambiente'?'Arrastrá para dibujar':_plantaState.tool==='abertura'?'Tocá una pared':'Tocá un ambiente para seleccionar'}
+        </div>
       </div>
 
-      <!-- Panel lateral -->
-      <div style="width:220px;flex-shrink:0">
-        <!-- Ambientes list -->
-        <div class="card" style="margin-bottom:8px">
-          <div class="card-header" style="padding:8px 12px">
-            <div class="card-title" style="font-size:12px">Ambientes</div>
-            <button onclick="addAmbienteManual()" class="btn btn-sm" style="font-size:10px;padding:3px 8px">+ Agregar</button>
+      <!-- Panel lateral / inferior -->
+      <div style="width:${isMobile?'100%':'220px'};flex-shrink:0;display:flex;flex-direction:${isMobile?'row':'column'};gap:8px;flex-wrap:${isMobile?'wrap':'nowrap'}">
+
+        <!-- Ambientes -->
+        <div class="card" style="flex:${isMobile?'1':'none'};min-width:${isMobile?'140px':'0'}">
+          <div class="card-header" style="padding:6px 10px">
+            <div class="card-title" style="font-size:11px">Ambientes</div>
+            <button onclick="addAmbienteManual()" style="background:none;border:none;color:var(--accent);font-size:18px;cursor:pointer;line-height:1">+</button>
           </div>
-          <div id="planta-amb-list" style="max-height:200px;overflow-y:auto"></div>
+          <div id="planta-amb-list" style="max-height:${isMobile?'120px':'180px'};overflow-y:auto"></div>
         </div>
 
-        <!-- Propiedades del seleccionado -->
-        <div id="planta-props" class="card" style="margin-bottom:8px;display:none">
-          <div class="card-header" style="padding:8px 12px">
-            <div class="card-title" style="font-size:12px">Propiedades</div>
-            <button onclick="deletePlantaSelected()" style="background:none;border:none;color:#C0392B;cursor:pointer;font-size:14px">🗑</button>
+        <!-- Propiedades (colapsable en mobile) -->
+        <div id="planta-props" class="card" style="flex:${isMobile?'1':'none'};min-width:${isMobile?'160px':'0'};display:none">
+          <div class="card-header" style="padding:6px 10px">
+            <div class="card-title" style="font-size:11px">Propiedades</div>
+            <button onclick="deletePlantaSelected()" style="background:none;border:none;color:#C0392B;cursor:pointer;font-size:16px">🗑</button>
           </div>
-          <div id="planta-props-content" style="padding:8px 12px"></div>
+          <div id="planta-props-content" style="padding:6px 10px;max-height:${isMobile?'200px':'300px'};overflow-y:auto"></div>
         </div>
 
         <!-- Cómputo -->
-        <div class="card">
-          <div class="card-header" style="padding:8px 12px">
-            <div class="card-title" style="font-size:12px">📊 Cómputo</div>
-            <button onclick="aplicarCometutoAlPIP()" class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--navy);color:#fff">→ Al PIP</button>
+        <div class="card" style="width:${isMobile?'100%':'auto'}">
+          <div class="card-header" style="padding:6px 10px;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display?'':'none'">
+            <div class="card-title" style="font-size:11px">📊 Cómputo</div>
+            <button onclick="event.stopPropagation();aplicarPlantaAlPIP()" class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--navy);color:#fff">→ Al PIP</button>
           </div>
-          <div id="planta-computo" style="padding:8px 12px;font-size:11px"></div>
+          <div id="planta-computo" style="padding:6px 10px;font-size:11px"></div>
         </div>
       </div>
     </div>
@@ -3142,38 +3165,90 @@ function renderPlantaEditor(){
   initPlantaCanvas();
   renderAmbientesList();
   updateComputo();
+  // Show restored ambientes
+  if(_planta.ambientes.length>0) setTimeout(plantaFit, 150);
 }
+
 
 function initPlantaCanvas(){
   const canvas = document.getElementById('planta-canvas');
   if(!canvas) return;
-  // Don't re-init if same canvas already set up
   if(_plantaState.canvas===canvas) return;
   _plantaState.canvas = canvas;
   _plantaState.ctx = canvas.getContext('2d');
 
-  // Size canvas to container
+  // Size canvas responsively
   const cont = canvas.parentElement;
-  const W = cont.clientWidth || 600;
-  const H = Math.max(400, window.innerHeight * 0.55);
+  const isMobile = window.innerWidth < 640;
+  const W = cont.clientWidth || (isMobile ? window.innerWidth - 32 : 600);
+  const H = isMobile ? Math.min(window.innerHeight * 0.50, 340) : Math.max(420, window.innerHeight * 0.55);
   canvas.width = W;
   canvas.height = H;
+  canvas.style.height = H + 'px';
 
   // Center grid
   _plantaState.panX = W/2 - 10 * _planta.gridSize;
   _plantaState.panY = H/2 - 8 * _planta.gridSize;
 
-  // Events
+  // Mouse events
   canvas.addEventListener('mousedown', plantaMouseDown);
   canvas.addEventListener('mousemove', plantaMouseMove);
   canvas.addEventListener('mouseup', plantaMouseUp);
   canvas.addEventListener('mouseleave', ()=>{ _plantaState.drawing=false; _plantaState.dragAmb=null; drawPlanta(); });
   canvas.addEventListener('wheel', plantaWheel, {passive:false});
 
-  // Touch
-  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); plantaMouseDown(touchToMouse(e)); }, {passive:false});
-  canvas.addEventListener('touchmove', e=>{ e.preventDefault(); plantaMouseMove(touchToMouse(e)); }, {passive:false});
-  canvas.addEventListener('touchend', e=>{ e.preventDefault(); plantaMouseUp(touchToMouse(e)); }, {passive:false});
+  // Touch — single finger draw/select, two fingers pan+zoom
+  let _lastTouches=[];
+  canvas.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    _lastTouches = Array.from(e.touches);
+    if(e.touches.length===1){
+      plantaMouseDown(touchToMouse(e));
+    }
+  }, {passive:false});
+
+  canvas.addEventListener('touchmove', e=>{
+    e.preventDefault();
+    if(e.touches.length===2){
+      // Pinch to zoom
+      const t1=e.touches[0], t2=e.touches[1];
+      const dist=Math.hypot(t1.clientX-t2.clientX, t1.clientY-t2.clientY);
+      const prev=_lastTouches.length===2?Math.hypot(
+        _lastTouches[0].clientX-_lastTouches[1].clientX,
+        _lastTouches[0].clientY-_lastTouches[1].clientY):dist;
+      const factor=dist/Math.max(prev,1);
+      const cx=(t1.clientX+t2.clientX)/2 - canvas.getBoundingClientRect().left;
+      const cy=(t1.clientY+t2.clientY)/2 - canvas.getBoundingClientRect().top;
+      if(Math.abs(factor-1)>0.01) plantaZoom(factor,cx,cy);
+      // Pan
+      if(_lastTouches.length===2){
+        const dx=((t1.clientX+t2.clientX)/2)-(((_lastTouches[0].clientX+_lastTouches[1].clientX)/2));
+        const dy=((t1.clientY+t2.clientY)/2)-(((_lastTouches[0].clientY+_lastTouches[1].clientY)/2));
+        _plantaState.panX+=dx; _plantaState.panY+=dy;
+        drawPlanta();
+      }
+    } else if(e.touches.length===1){
+      plantaMouseMove(touchToMouse(e));
+    }
+    _lastTouches=Array.from(e.touches);
+  }, {passive:false});
+
+  canvas.addEventListener('touchend', e=>{
+    e.preventDefault();
+    _lastTouches=Array.from(e.touches);
+    plantaMouseUp(touchToMouse(e));
+  }, {passive:false});
+
+  // Resize observer
+  if(window.ResizeObserver){
+    new ResizeObserver(()=>{
+      const newW=cont.clientWidth;
+      if(Math.abs(newW-canvas.width)>10){
+        canvas.width=newW;
+        drawPlanta();
+      }
+    }).observe(cont);
+  }
 
   drawPlanta();
 }
@@ -3269,6 +3344,13 @@ function drawPlanta(){
   // Aberturas
   _planta.aberturas.forEach(ab => drawAbertura(ctx, ab));
 
+  // Update hint text
+  const hintEl=document.getElementById('planta-hint');
+  if(hintEl){
+    const hints={'ambiente':'Arrastrá para dibujar','abertura':'Tocá una pared','select':'Tocá para seleccionar · 2 dedos para mover'};
+    hintEl.textContent=hints[_plantaState.tool]||'';
+  }
+
   // Preview while drawing
   if(drawing && _plantaState.tool==='ambiente'){
     const {gx:ex, gy:ey} = screenToGrid(_plantaState.curX||startX, _plantaState.curY||startY);
@@ -3287,9 +3369,15 @@ function drawPlanta(){
     // dimensions
     const wm = Math.abs(ex-sx2)*_planta.escala;
     const hm = Math.abs(ey-sy2)*_planta.escala;
+    // Big centered tooltip
+    const ttip=document.getElementById('planta-tooltip');
+    if(ttip&&(wm>0||hm>0)){
+      ttip.style.display='block';
+      ttip.textContent=wm.toFixed(2)+'m × '+hm.toFixed(2)+'m = '+(wm*hm).toFixed(2)+'m²';
+    }
     ctx.fillStyle = '#1A2744';
     ctx.font = 'bold 11px Arial';
-    ctx.fillText(`${wm.toFixed(1)}m × ${hm.toFixed(1)}m`,
+    ctx.fillText(wm.toFixed(2)+'m × '+hm.toFixed(2)+'m',
       Math.min(s1.sx,s2.sx)+4, Math.min(s1.sy,s2.sy)-4);
   }
 }
@@ -3632,6 +3720,10 @@ function plantaMouseMove(e){
   }
 
   if(_plantaState.drawing) drawPlanta();
+  else {
+    const ttip=document.getElementById('planta-tooltip');
+    if(ttip) ttip.style.display='none';
+  }
 }
 
 function plantaMouseUp(e){
