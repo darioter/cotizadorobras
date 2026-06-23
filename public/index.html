@@ -2614,7 +2614,7 @@ function editProyecto(id){
     toast('✓ Planta restaurada — '+_planta.ambientes.length+' ambientes','success');
   }
 
-anner=document.createElement('div');
+  const banner=document.createElement('div');
   banner.id='edit-banner';
   banner.style.cssText='background:#1B2A3B;color:#fff;border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:10px';
   banner.innerHTML='<span>✏ Editando: <strong>'+escHtml(p.nombre)+'</strong> — modificá y recalculá para guardar los cambios</span>'
