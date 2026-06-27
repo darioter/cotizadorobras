@@ -935,8 +935,18 @@ async function showView(v){
     const nav=document.getElementById('nav-'+id);if(nav)nav.classList.toggle('active',id===v);
     const bnav=document.getElementById('bnav-'+id);if(bnav)bnav.classList.toggle('active',id===v);
   });
+  // Always clean up precios state when leaving
+  if(v!=='precios'){
+    const pc=document.getElementById('precios-content');
+    const mc=document.getElementById('materiales-content');
+    if(pc)pc.style.display='none';
+    if(mc)mc.style.display='none';
+  }
   if(v==='proyectos') await loadProyectos();
   if(v==='precios'){
+    // Restore precios-content visibility
+    const pc=document.getElementById('precios-content');
+    if(pc)pc.style.display='block';
     // Mostrar/ocultar controles según rol
     const adminBtns=document.getElementById('admin-precios-btns');
     const memberLabel=document.getElementById('member-precios-label');
