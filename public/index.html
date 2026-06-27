@@ -205,8 +205,7 @@ html,body{overflow-x:hidden;max-width:100vw}
   .stat-label{font-size:9px}
 
   /* Toda la app respeta el ancho */
-  .card-body,.card-header{max-width:100%;overflow-x:hidden}
-  .card{max-width:100%}
+  .card,.card-body,.card-header{max-width:100%;overflow-x:hidden}
 
   /* Tabs — scroll horizontal interno, no rompen el layout */
   .tabs,#res-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
@@ -268,25 +267,6 @@ html,body{overflow-x:hidden;max-width:100vw}
   header,#bottom-nav,.btn,#toast{display:none!important}
   main{padding:0;max-width:100%}
   .card{box-shadow:none;border:1px solid #ddd}
-}
-
-#precios-tabs-bar { overflow-x: auto !important; }
-#precios-tabs-bar::-webkit-scrollbar { display: none; }
-#precios-tabs-bar::-webkit-scrollbar { height: 4px; display:block !important; }
-#precios-tabs-bar::-webkit-scrollbar-thumb { background: #C4B8AD; border-radius: 2px; }
-#precios-tabs-bar::-webkit-scrollbar-track { background: #F7F3EE; }
-#precios-tabs-bar .tab { flex-shrink: 0 !important; white-space: nowrap !important; }
-
-/* PLANTA MOBILE */
-@media(max-width:640px){
-  #planta-layout{flex-direction:column !important}
-  #planta-layout > div:first-child{width:100% !important}
-  #planta-layout > div:last-child{width:100% !important;flex-direction:row !important;flex-wrap:wrap !important;gap:6px !important}
-  #planta-layout > div:last-child .card{flex:1;min-width:140px}
-  #planta-props-content{max-height:180px !important;overflow-y:auto}
-  #planta-amb-list{max-height:100px !important}
-  /* Bigger touch targets for tools */
-  #planta-tool-select,#planta-tool-ambiente,#planta-tool-abertura{min-width:44px !important;height:44px !important;font-size:18px !important}
 }
 </style>
 </head>
@@ -365,16 +345,8 @@ html,body{overflow-x:hidden;max-width:100vw}
             <!-- Proyecto y cliente -->
             <div class="grid-2 mb-10">
               <div><label class="field-label">N° Proyecto</label><input type="text" id="pip-nro" placeholder="Ej: 1764" /></div>
-              <div>
-                <label class="field-label">Modalidad</label>
-                <select id="pip-modalidad" onchange="onModalidadChange(this.value)" style="width:100%">
-                  <option value="OBRA_NUEVA">Obra Nueva</option>
-                  <option value="REMODELACION">Remodelación</option>
-                  <option value="AMPLIACION">Ampliación</option>
-                  <option value="REFACCION">Refacción</option>
-                  <option value="SIN_FACTURA">⚡ Sin factura</option>
-                </select>
-
+              <div><label class="field-label">Tipo</label>
+                <select id="pip-modalidad"><option value="ALQUILER">Alquiler</option><option value="VENTA">Venta</option></select>
               </div>
             </div>
             <div class="mb-10"><label class="field-label">Cliente *</label><input type="text" id="pip-cliente" placeholder="Nombre del cliente" /></div>
@@ -566,14 +538,6 @@ html,body{overflow-x:hidden;max-width:100vw}
         <!-- PASO 2: Resultado inline -->
         <div id="step-resultado" style="display:none">
           <div id="calc-preview" class="card mb-12" style="border-left:4px solid var(--accent)"></div>
-          <!-- Sin Factura toggle -->
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:#FAFAFA;border:1px solid var(--border);border-radius:8px">
-            <label style="flex:1;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;display:flex;align-items:center;gap:8px">
-              <input type="checkbox" id="chk-sin-factura" onchange="_sinFactura=this.checked;document.getElementById('sf-badge').style.display=this.checked?'inline':'none'" style="width:18px;height:18px;accent-color:#856404;cursor:pointer">
-              ⚡ Sin factura
-            </label>
-            <span id="sf-badge" style="display:none;background:#FFF3CD;border:1px solid #FFCC00;border-radius:12px;padding:2px 10px;font-size:10px;font-weight:700;color:#856404">Sin IVA ni IIBB</span>
-          </div>
           <button class="btn btn-full mb-12" onclick="guardarYVerResultado()" style="background:var(--navy);color:#fff;font-size:14px;padding:14px">
             💾 Guardar proyecto
           </button>
@@ -617,10 +581,7 @@ html,body{overflow-x:hidden;max-width:100vw}
         <div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:flex-end">
           <button id="tab-materiales" onclick="switchToMateriales(this)" style="font-size:11px;padding:5px 14px;border-radius:15px;border:1.5px solid #E67E22;background:transparent;color:#E67E22;cursor:pointer;font-weight:600">🧰 Precios de Materiales</button>
         </div>
-        </div><!-- close prev --><div style="position:relative;border-bottom:1px solid var(--border)">
-        <button onclick="document.getElementById('precios-tabs-bar').scrollBy({left:-150,behavior:'smooth'})" style="position:absolute;left:0;top:0;bottom:0;z-index:2;background:linear-gradient(to right,#F7F3EE,transparent);border:none;padding:0 10px;cursor:pointer;font-size:16px;color:#888">‹</button>
-        <button onclick="document.getElementById('precios-tabs-bar').scrollBy({left:150,behavior:'smooth'})" style="position:absolute;right:0;top:0;bottom:0;z-index:2;background:linear-gradient(to left,#F7F3EE,transparent);border:none;padding:0 10px;cursor:pointer;font-size:16px;color:#888">›</button>
-        <div id="precios-tabs-bar" style="display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;padding:0 24px">
+        <div id="precios-tabs-bar" style="display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--border);-ms-overflow-style:none;scrollbar-width:none;-webkit-overflow-scrolling:touch">
           <button class="tab active" onclick="preciosTab('preliminares',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#6A6A6A">📋 Prelim.</button>
           <button class="tab" onclick="preciosTab('demoliciones',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#8B4513">🔨 Demol.</button>
           <button class="tab" onclick="preciosTab('movimiento_tierra',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#A0522D">⛏ Tierra</button>
@@ -645,8 +606,6 @@ html,body{overflow-x:hidden;max-width:100vw}
           <button class="tab" onclick="preciosTab('otros',this)" style="flex:none;border-radius:0;padding:7px 9px;font-size:10px" data-color="#6A6A6A">📦 Otros</button>
 
         </div>
-        </div><!-- /tabs-bar -->
-        </div><!-- /tabs-wrapper -->
         <div id="precios-content"></div>
         <div id="materiales-content" style="display:none;padding:12px"></div>
         <div style="padding:8px 14px;border-top:1px solid var(--border)">
@@ -951,18 +910,8 @@ async function showView(v){
     const nav=document.getElementById('nav-'+id);if(nav)nav.classList.toggle('active',id===v);
     const bnav=document.getElementById('bnav-'+id);if(bnav)bnav.classList.toggle('active',id===v);
   });
-  // Always clean up precios state when leaving
-  if(v!=='precios'){
-    const pc=document.getElementById('precios-content');
-    const mc=document.getElementById('materiales-content');
-    if(pc)pc.style.display='none';
-    if(mc)mc.style.display='none';
-  }
   if(v==='proyectos') await loadProyectos();
   if(v==='precios'){
-    // Restore precios-content visibility
-    const pc=document.getElementById('precios-content');
-    if(pc)pc.style.display='block';
     // Mostrar/ocultar controles según rol
     const adminBtns=document.getElementById('admin-precios-btns');
     const memberLabel=document.getElementById('member-precios-label');
@@ -1914,32 +1863,6 @@ let _calcSnapshot = null; // guarda el cálculo actual
 async function guardarYVerResultado(){
   if(!_calcSnapshot)return toast('Calculá el precio primero','error');
   const res=_calcSnapshot;
-  // Auto-capture planta if exists and not already captured
-  if(_planta.ambientes.length>0){
-    try{
-      const srcCanvas=document.getElementById('planta-canvas');
-      if(srcCanvas){
-        const off=document.createElement('canvas');
-        off.width=srcCanvas.width||800; off.height=srcCanvas.height||500;
-        const origC=_plantaState.canvas, origX=_plantaState.ctx;
-        _plantaState.canvas=off; _plantaState.ctx=off.getContext('2d');
-        // Fit all ambientes
-        const minX=Math.min(..._planta.ambientes.map(a=>a.x));
-        const maxX=Math.max(..._planta.ambientes.map(a=>a.x+a.w));
-        const minY=Math.min(..._planta.ambientes.map(a=>a.y));
-        const maxY=Math.max(..._planta.ambientes.map(a=>a.y+a.h));
-        const pw=maxX-minX,ph=maxY-minY,margin=40;
-        const gs=Math.max(12,Math.min(50,Math.min((off.width-margin*2)/Math.max(pw,1),(off.height-margin*2)/Math.max(ph,1))));
-        _planta.gridSize=gs;
-        _plantaState.panX=margin-minX*gs; _plantaState.panY=margin-minY*gs;
-        drawPlanta();
-        _ofertaPlanta=off.toDataURL('image/png');
-        _plantaState.canvas=origC; _plantaState.ctx=origX;
-        if(origC) drawPlanta();
-      }
-    }catch(e){console.warn('planta capture:',e);}
-  }
-
   // Calculate material cost if available
   let costoMateriales=0;
   if(_lastResultado&&_lastResultado.rubrosA){
@@ -1971,9 +1894,6 @@ async function guardarYVerResultado(){
 
 
 function calcularPrecio(){
-  // Sync sinFactura from checkbox
-  const chkSF=document.getElementById('chk-sin-factura');
-  if(chkSF) _sinFactura=chkSF.checked;
   const nombre=document.getElementById('pip-nombre').value.trim();
   if(!nombre)return toast('Ingresá un nombre para el proyecto','error');
   const cvA=getCVA(); const cvB=getCVB();
@@ -2011,7 +1931,6 @@ function calcularPrecio(){
     calc,
     params:parametros,
     moneda:{...monedaConfig},
-    sinFactura:_sinFactura,
     rubrosA:pipRubrosA.filter(r=>r.cant>0),
     rubrosB:pipRubrosB.filter(r=>r.cant*r.precio>0),
     propuestas:[]
@@ -2039,7 +1958,6 @@ function calcularPrecio(){
         return cm>0?'<div style="margin-top:10px;padding:8px 12px;background:#FFF8F0;border-radius:7px;border:1px solid #F0E0C0;font-size:12px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><span style="font-weight:700;color:var(--navy)">$ '+fmt(cm)+'</span></div>':'';
       }catch(e){return '';}
     })()
-    +(_sinFactura?'<div style="margin:8px 0;padding:6px 10px;background:#FFF3CD;border:1px solid #FFCC00;border-radius:7px;font-size:11px;font-weight:700;color:#856404">⚡ Modo Sin Factura — IVA e IIBB no aplicados</div>':'')
     +(pautaOk?'<div style="margin-top:10px;padding:8px 12px;border-radius:7px;background:'+(enPauta?'#E8F5EE':'#FFF0EE')+';font-size:12px;font-weight:700;color:'+(enPauta?'var(--green)':'var(--red)')+'">'+
       (enPauta?'✓ Precio dentro de la pauta del cliente':'⚠ Supera la pauta en $ '+fmt(calc.precioNeto-parseFloat(pauta)))+'</div>':'')
     +'</div>';
@@ -2239,8 +2157,8 @@ function renderPIPResult(res){_lastResultado=res;
         <div class="res-row"><span>IIBB+Gcias+Sello+Déb/Créd</span><span class="res-val">$ ${fmt(c.impuestos)}</span></div>
         <div class="res-row"><span>Costo Financiero (${pct(p.costo_financiero)})</span><span class="res-val">$ ${fmt(c.costoFin)}</span></div>
         ${c.comisionAgencia>0?`<div class="res-row"><span>Comisión Agencia (${pct(p.comision_agencia)})</span><span class="res-val">$ ${fmt(c.comisionAgencia)}</span></div>`:''}
-        <div class="res-row subtotal"><span>PRECIO NETO ${_sinFactura?'(sin impuestos)':'en ARS (sin IVA)'}</span><span class="res-val">$ ${fmt(c.precioNeto)}</span></div>
-        ${_sinFactura?'<div class="res-row" style="color:#856404;font-weight:600"><span>⚡ Sin factura — no aplica IVA</span><span class="res-val">$ 0</span></div>':'<div class="res-row"><span>IVA 21%</span><span class="res-val">$ '+fmt(c.iva)+'</span></div>'}
+        <div class="res-row subtotal"><span>PRECIO NETO en ARS (sin IVA)</span><span class="res-val">$ ${fmt(c.precioNeto)}</span></div>
+        <div class="res-row"><span>IVA 21%</span><span class="res-val">$ ${fmt(c.iva)}</span></div>
         <div class="res-row total"><span>PRECIO TOTAL + IVA (ARS)</span><span class="res-val">$ ${fmt(c.precioTotal)}</span></div>
       </div>
       ${pautaOk?`<div class="warn-box mt-10" style="border-color:${enPauta?'#A8D5B8':'#F8C5BC'};background:${enPauta?'#E8F5EE':'#FFF0EE'}">
@@ -2296,12 +2214,11 @@ function renderOferta(res,c,m2,monSym,fmtM){
   var precioVenta=isARS?c.precioNeto:(c.precioNeto/tcFinal);
   var precioIVA=isARS?c.precioTotal:(c.precioTotal/tcFinal);
   var ivaVal=isARS?c.iva:(c.iva/tcFinal);
+  if(_ofertaSinFactura){var cb=isARS?(c.costoTotal+c.gastoAdmin+c.margen):((c.costoTotal+c.gastoAdmin+c.margen)/tcFinal);precioVenta=cb;precioIVA=cb;ivaVal=0;}
+  if(_ofertaDescuento>0){var df=1-_ofertaDescuento/100;precioVenta*=df;precioIVA*=df;ivaVal*=df;}
   var sym=isARS?'$':((window.MONEDAS&&window.MONEDAS[moneda.moneda]&&window.MONEDAS[moneda.moneda].simbolo)||moneda.moneda);
   var fV=function(v){return sym+' '+fmt(v);};
   var m2n=parseFloat(r.m2||1);
-
-  var H2='padding:5px 7px;font-weight:700;background:#f0f0f0;border:1px solid #ccc;font-size:11px;vertical-align:middle;word-break:break-word';
-  var D2='padding:5px 7px;border:1px solid #ccc;font-size:11px;vertical-align:middle;word-break:break-word;overflow-wrap:break-word';
 
   // Agrupar ítems por sección (sectionLabel) manteniendo orden
   var sections=[];
@@ -2323,30 +2240,50 @@ function renderOferta(res,c,m2,monSym,fmtM){
   // Construir filas del detalle
   var detalleRows='';
   sections.forEach(function(sec){
+    // Lista de ítems como texto descriptivo
     var itemsList=sec.items.map(function(it){
-      var q=parseFloat(it.cant)||0;
-      var qty=q>0?(q.toFixed(q%1===0?0:2)+' '+escHtml(it.unit||'u')+' '):'';
+      var qty=it.cant&&it.cant>1?(it.cant+' '+escHtml(it.unit||'u')+' '):'';
       return qty+escHtml(it.label);
-    }).join('<br>');
+    }).join(' / ');
     detalleRows+='<tr>'
-      +'<td style="'+H2+';white-space:nowrap;width:30%;vertical-align:top">'+sec.label+'</td>'
-      +'<td style="'+D2+';vertical-align:top;line-height:1.7">'+itemsList+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #ddd;font-weight:700;font-size:11px;background:#f8f8f8;white-space:nowrap;vertical-align:top;width:22%">'+sec.label+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid #ddd;font-size:11px;vertical-align:top;line-height:1.6">'+itemsList+'</td>'
       +'</tr>';
   });
 
+  // Fila TC si moneda extranjera
+  var tcNote=!isARS?('<div style="font-size:10px;color:#888;margin-top:4px">'
+    +'TC '+escHtml(moneda.moneda)+': $ '+fmt(tcFinal)
+    +' · Cobertura cambiaria '+((moneda.mgCambio||0)*100).toFixed(1)+'%'
+    +'</div>'):'';
+
+  var H2='padding:5px 7px;font-weight:700;background:#f0f0f0;border:1px solid #ccc;font-size:11px;vertical-align:middle;word-break:break-word';
+  var D2='padding:5px 7px;border:1px solid #ccc;font-size:11px;vertical-align:middle;word-break:break-word;overflow-wrap:break-word';
+
   var html=''
-    +'<div class="no-print" style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
+    +'<div class="no-print" style="margin-bottom:12px">'
+    +'<div style="background:#F7F3EE;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Opciones de oferta al cliente</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
+    +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fff;border:2px solid #FFCC00;border-radius:8px;padding:9px 14px;min-width:160px">'
+    +'<input type="checkbox" id="chk-oferta-sf" onchange="toggleOfertaSinFactura(this.checked)" style="width:18px;height:18px;accent-color:#856404;cursor:pointer">'
+    +'<span id="sf-lbl" style="font-size:13px;font-weight:600;color:#555">⚡ Sin IVA / IIBB</span>'
+    +'</label>'
+    +'<div style="display:flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--border);border-radius:8px;padding:9px 12px">'
+    +'<span style="font-size:13px;font-weight:600;color:#555">🏷 Descuento</span>'
+    +'<input type="number" id="inp-oferta-desc" value="0" min="0" max="50" step="0.5" style="width:54px;border:none;font-size:15px;font-weight:700;color:var(--navy);text-align:center;background:transparent;outline:none" onchange="setOfertaDescuento(this.value)">'
+    +'<span style="font-size:13px;color:#888">%</span>'
+    +'</div>'
+    +'</div></div>'
+    +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
     +'<button class="btn btn-navy" onclick="printOferta()">🖨 Imprimir / Guardar PDF</button>'
     +'<label style="display:flex;align-items:center;gap:7px;cursor:pointer;background:#F7F3EE;border:1.5px dashed #C4B8AD;border-radius:8px;padding:7px 14px;font-size:12px;color:#666">'
     +'<span>🖼 Cargar render</span>'
     +'<input type="file" accept="image/*" style="display:none" onchange="loadOfertaRender(this)" />'
     +'</label>'
-    +'<button onclick="capturarPlantaParaOferta()" style="display:flex;align-items:center;gap:7px;cursor:pointer;background:#F7F3EE;border:1.5px dashed #C4B8AD;border-radius:8px;padding:7px 14px;font-size:12px;color:#666;font-family:inherit">'
-    +'<span>📐 '+((_ofertaPlanta)?'✓ Planta incluida':'Incluir planta')+'</span>'
-    +'</button>'
     +'<span id="oferta-render-name" style="font-size:11px;color:#888"></span>'
     +'<button id="oferta-render-clear" onclick="clearOfertaRender()" style="display:none;background:none;border:none;color:#C0392B;cursor:pointer;font-size:12px">✕ quitar imagen</button>'
-    +'</div>'
+    +'</div></div>'
     +'<div class="oferta-doc" style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:20px;max-width:760px;margin:0 auto;font-family:Arial,sans-serif;box-shadow:0 2px 20px rgba(0,0,0,.08);overflow-x:auto">'
 
     // Encabezado
@@ -2367,17 +2304,19 @@ function renderOferta(res,c,m2,monSym,fmtM){
     // Tabla datos proyecto — layout vertical tipo ficha
     +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">'
     // Cada campo: etiqueta arriba en gris, valor abajo en blanco
-    +dataRow2(H2,D2,'PROYECTO N°',escHtml(r.nro||'—'),'MODALIDAD',escHtml(r.modalidad||'—'))
-    +'<tr><td style="'+H2+'">PROPIETARIO / CLIENTE</td><td colspan="3" style="'+D2+'">'+escHtml(r.cliente||'—')+'</td></tr>'
-    +dataRow2(H2,D2,'DIRECCIÓN',escHtml(r.evento||'—'),'BARRIO / LOCALIDAD',escHtml(r.lugar||'—'))
-    +dataRow2(H2,D2,'TIPO DE OBRA',escHtml(r.tipo||'—'),'REF. PROP.',escHtml(r.predio||'—'))
-    +dataRow2(H2,D2,'INICIO DE OBRA',escHtml(r.fechaApertura||'—'),'FIN DE OBRA',escHtml(r.fechaCierre||'—'))
-    +dataRow2(H2,D2,'FIRMA CONTRATO',escHtml(r.fechaMontaje||'—'),'ENTREGA FINAL',escHtml(r.fechaDesmontaje||'—'))
-    +dataRow2(H2,D2,'PARC. / MANZ.',escHtml(r.loteNro||'—'),'M² TOTALES',escHtml(r.m2||'0')+' m²')
+    +dataRow2(H2,D2,'PROYECTO N°',escHtml(r.nro||'—'),'MODALIDAD',escHtml(r.modalidad||'ALQUILER'))
+    +dataRow2(H2,D2,'CLIENTE',escHtml(r.cliente||'—'),'','')
+    +dataRow2(H2,D2,'FERIA / EVENTO',escHtml(r.evento||'—'),'LUGAR',escHtml(r.lugar||'—'))
+    +dataRow2(H2,D2,'PREDIO / PABELLÓN',escHtml(r.predio||'—'),'TIPOLOGÍA',escHtml(r.tipo||'—'))
+    +dataRow2(H2,D2,'APERTURA FERIA',escHtml(r.fechaApertura||'—'),'CIERRE FERIA',escHtml(r.fechaCierre||'—'))
+    +dataRow2(H2,D2,'INICIO MONTAJE',escHtml(r.fechaMontaje||'—'),'DESMONTAJE',escHtml(r.fechaDesmontaje||'—'))
+    +dataRow2(H2,D2,'N° LOTE',escHtml(r.loteNro||'—'),'FRENTE / FONDO',escHtml(r.frente||'—')+' m × '+escHtml(r.fondo||'—')+' m')
+    +dataRow2(H2,D2,'PISO (M²)',escHtml(r.m2||'0'),'ENTREPISO (M²)',escHtml(r.entrepiso||'0'))
     +'</table>'
+
         // Detalle descriptivo por rubro
     +(detalleRows?
-      '<div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">COMPOSICIÓN DE LA OBRA</div>'
+      '<div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Composición de la obra</div>'
       +'<table style="width:100%;border-collapse:collapse;margin-bottom:14px">'
       +detalleRows
       +'</table>'
@@ -2390,7 +2329,6 @@ function renderOferta(res,c,m2,monSym,fmtM){
        +'<img src="'+_ofertaRender+'" style="width:100%;max-height:380px;object-fit:contain;border:1px solid #ddd;border-radius:6px" />'
       :'')
     +'</div>'
-    +(_ofertaPlanta?'<div style="margin-bottom:14px"><div style="font-size:10px;font-weight:700;color:#333;margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em">Planta del proyecto</div><img src="'+_ofertaPlanta+'" style="width:100%;border:1px solid #ddd;border-radius:6px" /></div>':'')
 
     // Materiales referencia si existen
     +(r.costoMateriales>0
@@ -2414,7 +2352,7 @@ function renderOferta(res,c,m2,monSym,fmtM){
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-size:11px;color:#555">'+sym+' '+fmt(precioIVA/m2n)+'/m²</td>'
     +'</tr>'
     +'</table>'
-    +((!isARS)?'<div style="font-size:10px;color:#888;margin-top:4px">TC '+escHtml(moneda.moneda)+': $ '+fmt(tcFinal)+'</div>':'')
+    +tcNote
 
     // Observaciones
     +(r.brief?'<div style="font-size:10px;font-weight:700;color:#333;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Observaciones</div>'
@@ -2502,7 +2440,9 @@ let _proyectosData=[];
 let _editingProyectoId=null;
 let _ofertaRender=null;
 let _ofertaPlanta=null;
-let _sinFactura=false; // canvas snapshot of planta
+let _sinFactura=false;
+let _ofertaSinFactura=false;
+let _ofertaDescuento=0;
 let _lastResultado=null; // imagen del render para la oferta // ID del proyecto que se está editando
 
 async function loadProyectos(){
@@ -2618,18 +2558,12 @@ async function cambiarEstado(id,estado){
 
 async function openProyecto(id){
   const p=_proyectosData.find(x=>x.id===id)||await sb.from('proyectos_obra').select('*').eq('id',id).single().then(r=>r.data);
-  // Reset planta first, then restore from project
-  _planta.ambientes=[];
-  _planta.aberturas=[];
-  _planta.nextId=1;
-  _ofertaPlanta=null;
-  _sinFactura=false;
-  if(p&&p.resultado&&p.resultado.planta&&p.resultado.planta.ambientes&&p.resultado.planta.ambientes.length){
-    _planta.ambientes=JSON.parse(JSON.stringify(p.resultado.planta.ambientes));
-    _planta.aberturas=JSON.parse(JSON.stringify(p.resultado.planta.aberturas||[]));
+  // Restore planta
+  if(p&&p.resultado&&p.resultado.planta&&p.resultado.planta.ambientes){
+    _planta.ambientes=p.resultado.planta.ambientes;
+    _planta.aberturas=p.resultado.planta.aberturas||[];
     _planta.nextId=p.resultado.planta.nextId||(_planta.ambientes.length+1);
   }
-  if(p&&p.resultado&&p.resultado.sinFactura) _sinFactura=true;
   if(!p?.resultado)return toast('Sin resultado guardado','error');
   showView('pip');
   renderPIPResult(p.resultado);
@@ -2700,26 +2634,15 @@ function editProyecto(id){
   renderPIPRubrosA();
   renderPIPRubrosB();
 
-  // Restore sinFactura checkbox
-  const chkSF=document.getElementById('chk-sin-factura');
-  const sfBadge=document.getElementById('sf-badge');
-  if(chkSF){chkSF.checked=!!res.sinFactura;}
-  if(sfBadge){sfBadge.style.display=res.sinFactura?'inline':'none';}
-
-  // Reset planta primero, luego restaurar
-  _planta.ambientes=[];
-  _planta.aberturas=[];
-  _planta.nextId=1;
-  _ofertaPlanta=null;
+  // Restaurar planta si existe
   if(res.planta&&res.planta.ambientes&&res.planta.ambientes.length){
-    _planta.ambientes=JSON.parse(JSON.stringify(res.planta.ambientes));
-    _planta.aberturas=JSON.parse(JSON.stringify(res.planta.aberturas||[]));
+    _planta.ambientes=res.planta.ambientes;
+    _planta.aberturas=res.planta.aberturas||[];
     _planta.nextId=res.planta.nextId||(_planta.ambientes.length+1);
     toast('✓ Planta restaurada — '+_planta.ambientes.length+' ambientes','success');
   }
-  _sinFactura=!!(res.sinFactura);
 
-  const banner=document.createElement('div');
+anner=document.createElement('div');
   banner.id='edit-banner';
   banner.style.cssText='background:#1B2A3B;color:#fff;border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:10px';
   banner.innerHTML='<span>✏ Editando: <strong>'+escHtml(p.nombre)+'</strong> — modificá y recalculá para guardar los cambios</span>'
@@ -2905,57 +2828,6 @@ function printContent(el){
 }
 
 // ── RENDER OFERTA ──
-function capturarPlantaParaOferta(){
-  if(!_planta.ambientes.length){
-    toast('Dibujá la planta primero en la sección 📐 Planta del proyecto','error');
-    return;
-  }
-  // Create a clean offscreen canvas and redraw planta on it
-  const src=document.getElementById('planta-canvas');
-  const W=src?src.width:800;
-  const H=src?src.height:500;
-  const offscreen=document.createElement('canvas');
-  offscreen.width=W; offscreen.height=H;
-  // Temporarily swap canvas
-  const origCanvas=_plantaState.canvas;
-  const origCtx=_plantaState.ctx;
-  _plantaState.canvas=offscreen;
-  _plantaState.ctx=offscreen.getContext('2d');
-  // Fit to show all ambientes
-  if(_planta.ambientes.length>0){
-    const minX=Math.min(..._planta.ambientes.map(a=>a.x));
-    const maxX=Math.max(..._planta.ambientes.map(a=>a.x+a.w));
-    const minY=Math.min(..._planta.ambientes.map(a=>a.y));
-    const maxY=Math.max(..._planta.ambientes.map(a=>a.y+a.h));
-    const pw=maxX-minX, ph=maxY-minY;
-    const margin=40;
-    const gs=Math.max(10,Math.min(50,Math.min((W-margin*2)/Math.max(pw,1),(H-margin*2)/Math.max(ph,1))));
-    _planta.gridSize=gs;
-    _plantaState.panX=margin-minX*gs;
-    _plantaState.panY=margin-minY*gs;
-  }
-  drawPlanta();
-  try{
-    _ofertaPlanta=offscreen.toDataURL('image/png');
-    toast('✓ Planta capturada para la oferta','success');
-  }catch(e){
-    toast('Error al capturar: '+e.message,'error');
-    _ofertaPlanta=null;
-  }
-  // Restore original canvas
-  _plantaState.canvas=origCanvas;
-  _plantaState.ctx=origCtx;
-  if(origCanvas) drawPlanta();
-  // Update button text
-  const btn=document.querySelector('[onclick="capturarPlantaParaOferta()"]');
-  if(btn&&_ofertaPlanta) btn.querySelector('span').textContent='📐 ✓ Planta incluida';
-}
-
-function clearOfertaPlanta(){
-  _ofertaPlanta=null;
-  toast('Planta eliminada de la oferta');
-}
-
 function loadOfertaRender(input){
   if(!input.files||!input.files[0])return;
   const file=input.files[0];
@@ -2999,13 +2871,13 @@ function copyPrompt(btn){
 
 function fmt(n){return Math.round(n||0).toLocaleString('es-AR');}
 // ── RENDIMIENTOS DE MATERIALES ──
-const RENDIMIENTOS={"preliminares_pr01": [["Bolsas de consorcio 240L (u)", 0.08, "u"]], "preliminares_pr02": [["Cemento portland 50kg (u)", 0.5, "u"], ["Ladrillos comunes (u)", 50, "u"]], "demoliciones_d01": [["Volquete 4m³ (u)", 0.1, "u"]], "demoliciones_d03": [["Volquete 4m³ (u)", 0.3, "u"]], "estructura_e03": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 4.2, "barra"], ["Hierro aletado 8mm (barra)", 1.4, "barra"], ["Alambre n°16 (kg)", 0.55, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 8.5, "ml"]], "estructura_e08": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 5.0, "barra"], ["Malla hierro ø6 15x15 (2.40x6m) (m²)", 1.15, "m²"], ["Alambre n°16 (kg)", 0.65, "kg"], ["Fenólico 18mm (m²)", 1.15, "m²"], ["Puntal metálico (u)", 0.9, "u"]], "estructura_e14": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 4.8, "barra"], ["Hierro aletado 8mm (barra)", 2.2, "barra"], ["Alambre n°16 (kg)", 0.85, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 14.0, "ml"]], "estructura_e13": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 6.5, "barra"], ["Hierro aletado 8mm (barra)", 2.8, "barra"], ["Alambre n°16 (kg)", 1.0, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 18.0, "ml"]], "mamposteria_m01": [["Bloque estándar 20x20x40 (u)", 12.5, "u"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.28, "u"]], "mamposteria_m05": [["Ladrillos comunes (millar)", 0.082, "millar"], ["Cemento portland 50kg (u)", 0.14, "u"], ["Cal hidráulica (25kg) (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.35, "u"]], "mamposteria_m10": [["Ladrillos huecos 8x18x33 (millar)", 0.02, "millar"], ["Cemento portland 50kg (u)", 0.09, "u"], ["Cal hidráulica (25kg) (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.2, "u"]], "mamposteria_m13": [["Ladrillos huecos 12x18x33 (millar)", 0.016, "millar"], ["Cemento portland 50kg (u)", 0.11, "u"], ["Cal hidráulica (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "construccion_seco_cs01": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Montante acero galv. 69mm x 2.60m (u)", 0.55, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Masilla Durlock (32kg) (u)", 0.14, "u"], ["Cinta papel kraft 50m (u)", 0.05, "u"]], "construccion_seco_cs05": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Perfil omega x 2.60m (u)", 0.52, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Varilla roscada 3/8\" (ml)", 0.45, "ml"], ["Masilla Durlock (32kg) (u)", 0.12, "u"]], "aislaciones_a04": [["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "aislaciones_a06": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.15, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "cubierta_cu01": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.2, "m²"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "cubierta_cu05": [["Chapa ondulada N24 (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "cubierta_cu06": [["Chapa prepintada (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "revoques_r01": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.22, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.55, "u"]], "revoques_r04": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.55, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.1, "u"]], "revoques_r05": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.5, "u"]], "revoques_r09": [["Yeso tuyango (30kg) (u)", 0.45, "u"]], "revestimientos_rv01": [["Adhesivo blanco revestimientos (30kg) (u)", 0.22, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.25, "u"]], "revestimientos_rv03": [["Adhesivo blanco revestimientos (30kg) (u)", 0.23, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "revestimientos_rv04": [["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "cielorrasos_cr01": [["Cal aérea tipo El Milagro (25kg) (u)", 0.14, "u"], ["Cemento portland 50kg (u)", 0.06, "u"], ["Arena en bolsa (u)", 0.12, "u"]], "cielorrasos_cr09": [["Yeso tuyango (30kg) (u)", 0.48, "u"]], "contrapisos_cp01": [["Cascote limpio (m³)", 0.14, "m³"], ["Cemento portland 50kg (u)", 0.15, "u"], ["Arena en bolsa (u)", 0.35, "u"], ["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "contrapisos_cp02": [["Cascote limpio (m³)", 0.07, "m³"], ["Cemento portland 50kg (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "contrapisos_cp05": [["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.4, "u"]], "pisos_p04": [["Porcelanato pulido 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.15, "u"]], "pisos_p05": [["Porcelanato rústico 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "pisos_p08": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.25, "u"]], "pisos_p12": [["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "pisos_p15": [["Poliestireno expandido 2cm 20kg/m³ (m²)", 0.2, "lt"]], "escaleras_es02": [["Cemento portland 50kg (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "escaleras_es05": [["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "sanitaria_sa01": [["Inodoro corto blanco común (u)", 1, "u"], ["Bidet blanco común (u)", 1, "u"], ["Lavatorio común blanco chico (u)", 1, "u"], ["Accesorios loza blancos (9 pzas.) (set)", 1, "set"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 4, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 5, "u"], ["Pegamento PVC (u)", 0.3, "u"]], "sanitaria_sa02": [["Pileta cocina acero inox. doble bacha (u)", 1, "u"], ["Pileta lavar Ferrum c/fregadero (u)", 1, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 4, "u"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 3, "u"]], "electricidad_el01": [["Caño acero liviano 5/8\" (ml)", 5.0, "ml"], ["Cable 4mm² c/100m (u)", 0.06, "u"]], "electricidad_el02": [["Caño acero liviano 5/8\" (ml)", 6.0, "ml"], ["Cable 6mm² c/100m (u)", 0.08, "u"]], "calefaccion_cl01": [["Caño Sigas thermofusión 20mm x 4m (u)", 1.8, "u"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.22, "u"], ["Arena en bolsa (u)", 0.45, "u"]], "pintura_pi01": [["Látex interior (20lt) (u)", 0.022, "u"], ["Fijador al agua (lt) (u)", 0.12, "lt"], ["Enduído plástico (kg)", 0.28, "kg"], ["Lija N°120 (pliego)", 0.08, "u"], ["Rodillo lana 23cm (u)", 0.015, "u"], ["Pincel 3\" (u)", 0.02, "u"], ["Cubeta plástica (u)", 0.015, "u"], ["Cinta de papel 50m (u)", 0.04, "u"]], "pintura_pi02": [["Látex interior (20lt) (u)", 0.02, "u"], ["Fijador al agua (lt) (u)", 0.1, "lt"], ["Rodillo antigota 23cm (u)", 0.01, "u"], ["Pincel 3\" (u)", 0.015, "u"], ["Cubeta plástica (u)", 0.012, "u"], ["Lija N°120 (pliego)", 0.05, "u"]], "pintura_pi03": [["Látex satinado primera marca (20lt) (u)", 0.018, "u"], ["Fijador exterior (lt) (u)", 0.14, "lt"], ["Enduído exterior (kg)", 0.3, "kg"], ["Lija N°80 (pliego)", 0.06, "u"], ["Rodillo lana 23cm (u)", 0.018, "u"], ["Pincel 4\" (u)", 0.02, "u"], ["Cubeta plástica (u)", 0.015, "u"]], "pintura_pi05": [["Látex satinado primera marca (20lt) (u)", 0.016, "u"]], "pintura_pi09": [["Látex exterior primera marca (20lt) (u)", 0.065, "u"], ["Pincel 4\" (u)", 0.015, "u"], ["Rodillo lana 23cm (u)", 0.012, "u"]]};
+const RENDIMIENTOS={"preliminares_pr01": [["Bolsas de consorcio 240L (u)", 0.08, "u"]], "preliminares_pr02": [["Cemento portland 50kg (u)", 0.5, "u"], ["Ladrillos comunes (u)", 50, "u"]], "demoliciones_d01": [["Volquete 4m³ (u)", 0.1, "u"]], "demoliciones_d03": [["Volquete 4m³ (u)", 0.3, "u"]], "estructura_e03": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 4.2, "barra"], ["Hierro aletado 8mm (barra)", 1.4, "barra"], ["Alambre n°16 (kg)", 0.55, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 8.5, "ml"]], "estructura_e08": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 5.0, "barra"], ["Malla hierro ø6 15x15 (2.40x6m) (m²)", 1.15, "m²"], ["Alambre n°16 (kg)", 0.65, "kg"], ["Fenólico 18mm (m²)", 1.15, "m²"], ["Puntal metálico (u)", 0.9, "u"]], "estructura_e14": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 4.8, "barra"], ["Hierro aletado 8mm (barra)", 2.2, "barra"], ["Alambre n°16 (kg)", 0.85, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 14.0, "ml"]], "estructura_e13": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 6.5, "barra"], ["Hierro aletado 8mm (barra)", 2.8, "barra"], ["Alambre n°16 (kg)", 1.0, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 18.0, "ml"]], "mamposteria_m01": [["Bloque estándar 20x20x40 (u)", 12.5, "u"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.28, "u"]], "mamposteria_m05": [["Ladrillos comunes (millar)", 0.082, "millar"], ["Cemento portland 50kg (u)", 0.14, "u"], ["Cal hidráulica (25kg) (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.35, "u"]], "mamposteria_m10": [["Ladrillos huecos 8x18x33 (millar)", 0.02, "millar"], ["Cemento portland 50kg (u)", 0.09, "u"], ["Cal hidráulica (25kg) (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.2, "u"]], "mamposteria_m13": [["Ladrillos huecos 12x18x33 (millar)", 0.016, "millar"], ["Cemento portland 50kg (u)", 0.11, "u"], ["Cal hidráulica (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "construccion_seco_cs01": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Montante acero galv. 69mm x 2.60m (u)", 0.55, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Masilla Durlock (32kg) (u)", 0.14, "u"], ["Cinta papel kraft 50m (u)", 0.05, "u"]], "construccion_seco_cs05": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Perfil omega x 2.60m (u)", 0.52, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Varilla roscada 3/8\" (ml)", 0.45, "ml"], ["Masilla Durlock (32kg) (u)", 0.12, "u"]], "aislaciones_a04": [["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "aislaciones_a06": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.15, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "cubierta_cu01": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.2, "m²"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "cubierta_cu05": [["Chapa ondulada N24 (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "cubierta_cu06": [["Chapa prepintada (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "revoques_r01": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.22, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.55, "u"]], "revoques_r04": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.55, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.1, "u"]], "revoques_r05": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.5, "u"]], "revoques_r09": [["Yeso tuyango (30kg) (u)", 0.45, "u"]], "revestimientos_rv01": [["Adhesivo blanco revestimientos (30kg) (u)", 0.22, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.25, "u"]], "revestimientos_rv03": [["Adhesivo blanco revestimientos (30kg) (u)", 0.23, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "revestimientos_rv04": [["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "cielorrasos_cr01": [["Cal aérea tipo El Milagro (25kg) (u)", 0.14, "u"], ["Cemento portland 50kg (u)", 0.06, "u"], ["Arena en bolsa (u)", 0.12, "u"]], "cielorrasos_cr09": [["Yeso tuyango (30kg) (u)", 0.48, "u"]], "contrapisos_cp01": [["Cascote limpio (m³)", 0.14, "m³"], ["Cemento portland 50kg (u)", 0.15, "u"], ["Arena en bolsa (u)", 0.35, "u"], ["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "contrapisos_cp02": [["Cascote limpio (m³)", 0.07, "m³"], ["Cemento portland 50kg (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "contrapisos_cp05": [["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.4, "u"]], "pisos_p04": [["Porcelanato pulido 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.15, "u"]], "pisos_p05": [["Porcelanato rústico 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "pisos_p08": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.25, "u"]], "pisos_p12": [["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "pisos_p15": [["Poliestireno expandido 2cm 20kg/m³ (m²)", 0.2, "lt"]], "escaleras_es02": [["Cemento portland 50kg (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "escaleras_es05": [["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "sanitaria_sa01": [["Inodoro corto blanco común (u)", 1, "u"], ["Bidet blanco común (u)", 1, "u"], ["Lavatorio común blanco chico (u)", 1, "u"], ["Accesorios loza blancos (9 pzas.) (set)", 1, "set"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 4, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 5, "u"], ["Pegamento PVC (u)", 0.3, "u"]], "sanitaria_sa02": [["Pileta cocina acero inox. doble bacha (u)", 1, "u"], ["Pileta lavar Ferrum c/fregadero (u)", 1, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 4, "u"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 3, "u"]], "electricidad_el01": [["Caño acero liviano 5/8\" (ml)", 5.0, "ml"], ["Cable 4mm² c/100m (u)", 0.06, "u"]], "electricidad_el02": [["Caño acero liviano 5/8\" (ml)", 6.0, "ml"], ["Cable 6mm² c/100m (u)", 0.08, "u"]], "calefaccion_cl01": [["Caño Sigas thermofusión 20mm x 4m (u)", 1.8, "u"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.22, "u"], ["Arena en bolsa (u)", 0.45, "u"]], "pintura_pi01": [["Látex interior (20lt) (u)", 0.022, "u"], ["Fijador al agua (lt) (u)", 0.12, "u"], ["Masilla Durlock (32kg) (u)", 0.015, "u"]], "pintura_pi02": [["Látex interior (20lt) (u)", 0.02, "u"], ["Fijador al agua (lt) (u)", 0.1, "u"]], "pintura_pi03": [["Látex satinado primera marca (20lt) (u)", 0.018, "u"], ["Fijador exterior (lt) (u)", 0.12, "u"]], "pintura_pi05": [["Látex satinado primera marca (20lt) (u)", 0.016, "u"]], "pintura_pi09": [["Látex exterior primera marca (20lt) (u)", 0.065, "u"]]};
 
 let _materialesDB={}; // materiales con precios cargados de Supabase
 
 
 // Búsqueda por label (más robusto que por ID)
-const RENDIMIENTOS_BY_LABEL={"limpieza y nivelación": [["Bolsas de consorcio 240L (u)", 0.08, "u"]], "obrador": [["Cemento portland 50kg (u)", 0.5, "u"], ["Ladrillos comunes (u)", 50, "u"]], "demolición de obra completa": [["Volquete 4m³ (u)", 0.1, "u"]], "excavación manual de bases": [["Volquete 4m³ (u)", 0.3, "u"]], "platea de fundación": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 4.2, "barra"], ["Hierro aletado 8mm (barra)", 1.4, "barra"], ["Alambre n°16 (kg)", 0.55, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 8.5, "ml"]], "losas espesor": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 5.0, "barra"], ["Malla hierro ø6 15x15 (2.40x6m) (m²)", 1.15, "m²"], ["Alambre n°16 (kg)", 0.65, "kg"], ["Fenólico 18mm (m²)", 1.15, "m²"], ["Puntal metálico (u)", 0.9, "u"]], "vigas cuantía": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 6.5, "barra"], ["Hierro aletado 8mm (barra)", 2.8, "barra"], ["Alambre n°16 (kg)", 1.0, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 18.0, "ml"]], "columnas cuantía": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 4.8, "barra"], ["Hierro aletado 8mm (barra)", 2.2, "barra"], ["Alambre n°16 (kg)", 0.85, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 14.0, "ml"]], "bloques de hormigón 20x20x40": [["Bloque estándar 20x20x40 (u)", 12.5, "u"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.28, "u"]], "ladrillos comunes elevación": [["Ladrillos comunes (millar)", 0.082, "millar"], ["Cemento portland 50kg (u)", 0.14, "u"], ["Cal hidráulica (25kg) (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.35, "u"]], "ladrillo hueco de 8x18x33": [["Ladrillos huecos 8x18x33 (millar)", 0.02, "millar"], ["Cemento portland 50kg (u)", 0.09, "u"], ["Cal hidráulica (25kg) (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.2, "u"]], "ladrillo cerámico portante": [["Ladrillos huecos 12x18x33 (millar)", 0.016, "millar"], ["Cemento portland 50kg (u)", 0.11, "u"], ["Cal hidráulica (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "tabique simple esp": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Montante acero galv. 69mm x 2.60m (u)", 0.55, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Masilla Durlock (32kg) (u)", 0.14, "u"], ["Cinta papel kraft 50m (u)", 0.05, "u"]], "cielo raso suspendido junta": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Perfil omega x 2.60m (u)", 0.52, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Varilla roscada 3/8\" (ml)", 0.45, "ml"], ["Masilla Durlock (32kg) (u)", 0.12, "u"]], "film de polietileno": [["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "horizontal sobre losa": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.15, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "cubierta c/membrana aluminio": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.2, "m²"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "chapa ondulada n24": [["Chapa ondulada N24 (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "chapa prepintada": [["Chapa prepintada (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "grueso y fino a la cal": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.22, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.55, "u"]], "revoque proyectable exterior": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.55, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.1, "u"]], "revoque proyectable grueso interior": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.5, "u"]], "enlucido de yeso": [["Yeso tuyango (30kg) (u)", 0.48, "u"]], "cerámico 20x20": [["Adhesivo blanco revestimientos (30kg) (u)", 0.22, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.25, "u"]], "cerámica esmaltada 30x30": [["Adhesivo blanco revestimientos (30kg) (u)", 0.23, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "porcellanato 30x30": [["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "aplicado a la cal fina": [["Cal aérea tipo El Milagro (25kg) (u)", 0.14, "u"], ["Cemento portland 50kg (u)", 0.06, "u"], ["Arena en bolsa (u)", 0.12, "u"]], "hormigón de cascote armado 15cm": [["Cascote limpio (m³)", 0.14, "m³"], ["Cemento portland 50kg (u)", 0.15, "u"], ["Arena en bolsa (u)", 0.35, "u"], ["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "hormigón de cascote sobre losa": [["Cascote limpio (m³)", 0.07, "m³"], ["Cemento portland 50kg (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "carpeta de concreto": [["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.4, "u"]], "porcelanato opaco 30x30": [["Porcelanato pulido 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.15, "u"]], "cerámico esmaltado 20x20": [["Porcelanato rústico 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "mosaico granítico 30x30": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.25, "u"]], "parquet eucaliptus": [["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "pulido y plastificado": [["Poliestireno expandido 2cm 20kg/m³ (m²)", 0.2, "lt"]], "alzada y pedada de cemento": [["Cemento portland 50kg (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "alzada y pedada de cerámica": [["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "baño completo": [["Inodoro corto blanco común (u)", 1, "u"], ["Bidet blanco común (u)", 1, "u"], ["Lavatorio común blanco chico (u)", 1, "u"], ["Accesorios loza blancos (9 pzas.) (set)", 1, "set"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 4, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 5, "u"], ["Pegamento PVC (u)", 0.3, "u"]], "cocina y lavadero": [["Pileta cocina acero inox. doble bacha (u)", 1, "u"], ["Pileta lavar Ferrum c/fregadero (u)", 1, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 4, "u"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 3, "u"]], "boca de iluminación y toma": [["Caño acero liviano 5/8\" (ml)", 5.0, "ml"], ["Cable 4mm² c/100m (u)", 0.06, "u"]], "boca de te": [["Caño acero liviano 5/8\" (ml)", 6.0, "ml"], ["Cable 6mm² c/100m (u)", 0.08, "u"]], "piso radiante": [["Caño Sigas thermofusión 20mm x 4m (u)", 1.8, "u"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.22, "u"], ["Arena en bolsa (u)", 0.45, "u"]], "látex sobre muros interiores": [["Látex interior (20lt) (u)", 0.022, "u"], ["Fijador al agua (lt) (u)", 0.12, "lt"], ["Enduído plástico (kg)", 0.28, "kg"], ["Lija N°120 (pliego)", 0.08, "u"], ["Rodillo lana 23cm (u)", 0.015, "u"], ["Pincel 3\" (u)", 0.02, "u"], ["Cubeta plástica (u)", 0.015, "u"], ["Cinta de papel 50m (u)", 0.04, "u"]], "látex sobre cielo rasos": [["Látex interior (20lt) (u)", 0.02, "u"], ["Fijador al agua (lt) (u)", 0.1, "lt"], ["Rodillo antigota 23cm (u)", 0.01, "u"], ["Pincel 3\" (u)", 0.015, "u"], ["Cubeta plástica (u)", 0.012, "u"], ["Lija N°120 (pliego)", 0.05, "u"]], "látex acrílico sobre muros exteriores": [["Látex satinado primera marca (20lt) (u)", 0.018, "u"], ["Fijador exterior (lt) (u)", 0.14, "lt"], ["Enduído exterior (kg)", 0.3, "kg"], ["Lija N°80 (pliego)", 0.06, "u"], ["Rodillo lana 23cm (u)", 0.018, "u"], ["Pincel 4\" (u)", 0.02, "u"], ["Cubeta plástica (u)", 0.015, "u"]], "esmalte sintético s/carpinterías": [["Látex satinado primera marca (20lt) (u)", 0.016, "u"]], "impermeabilizante fibrado": [["Látex exterior primera marca (20lt) (u)", 0.065, "u"], ["Pincel 4\" (u)", 0.015, "u"], ["Rodillo lana 23cm (u)", 0.012, "u"]]};
+const RENDIMIENTOS_BY_LABEL={"limpieza y nivelación": [["Bolsas de consorcio 240L (u)", 0.08, "u"]], "obrador": [["Cemento portland 50kg (u)", 0.5, "u"], ["Ladrillos comunes (u)", 50, "u"]], "demolición de obra completa": [["Volquete 4m³ (u)", 0.1, "u"]], "excavación manual de bases": [["Volquete 4m³ (u)", 0.3, "u"]], "platea de fundación": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 4.2, "barra"], ["Hierro aletado 8mm (barra)", 1.4, "barra"], ["Alambre n°16 (kg)", 0.55, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 8.5, "ml"]], "losas espesor": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 10mm (barra)", 5.0, "barra"], ["Malla hierro ø6 15x15 (2.40x6m) (m²)", 1.15, "m²"], ["Alambre n°16 (kg)", 0.65, "kg"], ["Fenólico 18mm (m²)", 1.15, "m²"], ["Puntal metálico (u)", 0.9, "u"]], "vigas cuantía": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 6.5, "barra"], ["Hierro aletado 8mm (barra)", 2.8, "barra"], ["Alambre n°16 (kg)", 1.0, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 18.0, "ml"]], "columnas cuantía": [["Hormigón H-21 (elaborado) (m³)", 1.05, "m³"], ["Hierro aletado 16mm (barra)", 4.8, "barra"], ["Hierro aletado 8mm (barra)", 2.2, "barra"], ["Alambre n°16 (kg)", 0.85, "kg"], ["Tabla encofrado 1\"x10\" (ml)", 14.0, "ml"]], "bloques de hormigón 20x20x40": [["Bloque estándar 20x20x40 (u)", 12.5, "u"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.28, "u"]], "ladrillos comunes elevación": [["Ladrillos comunes (millar)", 0.082, "millar"], ["Cemento portland 50kg (u)", 0.14, "u"], ["Cal hidráulica (25kg) (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.35, "u"]], "ladrillo hueco de 8x18x33": [["Ladrillos huecos 8x18x33 (millar)", 0.02, "millar"], ["Cemento portland 50kg (u)", 0.09, "u"], ["Cal hidráulica (25kg) (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.2, "u"]], "ladrillo cerámico portante": [["Ladrillos huecos 12x18x33 (millar)", 0.016, "millar"], ["Cemento portland 50kg (u)", 0.11, "u"], ["Cal hidráulica (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "tabique simple esp": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Montante acero galv. 69mm x 2.60m (u)", 0.55, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Masilla Durlock (32kg) (u)", 0.14, "u"], ["Cinta papel kraft 50m (u)", 0.05, "u"]], "cielo raso suspendido junta": [["Placa roca de yeso 9.5mm (1.20x2.40) (u)", 0.4, "u"], ["Perfil omega x 2.60m (u)", 0.52, "u"], ["Solera acero galv. 70mm x 2.60m (u)", 0.36, "u"], ["Varilla roscada 3/8\" (ml)", 0.45, "ml"], ["Masilla Durlock (32kg) (u)", 0.12, "u"]], "film de polietileno": [["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "horizontal sobre losa": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.15, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "cubierta c/membrana aluminio": [["Membrana polietileno c/alum. Isolant 5mm (m²)", 1.2, "m²"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "chapa ondulada n24": [["Chapa ondulada N24 (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "chapa prepintada": [["Chapa prepintada (m²)", 1.15, "m²"], ["Tornillos autoperforantes (u)", 9.0, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.08, "u"]], "grueso y fino a la cal": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.22, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.12, "u"], ["Arena en bolsa (u)", 0.55, "u"]], "revoque proyectable exterior": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.55, "u"], ["Cal aérea tipo El Milagro (25kg) (u)", 0.1, "u"]], "revoque proyectable grueso interior": [["Yeso proyectable tipo Alpress (35kg) (u)", 0.5, "u"]], "enlucido de yeso": [["Yeso tuyango (30kg) (u)", 0.48, "u"]], "cerámico 20x20": [["Adhesivo blanco revestimientos (30kg) (u)", 0.22, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.25, "u"]], "cerámica esmaltada 30x30": [["Adhesivo blanco revestimientos (30kg) (u)", 0.23, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "porcellanato 30x30": [["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.2, "u"]], "aplicado a la cal fina": [["Cal aérea tipo El Milagro (25kg) (u)", 0.14, "u"], ["Cemento portland 50kg (u)", 0.06, "u"], ["Arena en bolsa (u)", 0.12, "u"]], "hormigón de cascote armado 15cm": [["Cascote limpio (m³)", 0.14, "m³"], ["Cemento portland 50kg (u)", 0.15, "u"], ["Arena en bolsa (u)", 0.35, "u"], ["Membrana polietileno 2mm (m²)", 1.15, "m²"]], "hormigón de cascote sobre losa": [["Cascote limpio (m³)", 0.07, "m³"], ["Cemento portland 50kg (u)", 0.1, "u"], ["Arena en bolsa (u)", 0.22, "u"]], "carpeta de concreto": [["Cemento portland 50kg (u)", 0.18, "u"], ["Arena en bolsa (u)", 0.4, "u"]], "porcelanato opaco 30x30": [["Porcelanato pulido 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento porcellanato (25kg) (u)", 0.28, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.15, "u"]], "cerámico esmaltado 20x20": [["Porcelanato rústico 50x50/60x60 (m²)", 1.12, "m²"], ["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "mosaico granítico 30x30": [["Cemento portland 50kg (u)", 0.1, "u"], ["Cal hidráulica (25kg) (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.25, "u"]], "parquet eucaliptus": [["Pegamento cerámicos (25kg) (u)", 0.08, "u"]], "pulido y plastificado": [["Poliestireno expandido 2cm 20kg/m³ (m²)", 0.2, "lt"]], "alzada y pedada de cemento": [["Cemento portland 50kg (u)", 0.14, "u"], ["Arena en bolsa (u)", 0.3, "u"]], "alzada y pedada de cerámica": [["Pegamento cerámicos (25kg) (u)", 0.27, "u"], ["Sellador neutro (cartucho 310cm³) (u)", 0.18, "u"]], "baño completo": [["Inodoro corto blanco común (u)", 1, "u"], ["Bidet blanco común (u)", 1, "u"], ["Lavatorio común blanco chico (u)", 1, "u"], ["Accesorios loza blancos (9 pzas.) (set)", 1, "set"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 4, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 5, "u"], ["Pegamento PVC (u)", 0.3, "u"]], "cocina y lavadero": [["Pileta cocina acero inox. doble bacha (u)", 1, "u"], ["Pileta lavar Ferrum c/fregadero (u)", 1, "u"], ["Caño Sigas thermofusión 20mm x 4m (u)", 4, "u"], ["Caño PVC 3.2 110mm x 2m cloacal (u)", 3, "u"]], "boca de iluminación y toma": [["Caño acero liviano 5/8\" (ml)", 5.0, "ml"], ["Cable 4mm² c/100m (u)", 0.06, "u"]], "boca de te": [["Caño acero liviano 5/8\" (ml)", 6.0, "ml"], ["Cable 6mm² c/100m (u)", 0.08, "u"]], "piso radiante": [["Caño Sigas thermofusión 20mm x 4m (u)", 1.8, "u"], ["Poliestireno expandido 2cm 20kg/m³ (m²)", 1.1, "m²"], ["Cemento portland 50kg (u)", 0.22, "u"], ["Arena en bolsa (u)", 0.45, "u"]], "látex sobre muros interiores": [["Látex interior (20lt) (u)", 0.022, "u"], ["Fijador al agua (lt) (u)", 0.12, "u"], ["Masilla Durlock (32kg) (u)", 0.015, "u"]], "látex sobre cielo rasos": [["Látex interior (20lt) (u)", 0.02, "u"], ["Fijador al agua (lt) (u)", 0.1, "u"]], "látex acrílico sobre muros exteriores": [["Látex satinado primera marca (20lt) (u)", 0.018, "u"], ["Fijador exterior (lt) (u)", 0.12, "u"]], "esmalte sintético s/carpinterías": [["Látex satinado primera marca (20lt) (u)", 0.016, "u"]], "impermeabilizante fibrado": [["Látex exterior primera marca (20lt) (u)", 0.065, "u"]]};
 
 function findRendimientos(it){
   // 1. Try by Supabase ID directly
@@ -3223,71 +3095,60 @@ function togglePlantaSection(){
 function renderPlantaEditor(){
   const cont = document.getElementById('planta-editor-pip')||document.getElementById('res-planta');
   if(!cont) return;
-  const isMobile = window.innerWidth < 640;
+  const computo=document.getElementById('planta-computo-pip');
 
   cont.innerHTML = `
   <div style="font-family:Arial,sans-serif">
-    <!-- Toolbar compacta -->
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#F7F3EE;border-radius:10px;border:1px solid var(--border)">
-      <div style="display:flex;gap:4px;flex:1;min-width:0">
-        <button id="planta-tool-select" onclick="setPlantaTool('select')" title="Seleccionar"
-          style="flex:1;min-width:36px;height:36px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:15px;cursor:pointer">↖</button>
-        <button id="planta-tool-ambiente" onclick="setPlantaTool('ambiente')" title="Dibujar ambiente"
-          style="flex:1;min-width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:15px;cursor:pointer">⬛</button>
-        <button id="planta-tool-abertura" onclick="setPlantaTool('abertura')" title="Agregar abertura"
-          style="flex:1;min-width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:18px;cursor:pointer">🚪</button>
-      </div>
-      <div style="display:flex;gap:4px">
-        <button onclick="plantaZoom(1.25)" style="width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:18px;cursor:pointer">+</button>
-        <button onclick="plantaZoom(0.8)" style="width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:18px;cursor:pointer">−</button>
-        <button onclick="plantaFit()" style="width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:13px;cursor:pointer">⊡</button>
-      </div>
-      <span style="font-size:9px;color:#aaa;white-space:nowrap">0.25m/celda</span>
-      <button onclick="printContent(document.getElementById('planta-editor-pip'))" class="no-print"
-        style="width:36px;height:36px;border-radius:8px;border:none;background:#F0EAE2;color:#666;font-size:14px;cursor:pointer">🖨</button>
+    <!-- Toolbar -->
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:#F7F3EE;border-radius:10px;border:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-right:4px">Herramientas:</div>
+      <button id="planta-tool-select" onclick="setPlantaTool('select')" class="btn btn-sm" style="background:var(--navy);color:#fff">↖ Seleccionar</button>
+      <button id="planta-tool-ambiente" onclick="setPlantaTool('ambiente')" class="btn btn-sm" style="background:#F0EAE2;color:#666">⬛ Ambiente</button>
+      <button id="planta-tool-abertura" onclick="setPlantaTool('abertura')" class="btn btn-sm" style="background:#F0EAE2;color:#666">🚪 Abertura</button>
+      <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
+      <button onclick="plantaZoom(1.2)" class="btn btn-sm" style="background:#F0EAE2;color:#666">＋</button>
+      <button onclick="plantaZoom(0.8)" class="btn btn-sm" style="background:#F0EAE2;color:#666">－</button>
+      <button onclick="plantaFit()" class="btn btn-sm" style="background:#F0EAE2;color:#666">⊡ Ajustar</button>
+      <div style="width:1px;background:var(--border);height:24px;margin:0 4px"></div>
+      <span style="font-size:10px;color:#888">Escala: 1 celda = 0.25m</span>
+      <button onclick="printContent(document.getElementById('res-planta'))" class="btn btn-sm no-print" style="margin-left:auto;background:#F0EAE2;color:#666">🖨 Imprimir</button>
     </div>
 
-    <!-- Canvas + Panel: flex-col en mobile, flex-row en desktop -->
-    <div id="planta-layout" style="display:flex;flex-direction:${isMobile?'column':'row'};gap:10px;align-items:flex-start">
-
+    <!-- Canvas + Panel -->
+    <div style="display:flex;gap:10px;align-items:flex-start">
       <!-- Canvas -->
-      <div style="flex:1;width:100%;min-width:0;border:2px solid var(--border);border-radius:10px;overflow:hidden;position:relative;background:#fff">
-        <canvas id="planta-canvas" style="display:block;touch-action:none;width:100%"></canvas>
-        <div id="planta-tooltip" style="display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);background:#1B2A3B;color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;pointer-events:none;z-index:10;white-space:nowrap"></div>
-        <!-- Mobile: hint -->
-        <div id="planta-hint" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);color:#fff;font-size:10px;padding:3px 10px;border-radius:12px;pointer-events:none;white-space:nowrap">
-          ${_plantaState.tool==='ambiente'?'Arrastrá para dibujar':_plantaState.tool==='abertura'?'Tocá una pared':'Tocá un ambiente para seleccionar'}
-        </div>
+      <div style="flex:1;min-width:0;border:2px solid var(--border);border-radius:10px;overflow:hidden;position:relative;background:#fff">
+        <canvas id="planta-canvas" style="display:block;cursor:crosshair;touch-action:none"></canvas>
+        <div id="planta-tooltip" style="display:none;position:absolute;background:#1B2A3B;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;pointer-events:none;z-index:10"></div>
       </div>
 
-      <!-- Panel lateral / inferior -->
-      <div style="width:${isMobile?'100%':'220px'};flex-shrink:0;display:flex;flex-direction:${isMobile?'row':'column'};gap:8px;flex-wrap:${isMobile?'wrap':'nowrap'}">
-
-        <!-- Ambientes -->
-        <div class="card" style="flex:${isMobile?'1':'none'};min-width:${isMobile?'140px':'0'}">
-          <div class="card-header" style="padding:6px 10px">
-            <div class="card-title" style="font-size:11px">Ambientes</div>
-            <button onclick="addAmbienteManual()" style="background:none;border:none;color:var(--accent);font-size:18px;cursor:pointer;line-height:1">+</button>
+      <!-- Panel lateral -->
+      <div style="width:220px;flex-shrink:0">
+        <!-- Ambientes list -->
+        <div class="card" style="margin-bottom:8px">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">Ambientes</div>
+            <button onclick="addAmbienteManual()" class="btn btn-sm" style="font-size:10px;padding:3px 8px">+ Agregar</button>
           </div>
-          <div id="planta-amb-list" style="max-height:${isMobile?'120px':'180px'};overflow-y:auto"></div>
+          <div id="planta-amb-list" style="max-height:200px;overflow-y:auto"></div>
         </div>
 
-        <!-- Propiedades (colapsable en mobile) -->
-        <div id="planta-props" class="card" style="flex:${isMobile?'1':'none'};min-width:${isMobile?'160px':'0'};display:none">
-          <div class="card-header" style="padding:6px 10px">
-            <div class="card-title" style="font-size:11px">Propiedades</div>
-            <button onclick="deletePlantaSelected()" style="background:none;border:none;color:#C0392B;cursor:pointer;font-size:16px">🗑</button>
+        <!-- Propiedades del seleccionado -->
+        <div id="planta-props" class="card" style="margin-bottom:8px;display:none">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">Propiedades</div>
+            <button onclick="deletePlantaSelected()" style="background:none;border:none;color:#C0392B;cursor:pointer;font-size:14px">🗑</button>
           </div>
-          <div id="planta-props-content" style="padding:6px 10px;max-height:${isMobile?'200px':'300px'};overflow-y:auto"></div>
+          <div id="planta-props-content" style="padding:8px 12px"></div>
         </div>
 
         <!-- Cómputo -->
-        <div class="card" style="width:${isMobile?'100%':'auto'}">
-          <div class="card-header" style="padding:6px 10px;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display?'':'none'">
-            <div class="card-title" style="font-size:11px">📊 Cómputo</div>
-            <button onclick="event.stopPropagation();aplicarPlantaAlPIP()" class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--navy);color:#fff">→ Al PIP</button>
+        <div class="card">
+          <div class="card-header" style="padding:8px 12px">
+            <div class="card-title" style="font-size:12px">📊 Cómputo</div>
+            <button onclick="aplicarCometutoAlPIP()" class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:var(--navy);color:#fff">→ Al PIP</button>
           </div>
-          <div id="planta-computo" style="padding:6px 10px;font-size:11px"></div>
+          <div id="planta-computo" style="padding:8px 12px;font-size:11px"></div>
         </div>
       </div>
     </div>
@@ -3296,90 +3157,38 @@ function renderPlantaEditor(){
   initPlantaCanvas();
   renderAmbientesList();
   updateComputo();
-  // Show restored ambientes
-  if(_planta.ambientes.length>0) setTimeout(plantaFit, 150);
 }
-
 
 function initPlantaCanvas(){
   const canvas = document.getElementById('planta-canvas');
   if(!canvas) return;
+  // Don't re-init if same canvas already set up
   if(_plantaState.canvas===canvas) return;
   _plantaState.canvas = canvas;
   _plantaState.ctx = canvas.getContext('2d');
 
-  // Size canvas responsively
+  // Size canvas to container
   const cont = canvas.parentElement;
-  const isMobile = window.innerWidth < 640;
-  const W = cont.clientWidth || (isMobile ? window.innerWidth - 32 : 600);
-  const H = isMobile ? Math.min(window.innerHeight * 0.50, 340) : Math.max(420, window.innerHeight * 0.55);
+  const W = cont.clientWidth || 600;
+  const H = Math.max(400, window.innerHeight * 0.55);
   canvas.width = W;
   canvas.height = H;
-  canvas.style.height = H + 'px';
 
   // Center grid
   _plantaState.panX = W/2 - 10 * _planta.gridSize;
   _plantaState.panY = H/2 - 8 * _planta.gridSize;
 
-  // Mouse events
+  // Events
   canvas.addEventListener('mousedown', plantaMouseDown);
   canvas.addEventListener('mousemove', plantaMouseMove);
   canvas.addEventListener('mouseup', plantaMouseUp);
   canvas.addEventListener('mouseleave', ()=>{ _plantaState.drawing=false; _plantaState.dragAmb=null; drawPlanta(); });
   canvas.addEventListener('wheel', plantaWheel, {passive:false});
 
-  // Touch — single finger draw/select, two fingers pan+zoom
-  let _lastTouches=[];
-  canvas.addEventListener('touchstart', e=>{
-    e.preventDefault();
-    _lastTouches = Array.from(e.touches);
-    if(e.touches.length===1){
-      plantaMouseDown(touchToMouse(e));
-    }
-  }, {passive:false});
-
-  canvas.addEventListener('touchmove', e=>{
-    e.preventDefault();
-    if(e.touches.length===2){
-      // Pinch to zoom
-      const t1=e.touches[0], t2=e.touches[1];
-      const dist=Math.hypot(t1.clientX-t2.clientX, t1.clientY-t2.clientY);
-      const prev=_lastTouches.length===2?Math.hypot(
-        _lastTouches[0].clientX-_lastTouches[1].clientX,
-        _lastTouches[0].clientY-_lastTouches[1].clientY):dist;
-      const factor=dist/Math.max(prev,1);
-      const cx=(t1.clientX+t2.clientX)/2 - canvas.getBoundingClientRect().left;
-      const cy=(t1.clientY+t2.clientY)/2 - canvas.getBoundingClientRect().top;
-      if(Math.abs(factor-1)>0.01) plantaZoom(factor,cx,cy);
-      // Pan
-      if(_lastTouches.length===2){
-        const dx=((t1.clientX+t2.clientX)/2)-(((_lastTouches[0].clientX+_lastTouches[1].clientX)/2));
-        const dy=((t1.clientY+t2.clientY)/2)-(((_lastTouches[0].clientY+_lastTouches[1].clientY)/2));
-        _plantaState.panX+=dx; _plantaState.panY+=dy;
-        drawPlanta();
-      }
-    } else if(e.touches.length===1){
-      plantaMouseMove(touchToMouse(e));
-    }
-    _lastTouches=Array.from(e.touches);
-  }, {passive:false});
-
-  canvas.addEventListener('touchend', e=>{
-    e.preventDefault();
-    _lastTouches=Array.from(e.touches);
-    plantaMouseUp(touchToMouse(e));
-  }, {passive:false});
-
-  // Resize observer
-  if(window.ResizeObserver){
-    new ResizeObserver(()=>{
-      const newW=cont.clientWidth;
-      if(Math.abs(newW-canvas.width)>10){
-        canvas.width=newW;
-        drawPlanta();
-      }
-    }).observe(cont);
-  }
+  // Touch
+  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); plantaMouseDown(touchToMouse(e)); }, {passive:false});
+  canvas.addEventListener('touchmove', e=>{ e.preventDefault(); plantaMouseMove(touchToMouse(e)); }, {passive:false});
+  canvas.addEventListener('touchend', e=>{ e.preventDefault(); plantaMouseUp(touchToMouse(e)); }, {passive:false});
 
   drawPlanta();
 }
@@ -3475,13 +3284,6 @@ function drawPlanta(){
   // Aberturas
   _planta.aberturas.forEach(ab => drawAbertura(ctx, ab));
 
-  // Update hint text
-  const hintEl=document.getElementById('planta-hint');
-  if(hintEl){
-    const hints={'ambiente':'Arrastrá para dibujar','abertura':'Tocá una pared','select':'Tocá para seleccionar · 2 dedos para mover'};
-    hintEl.textContent=hints[_plantaState.tool]||'';
-  }
-
   // Preview while drawing
   if(drawing && _plantaState.tool==='ambiente'){
     const {gx:ex, gy:ey} = screenToGrid(_plantaState.curX||startX, _plantaState.curY||startY);
@@ -3500,15 +3302,9 @@ function drawPlanta(){
     // dimensions
     const wm = Math.abs(ex-sx2)*_planta.escala;
     const hm = Math.abs(ey-sy2)*_planta.escala;
-    // Big centered tooltip
-    const ttip=document.getElementById('planta-tooltip');
-    if(ttip&&(wm>0||hm>0)){
-      ttip.style.display='block';
-      ttip.textContent=wm.toFixed(2)+'m × '+hm.toFixed(2)+'m = '+(wm*hm).toFixed(2)+'m²';
-    }
     ctx.fillStyle = '#1A2744';
     ctx.font = 'bold 11px Arial';
-    ctx.fillText(wm.toFixed(2)+'m × '+hm.toFixed(2)+'m',
+    ctx.fillText(`${wm.toFixed(1)}m × ${hm.toFixed(1)}m`,
       Math.min(s1.sx,s2.sx)+4, Math.min(s1.sy,s2.sy)-4);
   }
 }
@@ -3851,10 +3647,6 @@ function plantaMouseMove(e){
   }
 
   if(_plantaState.drawing) drawPlanta();
-  else {
-    const ttip=document.getElementById('planta-tooltip');
-    if(ttip) ttip.style.display='none';
-  }
 }
 
 function plantaMouseUp(e){
@@ -4402,6 +4194,18 @@ function toggleWallType(ambId,side){
   showPlantaProps();
   updateComputo();
   drawPlanta();
+}
+
+function toggleOfertaSinFactura(val){
+  _ofertaSinFactura=!!val;
+  const lbl=document.getElementById('sf-lbl');
+  if(lbl){lbl.style.color=_ofertaSinFactura?'#856404':'#555';lbl.style.fontWeight='700';}
+}
+function setOfertaDescuento(val){
+  _ofertaDescuento=Math.max(0,Math.min(50,parseFloat(val)||0));
+}
+function getCVAFromResultado(res){
+  return (res.rubrosA||[]).reduce(function(s,it){return s+(it.cant||0)*(it.precio||0);},0);
 }
 
 function escHtml(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
