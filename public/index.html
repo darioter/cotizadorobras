@@ -1863,27 +1863,31 @@ let _calcSnapshot = null; // guarda el cálculo actual
 async function guardarYVerResultado(){
   if(!_calcSnapshot)return toast('Calculá el precio primero','error');
   const res=_calcSnapshot;
-  // Auto-capture planta if exists
-  if(_planta&&_planta.ambientes&&_planta.ambientes.length>0&&_plantaState){
+  // Auto-capture planta using offscreen canvas (no need for DOM canvas)
+  if(_planta&&_planta.ambientes&&_planta.ambientes.length>0){
     try{
-      var srcC=document.getElementById('planta-canvas');
-      var W=600,H=420;
-      if(srcC&&srcC.width>0){W=srcC.width;H=srcC.height;}
+      var W=800,H=500;
       var off=document.createElement('canvas');
       off.width=W;off.height=H;
-      var oC=_plantaState.canvas,oX=_plantaState.ctx;
-      _plantaState.canvas=off;_plantaState.ctx=off.getContext('2d');
+      var offCtx=off.getContext('2d');
+      // Temporarily redirect draw to offscreen
+      var savedCanvas=_plantaState.canvas,savedCtx=_plantaState.ctx;
+      var savedGrid=_planta.gridSize,savedPanX=_plantaState.panX,savedPanY=_plantaState.panY;
+      _plantaState.canvas=off;_plantaState.ctx=offCtx;
       var minX=Math.min.apply(null,_planta.ambientes.map(function(a){return a.x;}));
       var maxX=Math.max.apply(null,_planta.ambientes.map(function(a){return a.x+a.w;}));
       var minY=Math.min.apply(null,_planta.ambientes.map(function(a){return a.y;}));
       var maxY=Math.max.apply(null,_planta.ambientes.map(function(a){return a.y+a.h;}));
-      var mg=50,gs=Math.max(14,Math.min(50,Math.min((W-mg*2)/Math.max(maxX-minX,1),(H-mg*2)/Math.max(maxY-minY,1))));
+      var mg=50,pw=Math.max(maxX-minX,1),ph=Math.max(maxY-minY,1);
+      var gs=Math.max(14,Math.min(50,Math.min((W-mg*2)/pw,(H-mg*2)/ph)));
       _planta.gridSize=gs;_plantaState.panX=mg-minX*gs;_plantaState.panY=mg-minY*gs;
       drawPlanta();
       _ofertaPlanta=off.toDataURL('image/png');
-      _plantaState.canvas=oC;_plantaState.ctx=oX;
-      if(oC)drawPlanta();
-    }catch(e){console.warn('planta capture:',e);}
+      // Restore
+      _plantaState.canvas=savedCanvas;_plantaState.ctx=savedCtx;
+      _planta.gridSize=savedGrid;_plantaState.panX=savedPanX;_plantaState.panY=savedPanY;
+      if(savedCanvas)drawPlanta();
+    }catch(e){console.warn('planta capture:',e.message);}
   }
 
   // Auto-capture planta if exists
@@ -2318,21 +2322,20 @@ function renderOferta(res,c,m2,monSym,fmtM){
   var html=''
     +'<div class="no-print" style="margin-bottom:12px">'
     // Dark controls bar
-    +'<div style="background:#1B2A3B;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
-    +'<span style="font-size:10px;font-weight:700;color:#7A9BC0;text-transform:uppercase;letter-spacing:.08em">Opciones al cliente:</span>'
-    +'<button id="btn-sf-pill" onclick="toggleOfertaSinFactura()"'
-    +' style="border:none;border-radius:20px;padding:8px 18px;cursor:pointer;font-size:12px;font-weight:700;'
-    +(_ofertaSinFactura?'background:#FFCC00;color:#5a4000':'background:rgba(255,255,255,.15);color:#ddd')
-    +'">'
-    +'⚡ Sin IVA / IIBB'
-    +(_ofertaSinFactura?'  ✓':'')
+    +'<div style="background:#1B2A3B;border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">'
+    +'<span style="font-size:10px;font-weight:700;color:#5A7A9A;letter-spacing:.1em;text-transform:uppercase">Opciones al cliente</span>'
+    +'<div style="width:1px;height:28px;background:rgba(255,255,255,.1)"></div>'
+    // Sin IVA toggle
+    +'<button id="btn-sf-pill" onclick="toggleOfertaSinFactura()" style="display:flex;align-items:center;gap:8px;border:2px solid '+(_ofertaSinFactura?'#F0C000':'rgba(255,255,255,.2)')+';border-radius:8px;padding:8px 16px;cursor:pointer;font-size:12px;font-weight:700;background:'+(_ofertaSinFactura?'#F0C000':'transparent')+';color:'+(_ofertaSinFactura?'#3a2800':'#bbb')+';transition:all .15s">'
+    +'<span style="font-size:14px">⚡</span>'
+    +'<span>Sin IVA / IIBB</span>'
+    +(_ofertaSinFactura?'<span style="background:#3a2800;color:#F0C000;border-radius:4px;padding:1px 6px;font-size:10px;margin-left:4px">ACTIVO</span>':'')
     +'</button>'
-    +'<div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border-radius:20px;padding:7px 14px">'
-    +'<span style="font-size:12px;color:#aaa;font-weight:600">🏷 Dto.</span>'
-    +'<input type="number" id="inp-oferta-desc" value="'+_ofertaDescuento+'" min="0" max="50" step="0.5"'
-    +' onchange="setOfertaDescuento(this.value)"'
-    +' style="width:44px;border:none;font-size:14px;font-weight:700;color:#fff;text-align:center;background:transparent;outline:none">'
-    +'<span style="font-size:12px;color:#aaa">%</span>'
+    // Descuento
+    +'<div style="display:flex;align-items:center;gap:8px;border:2px solid '+(_ofertaDescuento>0?'#E67E22':'rgba(255,255,255,.2)')+';border-radius:8px;padding:6px 14px;background:'+(_ofertaDescuento>0?'rgba(230,126,34,.15)':'transparent')+'">'
+    +'<span style="font-size:11px;font-weight:700;color:'+(_ofertaDescuento>0?'#E67E22':'#888')+'">🏷 Descuento</span>'
+    +'<input type="number" id="inp-oferta-desc" value="'+(_ofertaDescuento||0)+'" min="0" max="50" step="0.5" onchange="setOfertaDescuento(this.value)" style="width:42px;border:none;font-size:15px;font-weight:700;color:#fff;text-align:center;background:transparent;outline:none;-moz-appearance:textfield">'
+    +'<span style="font-size:12px;color:#888">%</span>'
     +'</div>'
     +'</div>'
     +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
@@ -2401,6 +2404,7 @@ function renderOferta(res,c,m2,monSym,fmtM){
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-weight:700;font-size:16px">'+fV(precioVenta)+'</td>'
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-size:11px;color:#666">'+sym+' '+fmt(precioVenta/m2n)+'/m²</td>'
     +'</tr>'
+    +(_ofertaDescuento>0?'<tr><td style="padding:5px 12px;border:1px solid #eee;color:#E67E22;font-size:11px">🏷 Descuento '+_ofertaDescuento+'%</td><td style="padding:5px 12px;border:1px solid #eee;text-align:right;color:#E67E22;font-weight:700">- '+fV(precioVenta*_ofertaDescuento/(100-_ofertaDescuento))+'</td><td style="padding:5px 12px;border:1px solid #eee"></td></tr>':'')
     +'<tr>'
     +'<td style="padding:7px 12px;border:1px solid #ddd;color:#666">IVA 21%</td>'
     +'<td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td>'
