@@ -2841,30 +2841,49 @@ function printContent(el){
 
 // ── RENDER OFERTA ──
 function capturarPlantaParaOferta(){
-  // Capture current planta canvas as PNG
-  const canvas=document.getElementById('planta-canvas');
-  if(!canvas||!_planta.ambientes.length){
+  if(!_planta.ambientes.length){
     toast('Dibujá la planta primero en la sección 📐 Planta del proyecto','error');
     return;
   }
-  // Draw fresh to ensure current state
-  drawPlanta();
-  _ofertaPlanta=canvas.toDataURL('image/png');
-  toast('✓ Planta capturada — se incluirá en la oferta','success');
-  // Refresh oferta if visible
-  const ofertaEl=document.getElementById('res-oferta');
-  if(ofertaEl&&ofertaEl.style.display!=='none'&&_lastResultado){
-    const prev=ofertaEl.innerHTML;
-    // Re-render oferta
-    if(typeof renderPIPResult==='function'&&_lastResultado)
-      document.getElementById('res-oferta').innerHTML=renderOferta(
-        _lastResultado,
-        calcPrecioVenta(getCVA(),getCVB(),parametros),
-        parseFloat(_lastResultado.m2)||1,
-        _lastResultado.moneda?.moneda||'ARS',
-        fmt
-      );
+  // Create a clean offscreen canvas and redraw planta on it
+  const src=document.getElementById('planta-canvas');
+  const W=src?src.width:800;
+  const H=src?src.height:500;
+  const offscreen=document.createElement('canvas');
+  offscreen.width=W; offscreen.height=H;
+  // Temporarily swap canvas
+  const origCanvas=_plantaState.canvas;
+  const origCtx=_plantaState.ctx;
+  _plantaState.canvas=offscreen;
+  _plantaState.ctx=offscreen.getContext('2d');
+  // Fit to show all ambientes
+  if(_planta.ambientes.length>0){
+    const minX=Math.min(..._planta.ambientes.map(a=>a.x));
+    const maxX=Math.max(..._planta.ambientes.map(a=>a.x+a.w));
+    const minY=Math.min(..._planta.ambientes.map(a=>a.y));
+    const maxY=Math.max(..._planta.ambientes.map(a=>a.y+a.h));
+    const pw=maxX-minX, ph=maxY-minY;
+    const margin=40;
+    const gs=Math.max(10,Math.min(50,Math.min((W-margin*2)/Math.max(pw,1),(H-margin*2)/Math.max(ph,1))));
+    _planta.gridSize=gs;
+    _plantaState.panX=margin-minX*gs;
+    _plantaState.panY=margin-minY*gs;
   }
+  drawPlanta();
+  try{
+    _ofertaPlanta=offscreen.toDataURL('image/png');
+    toast('✓ Planta capturada para la oferta','success');
+  }catch(e){
+    toast('Error al capturar: '+e.message,'error');
+    _ofertaPlanta=null;
+  }
+  // Restore original canvas
+  _plantaState.canvas=origCanvas;
+  _plantaState.ctx=origCtx;
+  if(origCanvas) drawPlanta();
+  // Update button text
+  const btn=document.querySelector('[onclick="capturarPlantaParaOferta()"]');
+  if(btn&&_ofertaPlanta) btn.querySelector('span').textContent='📐 ✓ Planta incluida';
 }
 
 function clearOfertaPlanta(){
