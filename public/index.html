@@ -1929,6 +1929,9 @@ async function guardarYVerResultado(){
 
 
 function calcularPrecio(){
+  // Sync sinFactura from modalidad
+  const modalVal=document.getElementById('pip-modalidad')?.value;
+  _sinFactura=(modalVal==='SIN_FACTURA');
   const nombre=document.getElementById('pip-nombre').value.trim();
   if(!nombre)return toast('Ingresá un nombre para el proyecto','error');
   const cvA=getCVA(); const cvB=getCVB();
@@ -1966,6 +1969,7 @@ function calcularPrecio(){
     calc,
     params:parametros,
     moneda:{...monedaConfig},
+    sinFactura:_sinFactura,
     rubrosA:pipRubrosA.filter(r=>r.cant>0),
     rubrosB:pipRubrosB.filter(r=>r.cant*r.precio>0),
     propuestas:[]
@@ -1993,6 +1997,7 @@ function calcularPrecio(){
         return cm>0?'<div style="margin-top:10px;padding:8px 12px;background:#FFF8F0;border-radius:7px;border:1px solid #F0E0C0;font-size:12px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><span style="font-weight:700;color:var(--navy)">$ '+fmt(cm)+'</span></div>':'';
       }catch(e){return '';}
     })()
+    +(_sinFactura?'<div style="margin:8px 0;padding:6px 10px;background:#FFF3CD;border:1px solid #FFCC00;border-radius:7px;font-size:11px;font-weight:700;color:#856404">⚡ Modo Sin Factura — IVA e IIBB no aplicados</div>':'')
     +(pautaOk?'<div style="margin-top:10px;padding:8px 12px;border-radius:7px;background:'+(enPauta?'#E8F5EE':'#FFF0EE')+';font-size:12px;font-weight:700;color:'+(enPauta?'var(--green)':'var(--red)')+'">'+
       (enPauta?'✓ Precio dentro de la pauta del cliente':'⚠ Supera la pauta en $ '+fmt(calc.precioNeto-parseFloat(pauta)))+'</div>':'')
     +'</div>';
@@ -2192,8 +2197,8 @@ function renderPIPResult(res){_lastResultado=res;
         <div class="res-row"><span>IIBB+Gcias+Sello+Déb/Créd</span><span class="res-val">$ ${fmt(c.impuestos)}</span></div>
         <div class="res-row"><span>Costo Financiero (${pct(p.costo_financiero)})</span><span class="res-val">$ ${fmt(c.costoFin)}</span></div>
         ${c.comisionAgencia>0?`<div class="res-row"><span>Comisión Agencia (${pct(p.comision_agencia)})</span><span class="res-val">$ ${fmt(c.comisionAgencia)}</span></div>`:''}
-        <div class="res-row subtotal"><span>PRECIO NETO en ARS (sin IVA)</span><span class="res-val">$ ${fmt(c.precioNeto)}</span></div>
-        <div class="res-row"><span>IVA 21%</span><span class="res-val">$ ${fmt(c.iva)}</span></div>
+        <div class="res-row subtotal"><span>PRECIO NETO ${_sinFactura?'(sin impuestos)':'en ARS (sin IVA)'}</span><span class="res-val">$ ${fmt(c.precioNeto)}</span></div>
+        ${_sinFactura?'<div class="res-row" style="color:#856404;font-weight:600"><span>⚡ Sin factura — no aplica IVA</span><span class="res-val">$ 0</span></div>':'<div class="res-row"><span>IVA 21%</span><span class="res-val">$ '+fmt(c.iva)+'</span></div>'}
         <div class="res-row total"><span>PRECIO TOTAL + IVA (ARS)</span><span class="res-val">$ ${fmt(c.precioTotal)}</span></div>
       </div>
       ${pautaOk?`<div class="warn-box mt-10" style="border-color:${enPauta?'#A8D5B8':'#F8C5BC'};background:${enPauta?'#E8F5EE':'#FFF0EE'}">
