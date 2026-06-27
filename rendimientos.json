@@ -719,11 +719,36 @@
     [
       "Fijador al agua (lt) (u)",
       0.12,
+      "lt"
+    ],
+    [
+      "Enduído plástico (kg)",
+      0.28,
+      "kg"
+    ],
+    [
+      "Lija N°120 (pliego)",
+      0.08,
       "u"
     ],
     [
-      "Masilla Durlock (32kg) (u)",
+      "Rodillo lana 23cm (u)",
       0.015,
+      "u"
+    ],
+    [
+      "Pincel 3\" (u)",
+      0.02,
+      "u"
+    ],
+    [
+      "Cubeta plástica (u)",
+      0.015,
+      "u"
+    ],
+    [
+      "Cinta de papel 50m (u)",
+      0.04,
       "u"
     ]
   ],
@@ -736,6 +761,26 @@
     [
       "Fijador al agua (lt) (u)",
       0.1,
+      "lt"
+    ],
+    [
+      "Rodillo antigota 23cm (u)",
+      0.01,
+      "u"
+    ],
+    [
+      "Pincel 3\" (u)",
+      0.015,
+      "u"
+    ],
+    [
+      "Cubeta plástica (u)",
+      0.012,
+      "u"
+    ],
+    [
+      "Lija N°120 (pliego)",
+      0.05,
       "u"
     ]
   ],
@@ -747,7 +792,32 @@
     ],
     [
       "Fijador exterior (lt) (u)",
-      0.12,
+      0.14,
+      "lt"
+    ],
+    [
+      "Enduído exterior (kg)",
+      0.3,
+      "kg"
+    ],
+    [
+      "Lija N°80 (pliego)",
+      0.06,
+      "u"
+    ],
+    [
+      "Rodillo lana 23cm (u)",
+      0.018,
+      "u"
+    ],
+    [
+      "Pincel 4\" (u)",
+      0.02,
+      "u"
+    ],
+    [
+      "Cubeta plástica (u)",
+      0.015,
       "u"
     ]
   ],
@@ -762,6 +832,16 @@
     [
       "Látex exterior primera marca (20lt) (u)",
       0.065,
+      "u"
+    ],
+    [
+      "Pincel 4\" (u)",
+      0.015,
+      "u"
+    ],
+    [
+      "Rodillo lana 23cm (u)",
+      0.012,
       "u"
     ]
   ]
