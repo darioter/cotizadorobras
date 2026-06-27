@@ -374,9 +374,7 @@ html,body{overflow-x:hidden;max-width:100vw}
                   <option value="REFACCION">Refacción</option>
                   <option value="SIN_FACTURA">⚡ Sin factura</option>
                 </select>
-                <div id="sin-factura-ind" style="display:none;margin-top:4px;background:#FFF3CD;border:1px solid #FFCC00;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;color:#856404">
-                  ⚡ Precio sin IVA ni IIBB — modalidad informal
-                </div>
+
               </div>
             </div>
             <div class="mb-10"><label class="field-label">Cliente *</label><input type="text" id="pip-cliente" placeholder="Nombre del cliente" /></div>
@@ -568,6 +566,14 @@ html,body{overflow-x:hidden;max-width:100vw}
         <!-- PASO 2: Resultado inline -->
         <div id="step-resultado" style="display:none">
           <div id="calc-preview" class="card mb-12" style="border-left:4px solid var(--accent)"></div>
+          <!-- Sin Factura toggle -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;background:#FAFAFA;border:1px solid var(--border);border-radius:8px">
+            <label style="flex:1;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;display:flex;align-items:center;gap:8px">
+              <input type="checkbox" id="chk-sin-factura" onchange="_sinFactura=this.checked;document.getElementById('sf-badge').style.display=this.checked?'inline':'none'" style="width:18px;height:18px;accent-color:#856404;cursor:pointer">
+              ⚡ Sin factura
+            </label>
+            <span id="sf-badge" style="display:none;background:#FFF3CD;border:1px solid #FFCC00;border-radius:12px;padding:2px 10px;font-size:10px;font-weight:700;color:#856404">Sin IVA ni IIBB</span>
+          </div>
           <button class="btn btn-full mb-12" onclick="guardarYVerResultado()" style="background:var(--navy);color:#fff;font-size:14px;padding:14px">
             💾 Guardar proyecto
           </button>
@@ -1908,6 +1914,32 @@ let _calcSnapshot = null; // guarda el cálculo actual
 async function guardarYVerResultado(){
   if(!_calcSnapshot)return toast('Calculá el precio primero','error');
   const res=_calcSnapshot;
+  // Auto-capture planta if exists and not already captured
+  if(_planta.ambientes.length>0){
+    try{
+      const srcCanvas=document.getElementById('planta-canvas');
+      if(srcCanvas){
+        const off=document.createElement('canvas');
+        off.width=srcCanvas.width||800; off.height=srcCanvas.height||500;
+        const origC=_plantaState.canvas, origX=_plantaState.ctx;
+        _plantaState.canvas=off; _plantaState.ctx=off.getContext('2d');
+        // Fit all ambientes
+        const minX=Math.min(..._planta.ambientes.map(a=>a.x));
+        const maxX=Math.max(..._planta.ambientes.map(a=>a.x+a.w));
+        const minY=Math.min(..._planta.ambientes.map(a=>a.y));
+        const maxY=Math.max(..._planta.ambientes.map(a=>a.y+a.h));
+        const pw=maxX-minX,ph=maxY-minY,margin=40;
+        const gs=Math.max(12,Math.min(50,Math.min((off.width-margin*2)/Math.max(pw,1),(off.height-margin*2)/Math.max(ph,1))));
+        _planta.gridSize=gs;
+        _plantaState.panX=margin-minX*gs; _plantaState.panY=margin-minY*gs;
+        drawPlanta();
+        _ofertaPlanta=off.toDataURL('image/png');
+        _plantaState.canvas=origC; _plantaState.ctx=origX;
+        if(origC) drawPlanta();
+      }
+    }catch(e){console.warn('planta capture:',e);}
+  }
+
   // Calculate material cost if available
   let costoMateriales=0;
   if(_lastResultado&&_lastResultado.rubrosA){
@@ -1939,9 +1971,9 @@ async function guardarYVerResultado(){
 
 
 function calcularPrecio(){
-  // Sync sinFactura from modalidad
-  const modalVal=document.getElementById('pip-modalidad')?.value;
-  _sinFactura=(modalVal==='SIN_FACTURA');
+  // Sync sinFactura from checkbox
+  const chkSF=document.getElementById('chk-sin-factura');
+  if(chkSF) _sinFactura=chkSF.checked;
   const nombre=document.getElementById('pip-nombre').value.trim();
   if(!nombre)return toast('Ingresá un nombre para el proyecto','error');
   const cvA=getCVA(); const cvB=getCVB();
@@ -2667,6 +2699,12 @@ function editProyecto(id){
   });
   renderPIPRubrosA();
   renderPIPRubrosB();
+
+  // Restore sinFactura checkbox
+  const chkSF=document.getElementById('chk-sin-factura');
+  const sfBadge=document.getElementById('sf-badge');
+  if(chkSF){chkSF.checked=!!res.sinFactura;}
+  if(sfBadge){sfBadge.style.display=res.sinFactura?'inline':'none';}
 
   // Reset planta primero, luego restaurar
   _planta.ambientes=[];
