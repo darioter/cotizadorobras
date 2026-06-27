@@ -2265,13 +2265,13 @@ function renderOferta(res,c,m2,monSym,fmtM){
     precioVenta=cb; precioIVA=cb; ivaVal=0;
   }
   if(_ofertaDescuento>0){var df=1-_ofertaDescuento/100;precioVenta*=df;precioIVA*=df;ivaVal*=df;}
-  // Build IVA row HTML separately to avoid escaping issues
+  // Build IVA row HTML separately to avoid escaping issues  var sym=isARS?'$':((window.MONEDAS&&window.MONEDAS[moneda.moneda]&&window.MONEDAS[moneda.moneda].simbolo)||moneda.moneda);
+  var fV=function(v){return sym+' '+fmt(v);};
+
   var ivaRowHtml=(_ofertaSinFactura||_ofertaDescuento>0)
     ?'<tr><td colspan="3" style="padding:7px 12px;border:1px solid #ddd;background:#FFFDF0;color:#856404;font-size:11px;font-weight:700">'+(_ofertaSinFactura?'⚡ Sin IVA ni IIBB':'')+(_ofertaDescuento>0?(_ofertaSinFactura?' · ':'')+' Descuento '+_ofertaDescuento+'% aplicado':'')+'</td></tr>'
     :'<tr><td style="padding:7px 12px;border:1px solid #ddd;color:#666">IVA 21%</td><td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td><td style="padding:7px 12px;border:1px solid #ddd"></td></tr>';
   var totalLabel=_ofertaSinFactura?'PRECIO FINAL SIN IMPUESTOS':'PRECIO TOTAL + IVA';
-  var sym=isARS?'$':((window.MONEDAS&&window.MONEDAS[moneda.moneda]&&window.MONEDAS[moneda.moneda].simbolo)||moneda.moneda);
-  var fV=function(v){return sym+' '+fmt(v);};
   var m2n=parseFloat(r.m2||1);
 
   // Agrupar ítems por sección (sectionLabel) manteniendo orden
