@@ -2260,21 +2260,31 @@ function renderOferta(res,c,m2,monSym,fmtM){
   var moneda=r.moneda||{moneda:'ARS',tcFinal:1,mgCambio:0.02};
   var isARS=moneda.moneda==='ARS';
   var tcFinal=moneda.tcFinal||1;
-  var precioVenta=isARS?c.precioNeto:(c.precioNeto/tcFinal);
-  var precioIVA=isARS?c.precioTotal:(c.precioTotal/tcFinal);
-  var ivaVal=isARS?c.iva:(c.iva/tcFinal);
-  // Oferta options
-  if(_ofertaSinFactura){
-    var cb=isARS?(c.costoTotal+c.gastoAdmin+c.margen):((c.costoTotal+c.gastoAdmin+c.margen)/tcFinal);
-    precioVenta=cb; precioIVA=cb; ivaVal=0;
-  }
-  if(_ofertaDescuento>0){var df=1-_ofertaDescuento/100;precioVenta*=df;precioIVA*=df;ivaVal*=df;}
+  // Base prices
+  var precioBase=isARS?c.precioNeto:(c.precioNeto/tcFinal);
+  var ivaBase=isARS?c.iva:(c.iva/tcFinal);
+  var totalBase=isARS?c.precioTotal:(c.precioTotal/tcFinal);
+
+  // Sin factura: use costo+admin+margen (no impuestos)
+  var precioSinImp=_ofertaSinFactura
+    ?(isARS?(c.costoTotal+c.gastoAdmin+c.margen):((c.costoTotal+c.gastoAdmin+c.margen)/tcFinal))
+    :precioBase;
+  var ivaSinImp=_ofertaSinFactura?0:ivaBase;
+  var totalSinImp=_ofertaSinFactura?precioSinImp:(precioSinImp+ivaSinImp);
+
+  // Apply descuento to the effective price
+  var df=_ofertaDescuento>0?(1-_ofertaDescuento/100):1;
+  var precioVenta=precioSinImp*df;
+  var ivaVal=ivaSinImp*df;
+  var precioIVA=precioVenta+ivaVal;
   // Build IVA row HTML separately to avoid escaping issues
   var sym=isARS?'$':((window.MONEDAS&&window.MONEDAS[moneda.moneda]&&window.MONEDAS[moneda.moneda].simbolo)||moneda.moneda);
   var fV=function(v){return sym+' '+fmt(v);};
-  var ivaRowHtml=(_ofertaSinFactura||_ofertaDescuento>0)
-    ?'<tr><td colspan="3" style="padding:7px 12px;border:1px solid #ddd;background:#FFFDF0;color:#856404;font-size:11px;font-weight:700">'+(_ofertaSinFactura?'⚡ Sin IVA ni IIBB':'')+(_ofertaDescuento>0?(_ofertaSinFactura?' &middot; ':'')+' Descuento '+_ofertaDescuento+'% aplicado':'')+'</td></tr>'
-    :'';
+  var ivaRowHtml=_ofertaSinFactura
+    ?'<tr><td colspan="3" style="padding:6px 12px;border:1px solid #FFFDF0;background:#FFFDF0;color:#856404;font-size:11px;font-weight:700">⚡ Precio sin IVA ni IIBB'+(_ofertaDescuento>0?' · Dto. '+_ofertaDescuento+'% incluido':'')+'</td></tr>'
+    :(_ofertaDescuento>0
+      ?'<tr><td style="padding:7px 12px;border:1px solid #ddd;color:#666">IVA 21%</td><td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td><td style="padding:7px 12px;border:1px solid #ddd"></td></tr>'
+      :'<tr><td style="padding:7px 12px;border:1px solid #ddd;color:#666">IVA 21%</td><td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td><td style="padding:7px 12px;border:1px solid #ddd"></td></tr>');
   var totalLabel=_ofertaSinFactura?'PRECIO FINAL SIN IMPUESTOS':'PRECIO TOTAL + IVA';
 
   var m2n=parseFloat(r.m2||1);
@@ -2322,20 +2332,18 @@ function renderOferta(res,c,m2,monSym,fmtM){
   var html=''
     +'<div class="no-print" style="margin-bottom:12px">'
     // Dark controls bar
-    +'<div style="background:#1B2A3B;border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">'
+    +'<div style="background:#1B2A3B;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
     +'<span style="font-size:10px;font-weight:700;color:#5A7A9A;letter-spacing:.1em;text-transform:uppercase">Opciones al cliente</span>'
     +'<div style="width:1px;height:28px;background:rgba(255,255,255,.1)"></div>'
     // Sin IVA toggle
-    +'<button id="btn-sf-pill" onclick="toggleOfertaSinFactura()" style="display:flex;align-items:center;gap:8px;border:2px solid '+(_ofertaSinFactura?'#F0C000':'rgba(255,255,255,.2)')+';border-radius:8px;padding:8px 16px;cursor:pointer;font-size:12px;font-weight:700;background:'+(_ofertaSinFactura?'#F0C000':'transparent')+';color:'+(_ofertaSinFactura?'#3a2800':'#bbb')+';transition:all .15s">'
-    +'<span style="font-size:14px">⚡</span>'
-    +'<span>Sin IVA / IIBB</span>'
-    +(_ofertaSinFactura?'<span style="background:#3a2800;color:#F0C000;border-radius:4px;padding:1px 6px;font-size:10px;margin-left:4px">ACTIVO</span>':'')
+    +'<button id="btn-sf-pill" onclick="toggleOfertaSinFactura()" style="display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:6px;border:1.5px solid '+(_ofertaSinFactura?'#C8A200':'rgba(255,255,255,.15)')+';background:'+(_ofertaSinFactura?'#C8A200':'transparent')+';color:'+(_ofertaSinFactura?'#1B2A3B':'#aaa')+';font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'
+    +'⚡ Sin IVA / IIBB'
+    +(_ofertaSinFactura?'<span style="background:rgba(0,0,0,.2);border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">ON</span>':'')
     +'</button>'
-    // Descuento
-    +'<div style="display:flex;align-items:center;gap:8px;border:2px solid '+(_ofertaDescuento>0?'#E67E22':'rgba(255,255,255,.2)')+';border-radius:8px;padding:6px 14px;background:'+(_ofertaDescuento>0?'rgba(230,126,34,.15)':'transparent')+'">'
-    +'<span style="font-size:11px;font-weight:700;color:'+(_ofertaDescuento>0?'#E67E22':'#888')+'">🏷 Descuento</span>'
-    +'<input type="number" id="inp-oferta-desc" value="'+(_ofertaDescuento||0)+'" min="0" max="50" step="0.5" onchange="setOfertaDescuento(this.value)" style="width:42px;border:none;font-size:15px;font-weight:700;color:#fff;text-align:center;background:transparent;outline:none;-moz-appearance:textfield">'
-    +'<span style="font-size:12px;color:#888">%</span>'
+    +'<div style="display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:6px;border:1.5px solid '+(_ofertaDescuento>0?'var(--accent)':'rgba(255,255,255,.15)')+';background:transparent">'
+    +'<span style="font-size:11px;font-weight:600;color:'+(_ofertaDescuento>0?'var(--accent)':'#aaa')+'">Dto.</span>'
+    +'<input type="number" id="inp-oferta-desc" value="'+(_ofertaDescuento||0)+'" min="0" max="50" step="0.5" onchange="setOfertaDescuento(this.value)" style="width:38px;border:none;font-size:14px;font-weight:700;color:#fff;text-align:center;background:transparent;outline:none">'
+    +'<span style="font-size:11px;color:#888">%</span>'
     +'</div>'
     +'</div>'
     +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
@@ -2404,7 +2412,7 @@ function renderOferta(res,c,m2,monSym,fmtM){
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-weight:700;font-size:16px">'+fV(precioVenta)+'</td>'
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-size:11px;color:#666">'+sym+' '+fmt(precioVenta/m2n)+'/m²</td>'
     +'</tr>'
-    +(_ofertaDescuento>0?'<tr><td style="padding:5px 12px;border:1px solid #eee;color:#E67E22;font-size:11px">🏷 Descuento '+_ofertaDescuento+'%</td><td style="padding:5px 12px;border:1px solid #eee;text-align:right;color:#E67E22;font-weight:700">- '+fV(precioVenta*_ofertaDescuento/(100-_ofertaDescuento))+'</td><td style="padding:5px 12px;border:1px solid #eee"></td></tr>':'')
+    +(_ofertaDescuento>0?'<tr><td style="padding:5px 12px;border:1px solid #eee;color:#E67E22;font-size:11px">🏷 Descuento '+_ofertaDescuento+'%</td><td style="padding:5px 12px;border:1px solid #eee;text-align:right;color:#E67E22;font-weight:700">- '+fV(precioSinImp*_ofertaDescuento/100)+'</td><td style="padding:5px 12px;border:1px solid #eee"></td></tr>':'')
     +'<tr>'
     +'<td style="padding:7px 12px;border:1px solid #ddd;color:#666">IVA 21%</td>'
     +'<td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td>'
