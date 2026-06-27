@@ -2400,10 +2400,11 @@ function renderOferta(res,c,m2,monSym,fmtM){
        +'<img src="'+_ofertaRender+'" style="width:100%;max-height:380px;object-fit:contain;border:1px solid #ddd;border-radius:6px" />'
       :'')
     +'</div>'
+    +(_ofertaPlanta?'<div style="margin-bottom:14px"><div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Planta del proyecto</div><img src="'+_ofertaPlanta+'" style="width:100%;max-height:380px;object-fit:contain;border:1px solid #eee;border-radius:6px" /></div>':'')
 
     // Materiales referencia si existen
-    +(r.costoMateriales>0
-      ?'<div style="margin-bottom:10px;padding:8px 12px;background:#F7F3EE;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><b>'+fV(Math.round(r.costoMateriales*(isARS?1:1/tcFinal)))+'</b></div>'
+    +((r.costoMateriales>0||function(){try{var t=calcularMateriales(r.rubrosA||[]);var cm=Object.values(t).reduce(function(s,m){return s+m.qty*(m.precio||0);},0);r._cmCalc=cm;return cm>0;}catch(e){return false;}}())
+      ?'<div style="margin-bottom:10px;padding:8px 12px;background:#F7F3EE;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><b>'+fV(Math.round((r.costoMateriales||r._cmCalc||0)*(isARS?1:1/tcFinal)))+'</b></div>'
       :'')
     // Precio — solo totales, sin desglose
     +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">'
@@ -2418,6 +2419,7 @@ function renderOferta(res,c,m2,monSym,fmtM){
     +'<td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td>'
     +'<td style="padding:7px 12px;border:1px solid #ddd"></td>'
     +'</tr>'
+    +ivaRowHtml
     +'<tr style="background:#f0f0f0">'
     +'<td style="padding:9px 12px;border:2px solid #333;font-weight:700;font-size:13px">'+totalLabel+'</td>'
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-weight:700;font-size:15px">'+fV(precioIVA)+'</td>'
