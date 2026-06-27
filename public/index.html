@@ -365,8 +365,18 @@ html,body{overflow-x:hidden;max-width:100vw}
             <!-- Proyecto y cliente -->
             <div class="grid-2 mb-10">
               <div><label class="field-label">N° Proyecto</label><input type="text" id="pip-nro" placeholder="Ej: 1764" /></div>
-              <div><label class="field-label">Tipo</label>
-                <select id="pip-modalidad"><option value="ALQUILER">Alquiler</option><option value="VENTA">Venta</option></select>
+              <div>
+                <label class="field-label">Modalidad</label>
+                <select id="pip-modalidad" onchange="onModalidadChange(this.value)" style="width:100%">
+                  <option value="OBRA_NUEVA">Obra Nueva</option>
+                  <option value="REMODELACION">Remodelación</option>
+                  <option value="AMPLIACION">Ampliación</option>
+                  <option value="REFACCION">Refacción</option>
+                  <option value="SIN_FACTURA">⚡ Sin factura</option>
+                </select>
+                <div id="sin-factura-ind" style="display:none;margin-top:4px;background:#FFF3CD;border:1px solid #FFCC00;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;color:#856404">
+                  ⚡ Precio sin IVA ni IIBB — modalidad informal
+                </div>
               </div>
             </div>
             <div class="mb-10"><label class="field-label">Cliente *</label><input type="text" id="pip-cliente" placeholder="Nombre del cliente" /></div>
@@ -2576,12 +2586,18 @@ async function cambiarEstado(id,estado){
 
 async function openProyecto(id){
   const p=_proyectosData.find(x=>x.id===id)||await sb.from('proyectos_obra').select('*').eq('id',id).single().then(r=>r.data);
-  // Restore planta
-  if(p&&p.resultado&&p.resultado.planta&&p.resultado.planta.ambientes){
-    _planta.ambientes=p.resultado.planta.ambientes;
-    _planta.aberturas=p.resultado.planta.aberturas||[];
+  // Reset planta first, then restore from project
+  _planta.ambientes=[];
+  _planta.aberturas=[];
+  _planta.nextId=1;
+  _ofertaPlanta=null;
+  _sinFactura=false;
+  if(p&&p.resultado&&p.resultado.planta&&p.resultado.planta.ambientes&&p.resultado.planta.ambientes.length){
+    _planta.ambientes=JSON.parse(JSON.stringify(p.resultado.planta.ambientes));
+    _planta.aberturas=JSON.parse(JSON.stringify(p.resultado.planta.aberturas||[]));
     _planta.nextId=p.resultado.planta.nextId||(_planta.ambientes.length+1);
   }
+  if(p&&p.resultado&&p.resultado.sinFactura) _sinFactura=true;
   if(!p?.resultado)return toast('Sin resultado guardado','error');
   showView('pip');
   renderPIPResult(p.resultado);
@@ -2652,13 +2668,18 @@ function editProyecto(id){
   renderPIPRubrosA();
   renderPIPRubrosB();
 
-  // Restaurar planta si existe
+  // Reset planta primero, luego restaurar
+  _planta.ambientes=[];
+  _planta.aberturas=[];
+  _planta.nextId=1;
+  _ofertaPlanta=null;
   if(res.planta&&res.planta.ambientes&&res.planta.ambientes.length){
-    _planta.ambientes=res.planta.ambientes;
-    _planta.aberturas=res.planta.aberturas||[];
+    _planta.ambientes=JSON.parse(JSON.stringify(res.planta.ambientes));
+    _planta.aberturas=JSON.parse(JSON.stringify(res.planta.aberturas||[]));
     _planta.nextId=res.planta.nextId||(_planta.ambientes.length+1);
     toast('✓ Planta restaurada — '+_planta.ambientes.length+' ambientes','success');
   }
+  _sinFactura=!!(res.sinFactura);
 
   const banner=document.createElement('div');
   banner.id='edit-banner';
