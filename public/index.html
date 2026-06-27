@@ -1863,54 +1863,22 @@ let _calcSnapshot = null; // guarda el cálculo actual
 async function guardarYVerResultado(){
   if(!_calcSnapshot)return toast('Calculá el precio primero','error');
   const res=_calcSnapshot;
-  // Auto-capture planta using offscreen canvas (no need for DOM canvas)
-  if(_planta&&_planta.ambientes&&_planta.ambientes.length>0){
-    try{
-      var W=800,H=500;
-      var off=document.createElement('canvas');
-      off.width=W;off.height=H;
-      var offCtx=off.getContext('2d');
-      // Temporarily redirect draw to offscreen
-      var savedCanvas=_plantaState.canvas,savedCtx=_plantaState.ctx;
-      var savedGrid=_planta.gridSize,savedPanX=_plantaState.panX,savedPanY=_plantaState.panY;
-      _plantaState.canvas=off;_plantaState.ctx=offCtx;
-      var minX=Math.min.apply(null,_planta.ambientes.map(function(a){return a.x;}));
-      var maxX=Math.max.apply(null,_planta.ambientes.map(function(a){return a.x+a.w;}));
-      var minY=Math.min.apply(null,_planta.ambientes.map(function(a){return a.y;}));
-      var maxY=Math.max.apply(null,_planta.ambientes.map(function(a){return a.y+a.h;}));
-      var mg=50,pw=Math.max(maxX-minX,1),ph=Math.max(maxY-minY,1);
-      var gs=Math.max(14,Math.min(50,Math.min((W-mg*2)/pw,(H-mg*2)/ph)));
-      _planta.gridSize=gs;_plantaState.panX=mg-minX*gs;_plantaState.panY=mg-minY*gs;
-      drawPlanta();
-      _ofertaPlanta=off.toDataURL('image/png');
-      // Restore
-      _plantaState.canvas=savedCanvas;_plantaState.ctx=savedCtx;
-      _planta.gridSize=savedGrid;_plantaState.panX=savedPanX;_plantaState.panY=savedPanY;
-      if(savedCanvas)drawPlanta();
-    }catch(e){console.warn('planta capture:',e.message);}
-  }
-
-  // Auto-capture planta if exists
+  // Auto-capture planta
   if(_planta&&_planta.ambientes&&_planta.ambientes.length>0&&_plantaState){
     try{
-      var srcC=document.getElementById('planta-canvas');
-      var W=600,H=420;
-      if(srcC&&srcC.width>0){W=srcC.width;H=srcC.height;}
-      var off=document.createElement('canvas');
-      off.width=W;off.height=H;
-      var oC=_plantaState.canvas,oX=_plantaState.ctx;
-      _plantaState.canvas=off;_plantaState.ctx=off.getContext('2d');
-      var minX=Math.min.apply(null,_planta.ambientes.map(function(a){return a.x;}));
-      var maxX=Math.max.apply(null,_planta.ambientes.map(function(a){return a.x+a.w;}));
-      var minY=Math.min.apply(null,_planta.ambientes.map(function(a){return a.y;}));
-      var maxY=Math.max.apply(null,_planta.ambientes.map(function(a){return a.y+a.h;}));
-      var mg=50,gs=Math.max(14,Math.min(50,Math.min((W-mg*2)/Math.max(maxX-minX,1),(H-mg*2)/Math.max(maxY-minY,1))));
-      _planta.gridSize=gs;_plantaState.panX=mg-minX*gs;_plantaState.panY=mg-minY*gs;
-      drawPlanta();
-      _ofertaPlanta=off.toDataURL('image/png');
-      _plantaState.canvas=oC;_plantaState.ctx=oX;
-      if(oC)drawPlanta();
-    }catch(e){console.warn('planta capture:',e);}
+      var _off=document.createElement('canvas');_off.width=800;_off.height=500;
+      var _oC=_plantaState.canvas,_oX=_plantaState.ctx,_oG=_planta.gridSize,_oPX=_plantaState.panX,_oPY=_plantaState.panY;
+      _plantaState.canvas=_off;_plantaState.ctx=_off.getContext('2d');
+      var _mnX=Math.min.apply(null,_planta.ambientes.map(function(a){return a.x;}));
+      var _mxX=Math.max.apply(null,_planta.ambientes.map(function(a){return a.x+a.w;}));
+      var _mnY=Math.min.apply(null,_planta.ambientes.map(function(a){return a.y;}));
+      var _mxY=Math.max.apply(null,_planta.ambientes.map(function(a){return a.y+a.h;}));
+      var _mg=50,_gs=Math.max(14,Math.min(50,Math.min(700/Math.max(_mxX-_mnX,1),400/Math.max(_mxY-_mnY,1))));
+      _planta.gridSize=_gs;_plantaState.panX=_mg-_mnX*_gs;_plantaState.panY=_mg-_mnY*_gs;
+      drawPlanta();_ofertaPlanta=_off.toDataURL('image/png');
+      _plantaState.canvas=_oC;_plantaState.ctx=_oX;_planta.gridSize=_oG;_plantaState.panX=_oPX;_plantaState.panY=_oPY;
+      if(_oC)drawPlanta();
+    }catch(e){console.warn('planta:',e.message);}
   }
   // Calculate material cost if available
   let costoMateriales=0;
@@ -2260,33 +2228,12 @@ function renderOferta(res,c,m2,monSym,fmtM){
   var moneda=r.moneda||{moneda:'ARS',tcFinal:1,mgCambio:0.02};
   var isARS=moneda.moneda==='ARS';
   var tcFinal=moneda.tcFinal||1;
-  // Base prices
-  var precioBase=isARS?c.precioNeto:(c.precioNeto/tcFinal);
-  var ivaBase=isARS?c.iva:(c.iva/tcFinal);
-  var totalBase=isARS?c.precioTotal:(c.precioTotal/tcFinal);
-
-  // Sin factura: use costo+admin+margen (no impuestos)
-  var precioSinImp=_ofertaSinFactura
-    ?(isARS?(c.costoTotal+c.gastoAdmin+c.margen):((c.costoTotal+c.gastoAdmin+c.margen)/tcFinal))
-    :precioBase;
-  var ivaSinImp=_ofertaSinFactura?0:ivaBase;
-  var totalSinImp=_ofertaSinFactura?precioSinImp:(precioSinImp+ivaSinImp);
-
-  // Apply descuento to the effective price
-  var df=_ofertaDescuento>0?(1-_ofertaDescuento/100):1;
-  var precioVenta=precioSinImp*df;
-  var ivaVal=ivaSinImp*df;
-  var precioIVA=precioVenta+ivaVal;
-  // Build IVA row HTML separately to avoid escaping issues
+  var precioVenta=isARS?c.precioNeto:(c.precioNeto/tcFinal);
+  setTimeout(patchOferta,50);
+  var precioIVA=isARS?c.precioTotal:(c.precioTotal/tcFinal);
+  var ivaVal=isARS?c.iva:(c.iva/tcFinal);
   var sym=isARS?'$':((window.MONEDAS&&window.MONEDAS[moneda.moneda]&&window.MONEDAS[moneda.moneda].simbolo)||moneda.moneda);
   var fV=function(v){return sym+' '+fmt(v);};
-  var ivaRowHtml=_ofertaSinFactura
-    ?'<tr><td colspan="3" style="padding:6px 12px;border:1px solid #FFFDF0;background:#FFFDF0;color:#856404;font-size:11px;font-weight:700">⚡ Precio sin IVA ni IIBB'+(_ofertaDescuento>0?' · Dto. '+_ofertaDescuento+'% incluido':'')+'</td></tr>'
-    :(_ofertaDescuento>0
-      ?'<tr><td style="padding:7px 12px;border:1px solid #ddd;color:#666">IVA 21%</td><td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td><td style="padding:7px 12px;border:1px solid #ddd"></td></tr>'
-      :'<tr><td style="padding:7px 12px;border:1px solid #ddd;color:#666">IVA 21%</td><td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td><td style="padding:7px 12px;border:1px solid #ddd"></td></tr>');
-  var totalLabel=_ofertaSinFactura?'PRECIO FINAL SIN IMPUESTOS':'PRECIO TOTAL + IVA';
-
   var m2n=parseFloat(r.m2||1);
 
   // Agrupar ítems por sección (sectionLabel) manteniendo orden
@@ -2331,18 +2278,12 @@ function renderOferta(res,c,m2,monSym,fmtM){
 
   var html=''
     +'<div class="no-print" style="margin-bottom:12px">'
-    // Dark controls bar
     +'<div style="background:#1B2A3B;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
     +'<span style="font-size:10px;font-weight:700;color:#5A7A9A;letter-spacing:.1em;text-transform:uppercase">Opciones al cliente</span>'
-    +'<div style="width:1px;height:28px;background:rgba(255,255,255,.1)"></div>'
-    // Sin IVA toggle
-    +'<button id="btn-sf-pill" onclick="toggleOfertaSinFactura()" style="display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:6px;border:1.5px solid '+(_ofertaSinFactura?'#C8A200':'rgba(255,255,255,.15)')+';background:'+(_ofertaSinFactura?'#C8A200':'transparent')+';color:'+(_ofertaSinFactura?'#1B2A3B':'#aaa')+';font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">'
-    +'⚡ Sin IVA / IIBB'
-    +(_ofertaSinFactura?'<span style="background:rgba(0,0,0,.2);border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">ON</span>':'')
-    +'</button>'
-    +'<div style="display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:6px;border:1.5px solid '+(_ofertaDescuento>0?'var(--accent)':'rgba(255,255,255,.15)')+';background:transparent">'
-    +'<span style="font-size:11px;font-weight:600;color:'+(_ofertaDescuento>0?'var(--accent)':'#aaa')+'">Dto.</span>'
-    +'<input type="number" id="inp-oferta-desc" value="'+(_ofertaDescuento||0)+'" min="0" max="50" step="0.5" onchange="setOfertaDescuento(this.value)" style="width:38px;border:none;font-size:14px;font-weight:700;color:#fff;text-align:center;background:transparent;outline:none">'
+    +'<button id="btn-sf-pill" onclick="toggleOfertaSinFactura()" style="height:34px;padding:0 14px;border-radius:6px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:#aaa;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">⚡ Sin IVA / IIBB</button>'
+    +'<div style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,.15)">'
+    +'<span style="font-size:11px;font-weight:600;color:#888">Dto.</span>'
+    +'<input type="number" id="inp-oferta-desc" value="0" min="0" max="50" step="0.5" onchange="setOfertaDescuento(this.value)" style="width:38px;border:none;font-size:14px;font-weight:700;color:#fff;text-align:center;background:transparent;outline:none">'
     +'<span style="font-size:11px;color:#888">%</span>'
     +'</div>'
     +'</div>'
@@ -2400,11 +2341,10 @@ function renderOferta(res,c,m2,monSym,fmtM){
        +'<img src="'+_ofertaRender+'" style="width:100%;max-height:380px;object-fit:contain;border:1px solid #ddd;border-radius:6px" />'
       :'')
     +'</div>'
-    +(_ofertaPlanta?'<div style="margin-bottom:14px"><div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Planta del proyecto</div><img src="'+_ofertaPlanta+'" style="width:100%;max-height:380px;object-fit:contain;border:1px solid #eee;border-radius:6px" /></div>':'')
 
     // Materiales referencia si existen
-    +((r.costoMateriales>0||function(){try{var t=calcularMateriales(r.rubrosA||[]);var cm=Object.values(t).reduce(function(s,m){return s+m.qty*(m.precio||0);},0);r._cmCalc=cm;return cm>0;}catch(e){return false;}}())
-      ?'<div style="margin-bottom:10px;padding:8px 12px;background:#F7F3EE;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><b>'+fV(Math.round((r.costoMateriales||r._cmCalc||0)*(isARS?1:1/tcFinal)))+'</b></div>'
+    +(r.costoMateriales>0
+      ?'<div style="margin-bottom:10px;padding:8px 12px;background:#F7F3EE;border-radius:6px;font-size:11px;display:flex;justify-content:space-between;align-items:center"><span style="color:#888">🧱 Materiales estimados</span><b>'+fV(Math.round(r.costoMateriales*(isARS?1:1/tcFinal)))+'</b></div>'
       :'')
     // Precio — solo totales, sin desglose
     +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">'
@@ -2413,15 +2353,13 @@ function renderOferta(res,c,m2,monSym,fmtM){
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-weight:700;font-size:16px">'+fV(precioVenta)+'</td>'
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-size:11px;color:#666">'+sym+' '+fmt(precioVenta/m2n)+'/m²</td>'
     +'</tr>'
-    +(_ofertaDescuento>0?'<tr><td style="padding:5px 12px;border:1px solid #eee;color:#E67E22;font-size:11px">🏷 Descuento '+_ofertaDescuento+'%</td><td style="padding:5px 12px;border:1px solid #eee;text-align:right;color:#E67E22;font-weight:700">- '+fV(precioSinImp*_ofertaDescuento/100)+'</td><td style="padding:5px 12px;border:1px solid #eee"></td></tr>':'')
     +'<tr>'
     +'<td style="padding:7px 12px;border:1px solid #ddd;color:#666">IVA 21%</td>'
     +'<td style="padding:7px 12px;border:1px solid #ddd;text-align:right;color:#666">'+fV(ivaVal)+'</td>'
     +'<td style="padding:7px 12px;border:1px solid #ddd"></td>'
     +'</tr>'
-    +ivaRowHtml
     +'<tr style="background:#f0f0f0">'
-    +'<td style="padding:9px 12px;border:2px solid #333;font-weight:700;font-size:13px">'+totalLabel+'</td>'
+    +'<td style="padding:9px 12px;border:2px solid #333;font-weight:700;font-size:13px">PRECIO TOTAL + IVA</td>'
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-weight:700;font-size:15px">'+fV(precioIVA)+'</td>'
     +'<td style="padding:9px 12px;border:2px solid #333;text-align:right;font-size:11px;color:#555">'+sym+' '+fmt(precioIVA/m2n)+'/m²</td>'
     +'</tr>'
@@ -3032,7 +2970,6 @@ function renderMateriales(resultado){
   if(!keys.length){
     cont.innerHTML='<div class="card"><div class="card-body">'
       +'<div style="font-size:11px;color:#888;margin-bottom:10px;padding:8px;background:#f5f5f5;border-radius:6px;word-break:break-all">DEBUG: '+escHtml(debug)+'</div>'
-    +(_ofertaPlanta?'<div style="margin-bottom:14px"><div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Planta del proyecto</div><img src="'+_ofertaPlanta+'" style="width:100%;border:1px solid #ddd;border-radius:6px" /></div>':'')
       +'<div class="empty-state">Sin ítems con rendimientos definidos.<br><small>Cargá rubros en el PIP para ver el desglose de materiales.</small></div>'
       +'</div></div>';
     return;
@@ -4270,33 +4207,150 @@ function toggleWallType(ambId,side){
   drawPlanta();
 }
 
-function getCVAFromResultado(res){
-  return (res.rubrosA||[]).reduce(function(s,it){return s+(it.cant||0)*(it.precio||0);},0);
+function getCVAFromResultado(res){return(res.rubrosA||[]).reduce(function(s,it){return s+(it.cant||0)*(it.precio||0);},0);}
+function getCVBFromResultado(res){return(res.rubrosB||[]).filter(function(i){return i.precio>0;}).reduce(function(s,i){return s+(i.cant||0)*(i.precio||0);},0);}
+
+function patchOferta(){
+  if(!_lastResultado)return;
+  var c=calcPrecioVenta(getCVAFromResultado(_lastResultado),getCVBFromResultado(_lastResultado),parametros);
+  var isARS=!(_lastResultado.moneda&&_lastResultado.moneda.moneda&&_lastResultado.moneda.moneda!=='ARS');
+  var tcFinal=parseFloat((_lastResultado.moneda&&_lastResultado.moneda.tcFinal)||1)||1;
+  var base=isARS?c.precioNeto:(c.precioNeto/tcFinal);
+  var ivaBase=isARS?c.iva:(c.iva/tcFinal);
+  var sinImp=_ofertaSinFactura?(isARS?(c.costoTotal+c.gastoAdmin+c.margen):((c.costoTotal+c.gastoAdmin+c.margen)/tcFinal)):base;
+  var df=_ofertaDescuento>0?(1-_ofertaDescuento/100):1;
+  var pVenta=sinImp*df;
+  var ivaEf=(_ofertaSinFactura?0:ivaBase)*df;
+  var pTotal=pVenta+ivaEf;
+  var m2n=parseFloat(_lastResultado.m2||1)||1;
+  var sym=isARS?'$':'USD';
+  function fmtN(v){return Math.round(v).toLocaleString('es-AR');}
+
+  // Find price table rows by searching all td elements
+  var ofertaDiv=document.getElementById('res-oferta');
+  if(!ofertaDiv)return;
+
+  // Find and patch cells by position in known rows
+  var tds=ofertaDiv.querySelectorAll('td');
+  tds.forEach(function(td){
+    var txt=(td.textContent||'').trim();
+    // PRECIO DE VENTA row - next sibling cells
+    if(txt==='PRECIO DE VENTA (sin IVA)'){
+      var row=td.parentElement;
+      if(row){
+        var cells=row.querySelectorAll('td');
+        if(cells[1])cells[1].textContent=sym+' '+fmtN(pVenta);
+        if(cells[2])cells[2].textContent=sym+' '+fmtN(pVenta/m2n)+'/m²';
+      }
+    }
+    // IVA row
+    if(txt==='IVA 21%'){
+      var row=td.parentElement;
+      if(_ofertaSinFactura){
+        td.textContent='⚡ Sin IVA ni IIBB';
+        td.setAttribute('colspan','3');
+        td.style.color='#856404';
+        td.style.background='#FFFDF0';
+        var cells=row.querySelectorAll('td');
+        for(var i=1;i<cells.length;i++)cells[i].style.display='none';
+      } else {
+        td.textContent='IVA 21%';
+        td.removeAttribute('colspan');
+        td.style.color='';td.style.background='';
+        var row2=td.parentElement;
+        var cells2=row2?row2.querySelectorAll('td'):[];
+        if(cells2[1]){cells2[1].textContent=sym+' '+fmtN(ivaEf);cells2[1].style.display='';}
+        if(cells2[2])cells2[2].style.display='';
+      }
+    }
+    // PRECIO TOTAL row
+    if(txt==='PRECIO TOTAL + IVA'||txt==='PRECIO FINAL SIN IMPUESTOS'){
+      td.textContent=_ofertaSinFactura?'PRECIO FINAL SIN IMPUESTOS':'PRECIO TOTAL + IVA';
+      var row=td.parentElement;
+      if(row){
+        var cells=row.querySelectorAll('td');
+        if(cells[1])cells[1].textContent=sym+' '+fmtN(pTotal);
+        if(cells[2])cells[2].textContent=sym+' '+fmtN(pTotal/m2n)+'/m²';
+      }
+    }
+  });
+
+  // Descuento row - find or create
+  var dtoRow=ofertaDiv.querySelector('#oferta-dto-row');
+  if(!dtoRow){
+    // Create after PRECIO DE VENTA row
+    var pvRow=null;
+    ofertaDiv.querySelectorAll('td').forEach(function(td){
+      if((td.textContent||'').trim()==='PRECIO DE VENTA (sin IVA)')pvRow=td.parentElement;
+    });
+    if(pvRow){
+      dtoRow=document.createElement('tr');
+      dtoRow.id='oferta-dto-row';
+      dtoRow.innerHTML='<td style="padding:5px 12px;border:1px solid #eee;color:#E67E22;font-size:11px" id="dto-pct-cell">Descuento</td><td style="padding:5px 12px;border:1px solid #eee;text-align:right;color:#E67E22;font-weight:700" id="dto-amt-cell"></td><td style="padding:5px 12px;border:1px solid #eee"></td>';
+      pvRow.parentElement.insertBefore(dtoRow,pvRow.nextSibling);
+    }
+  }
+  if(dtoRow){
+    dtoRow.style.display=_ofertaDescuento>0?'':'none';
+    var pctCell=dtoRow.querySelector('#dto-pct-cell,td:first-child');
+    var amtCell=dtoRow.querySelector('#dto-amt-cell,td:nth-child(2)');
+    if(pctCell)pctCell.textContent='🏷 Descuento '+_ofertaDescuento+'%';
+    if(amtCell)amtCell.textContent='- '+sym+' '+fmtN(sinImp*_ofertaDescuento/100);
+  }
+
+  // Planta image
+  var plantaDiv=ofertaDiv.querySelector('#oferta-planta-img');
+  if(!plantaDiv&&_ofertaPlanta){
+    // Create before materiales/price table
+    plantaDiv=document.createElement('div');
+    plantaDiv.id='oferta-planta-img';
+    plantaDiv.style.marginBottom='14px';
+    plantaDiv.innerHTML='<div style="font-size:10px;font-weight:700;color:#333;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Planta del proyecto</div><img style="width:100%;max-height:360px;object-fit:contain;border:1px solid #eee;border-radius:6px">';
+    var rcDiv=ofertaDiv.querySelector('#oferta-render-container');
+    if(rcDiv&&rcDiv.parentElement)rcDiv.parentElement.insertBefore(plantaDiv,rcDiv.nextSibling);
+  }
+  if(plantaDiv){
+    plantaDiv.style.display=_ofertaPlanta?'':'none';
+    var img=plantaDiv.querySelector('img');
+    if(img&&_ofertaPlanta)img.src=_ofertaPlanta;
+  }
+
+  // Materiales
+  var matDiv=ofertaDiv.querySelector('#oferta-mat-row');
+  if(!matDiv){
+    matDiv=document.createElement('div');
+    matDiv.id='oferta-mat-row';
+    matDiv.style.cssText='display:none;margin-bottom:10px;padding:8px 12px;background:#F7F3EE;border-radius:6px;font-size:11px;justify-content:space-between;align-items:center';
+    matDiv.innerHTML='<span style="color:#888">🧱 Materiales estimados</span><b id="mat-amt-cell"></b>';
+    var priceTable=ofertaDiv.querySelector('table');
+    if(priceTable&&priceTable.parentElement)priceTable.parentElement.insertBefore(matDiv,priceTable);
+  }
+  try{
+    var t=calcularMateriales(_lastResultado.rubrosA||[]);
+    var cm=Object.values(t).reduce(function(s,m){return s+m.qty*(m.precio||0);},0);
+    var cmFinal=_lastResultado.costoMateriales||cm;
+    if(cmFinal>0){
+      matDiv.style.display='flex';
+      var matAmt=matDiv.querySelector('#mat-amt-cell,b');
+      if(matAmt)matAmt.textContent=sym+' '+fmtN(Math.round(cmFinal*(isARS?1:1/tcFinal)));
+    }
+  }catch(e){}
 }
-function getCVBFromResultado(res){
-  return (res.rubrosB||[]).filter(function(i){return i.precio>0;}).reduce(function(s,i){return s+(i.cant||0)*(i.precio||0);},0);
-}
+
 function toggleOfertaSinFactura(){
   _ofertaSinFactura=!_ofertaSinFactura;
-  // Update pill style
   var btn=document.getElementById('btn-sf-pill');
   if(btn){
-    btn.style.background=_ofertaSinFactura?'#FFCC00':'rgba(255,255,255,.15)';
-    btn.style.color=_ofertaSinFactura?'#5a4000':'#ddd';
-    btn.style.fontWeight='700';
+    btn.style.background=_ofertaSinFactura?'#C8A200':'transparent';
+    btn.style.color=_ofertaSinFactura?'#1B2A3B':'#aaa';
+    btn.style.borderColor=_ofertaSinFactura?'#C8A200':'rgba(255,255,255,.15)';
+    btn.textContent=_ofertaSinFactura?'⚡ Sin IVA / IIBB ✓':'⚡ Sin IVA / IIBB';
   }
-  // Recompute and refresh oferta
-  if(_lastResultado){
-    var c=calcPrecioVenta(getCVAFromResultado(_lastResultado),getCVBFromResultado(_lastResultado),parametros);
-    document.getElementById('res-oferta').innerHTML=renderOferta(_lastResultado,c,parseFloat(_lastResultado.m2)||1,(_lastResultado.moneda&&_lastResultado.moneda.moneda)||'ARS',fmt);
-  }
+  patchOferta();
 }
 function setOfertaDescuento(val){
   _ofertaDescuento=Math.max(0,Math.min(50,parseFloat(val)||0));
-  if(_lastResultado){
-    var c=calcPrecioVenta(getCVAFromResultado(_lastResultado),getCVBFromResultado(_lastResultado),parametros);
-    document.getElementById('res-oferta').innerHTML=renderOferta(_lastResultado,c,parseFloat(_lastResultado.m2)||1,(_lastResultado.moneda&&_lastResultado.moneda.moneda)||'ARS',fmt);
-  }
+  patchOferta();
 }
 
 function escHtml(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
